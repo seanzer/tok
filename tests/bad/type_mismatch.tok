@@ -1,0 +1,2 @@
+fn main() ! io
+  print(1 + "two")

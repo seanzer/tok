@@ -1,0 +1,17 @@
+// Functions, inference, immutability, effects, and string interpolation.
+fn fizz(n: int) -> str
+  if n % 15 == 0
+    "FizzBuzz"
+  else if n % 3 == 0
+    "Fizz"
+  else if n % 5 == 0
+    "Buzz"
+  else
+    "{n}"
+
+fn main() ! io
+  var total = 0
+  for i in 1..15
+    print(fizz(i))
+    total = total + i
+  print("sum of 1..15 = {total}")
