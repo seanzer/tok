@@ -1,0 +1,17 @@
+fn insert(sorted: [int], x: int) -> [int]
+  var out: [int] = []
+  var placed = false
+  for y in sorted
+    if not placed and x < y
+      out.push(x)
+      placed = true
+    out.push(y)
+  if not placed
+    out.push(x)
+  out
+
+fn main(args: [str]) ! io
+  var sorted: [int] = []
+  for i in 1..args.len() - 1
+    sorted = insert(sorted, args[i].to_int() or 0)
+  print(sorted.map(n -> "{n}").join(" "))

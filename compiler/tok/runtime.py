@@ -31,10 +31,53 @@ TOK_NORETURN TOK_UNUSED static void tok_panic(const char* loc, const char* fmt, 
   fprintf(stderr, " (%s)\n", loc);
   exit(70);
 }
+// An error: a kind (an index into the table of declared kinds) and a message.
+typedef struct { const char* msg; int32_t kind; } tok_error;
 TOK_NORETURN TOK_UNUSED static void tok_main_fail(const char* msg) {
   fflush(stdout);
   fprintf(stderr, "error: %s\n", msg);
   exit(1);
+}
+// `int` arithmetic stops the program on overflow; the sized integer types wrap.
+TOK_UNUSED static int64_t tok_add_int(int64_t a, int64_t b, const char* loc) {
+  int64_t r;
+#if defined(__GNUC__)
+  if (__builtin_add_overflow(a, b, &r))
+#else
+  r = (int64_t)((uint64_t)a + (uint64_t)b);
+  if ((b > 0 && a > INT64_MAX - b) || (b < 0 && a < INT64_MIN - b))
+#endif
+    tok_panic(loc, "integer overflow: %lld + %lld does not fit in int", (long long)a, (long long)b);
+  return r;
+}
+TOK_UNUSED static int64_t tok_sub_int(int64_t a, int64_t b, const char* loc) {
+  int64_t r;
+#if defined(__GNUC__)
+  if (__builtin_sub_overflow(a, b, &r))
+#else
+  r = (int64_t)((uint64_t)a - (uint64_t)b);
+  if ((b < 0 && a > INT64_MAX + b) || (b > 0 && a < INT64_MIN + b))
+#endif
+    tok_panic(loc, "integer overflow: %lld - %lld does not fit in int", (long long)a, (long long)b);
+  return r;
+}
+TOK_UNUSED static int64_t tok_mul_int(int64_t a, int64_t b, const char* loc) {
+  int64_t r;
+#if defined(__GNUC__)
+  if (__builtin_mul_overflow(a, b, &r))
+#else
+  bool bad = false;
+  if (a > 0) bad = b > 0 ? a > INT64_MAX / b : b < INT64_MIN / a;
+  else if (a < 0) bad = b > 0 ? a < INT64_MIN / b : b < INT64_MAX / a;
+  r = bad ? 0 : a * b;
+  if (bad)
+#endif
+    tok_panic(loc, "integer overflow: %lld * %lld does not fit in int", (long long)a, (long long)b);
+  return r;
+}
+TOK_UNUSED static int64_t tok_neg_int(int64_t a, const char* loc) {
+  if (a == INT64_MIN) tok_panic(loc, "integer overflow: -(%lld) does not fit in int", (long long)a);
+  return -a;
 }
 TOK_UNUSED static void* tok_alloc(size_t n) {
   void* p = malloc(n ? n : 1);
@@ -188,7 +231,7 @@ TOK_UNUSED static tok_T_Of64 tok_s_to_f64(const char* s) {
   return r;
 }
 TOK_UNUSED static tok_T_Estr tok_fs_read_text(const char* path) {
-  tok_T_Estr r = { NULL, "" };
+  tok_T_Estr r = { NULL, TOK_KIND_FS, "" };
   FILE* f = fopen(path, "rb");
   if (!f) { r.err = tok_fmt("cannot read '%s': %s", path, strerror(errno)); return r; }
   size_t cap = 4096, n = 0;
@@ -211,7 +254,7 @@ TOK_UNUSED static tok_T_Estr tok_fs_read_text(const char* path) {
   return r;
 }
 TOK_UNUSED static tok_T_Evoid tok_fs_write_text(const char* path, const char* text) {
-  tok_T_Evoid r = { NULL };
+  tok_T_Evoid r = { NULL, TOK_KIND_FS };
   FILE* f = fopen(path, "wb");
   if (!f) { r.err = tok_fmt("cannot write '%s': %s", path, strerror(errno)); return r; }
   size_t n = strlen(text);

@@ -4,10 +4,13 @@ Types are tuples:
   ("int",) ("f64",) ("bool",) ("str",) and the other numeric names in NUMS
   ("list", T)  ("opt", T)  ("res", T)  ("rec", module_index, name)
   ("void",) ("none",) ("never",) ("error",)
+  ("errv",) an error value: kind + message      ("ekind",) an error kind
 """
 
 INT, F64, BOOL, STR = ("int",), ("f64",), ("bool",), ("str",)
 VOID, NONE, NEVER, ERR = ("void",), ("none",), ("never",), ("error",)
+# A caught error value (`e` in `call() or e -> ...`) and the kind of an error.
+ERRV, EKIND = ("errv",), ("ekind",)
 
 # name -> (C type, kind, bits); kind is "i" signed, "u" unsigned, "f" float
 NUMS = {
@@ -17,12 +20,14 @@ NUMS = {
     "i8": ("int8_t", "i", 8),
     "i16": ("int16_t", "i", 16),
     "i32": ("int32_t", "i", 32),
-    "i64": ("int64_t", "i", 64),
     "u8": ("uint8_t", "u", 8),
     "u16": ("uint16_t", "u", 16),
     "u32": ("uint32_t", "u", 32),
     "u64": ("uint64_t", "u", 64),
 }
+
+# Other spellings of the same type. `int` is 64-bit signed; `i64` is the same type, not a second one.
+ALIASES = {"i64": "int"}
 
 
 def is_num(t):
@@ -126,6 +131,10 @@ class TypeGen:
             return "void"
         if k in ("error", "none"):
             return "int"
+        if k == "errv":
+            return "tok_error"
+        if k == "ekind":
+            return "int32_t"
         self.need(t)
         return "tok_T_" + mangle(t)
 
@@ -140,8 +149,10 @@ class TypeGen:
 
     def eq(self, t, a, b):
         k = t[0]
-        if k in NUMS or k == "bool":
+        if k in NUMS or k in ("bool", "ekind"):
             return f"({a} == {b})"
+        if k == "errv":
+            return f"tok_error_eq({a}, {b})"
         if k == "str":
             return f"(strcmp({a}, {b}) == 0)"
         if k in ("error", "none", "void", "never"):
@@ -164,6 +175,10 @@ class TypeGen:
             return f"tok_str_f{bits}({code})"
         if k in ("error", "none", "void", "never"):
             return "\"none\""
+        if k == "ekind":
+            return f"tok_kind_name({code})"
+        if k == "errv":
+            return f"tok_error_str({code})"
         self.need(t)
         return f"tok_str_{mangle(t)}({code})"
 
@@ -210,9 +225,9 @@ class TypeGen:
         elif k == "res":
             self._define(t[1], done, order)
             if t[1] == VOID:
-                order.append(f"struct tok_T_{m} {{ const char* err; }};")
+                order.append(f"struct tok_T_{m} {{ const char* err; int32_t kind; }};")
             else:
-                order.append(f"struct tok_T_{m} {{ const char* err; {self.c(t[1])} v; }};")
+                order.append(f"struct tok_T_{m} {{ const char* err; int32_t kind; {self.c(t[1])} v; }};")
         else:
             fields = self.fields_of(t)
             for _, ft in fields:

@@ -1,0 +1,33 @@
+{
+ "id": "sum_args",
+ "prompt": "The arguments are integers. Print their sum. With no arguments print 0.",
+ "tests": [
+  {
+   "args": [
+    "1",
+    "2",
+    "3"
+   ],
+   "stdout": "6\n"
+  },
+  {
+   "args": [],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "-5",
+    "5",
+    "10"
+   ],
+   "stdout": "10\n"
+  },
+  {
+   "args": [
+    "1000000",
+    "2000000"
+   ],
+   "stdout": "3000000\n"
+  }
+ ]
+}

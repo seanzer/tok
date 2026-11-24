@@ -1,0 +1,10 @@
+fn main(args: [str]) ! io
+  old = args[1] or ""
+  new = args[2] or ""
+  var out: [str] = []
+  for i in 3..args.len() - 1
+    if args[i] == old
+      out.push(new)
+    else
+      out.push(args[i])
+  print(out.join(" "))

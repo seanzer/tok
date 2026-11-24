@@ -1,0 +1,49 @@
+{
+ "id": "palindrome_list",
+ "prompt": "Print yes if the list of arguments reads the same forwards and backwards, otherwise print no. An empty list counts as yes.",
+ "tests": [
+  {
+   "args": [
+    "a",
+    "b",
+    "a"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "a",
+    "b"
+   ],
+   "stdout": "no\n"
+  },
+  {
+   "args": [],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "x"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "1",
+    "2",
+    "2",
+    "1"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "1",
+    "2",
+    "3",
+    "1"
+   ],
+   "stdout": "no\n"
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "id": "max_arg",
+ "prompt": "The arguments are integers. Print the largest one. With no arguments print none.",
+ "tests": [
+  {
+   "args": [
+    "3",
+    "9",
+    "2"
+   ],
+   "stdout": "9\n"
+  },
+  {
+   "args": [],
+   "stdout": "none\n"
+  },
+  {
+   "args": [
+    "-4",
+    "-2",
+    "-9"
+   ],
+   "stdout": "-2\n"
+  },
+  {
+   "args": [
+    "5"
+   ],
+   "stdout": "5\n"
+  }
+ ]
+}

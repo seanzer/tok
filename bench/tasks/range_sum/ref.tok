@@ -1,0 +1,7 @@
+fn main(args: [str]) ! io
+  a = (args[1] or "0").to_int() or 0
+  b = (args[2] or "0").to_int() or 0
+  var total = 0
+  for i in min(a, b)..max(a, b)
+    total += i
+  print(total)

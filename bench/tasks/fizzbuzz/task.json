@@ -1,0 +1,24 @@
+{
+ "id": "fizzbuzz",
+ "prompt": "The argument is a positive integer n. For each i from 1 to n print one line: FizzBuzz if i is divisible by 15, Fizz if divisible by 3, Buzz if divisible by 5, otherwise i.",
+ "tests": [
+  {
+   "args": [
+    "5"
+   ],
+   "stdout": "1\n2\nFizz\n4\nBuzz\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "15"
+   ],
+   "stdout": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz\n"
+  }
+ ]
+}

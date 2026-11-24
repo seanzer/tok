@@ -1,0 +1,30 @@
+{
+ "id": "word_count",
+ "prompt": "The single argument is a line of text. Print the number of words in it. Words are separated by one or more spaces.",
+ "tests": [
+  {
+   "args": [
+    "the quick brown fox"
+   ],
+   "stdout": "4\n"
+  },
+  {
+   "args": [
+    ""
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "  two   words  "
+   ],
+   "stdout": "2\n"
+  },
+  {
+   "args": [
+    "one"
+   ],
+   "stdout": "1\n"
+  }
+ ]
+}

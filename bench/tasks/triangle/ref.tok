@@ -1,0 +1,14 @@
+fn kind(a: int, b: int, c: int) -> str
+  if a + b <= c or a + c <= b or b + c <= a
+    return "invalid"
+  if a == b and b == c
+    return "equilateral"
+  if a == b or b == c or a == c
+    return "isosceles"
+  "scalene"
+
+fn main(args: [str]) ! io
+  a = (args[1] or "0").to_int() or 0
+  b = (args[2] or "0").to_int() or 0
+  c = (args[3] or "0").to_int() or 0
+  print(kind(a, b, c))

@@ -1,0 +1,41 @@
+{
+ "id": "power",
+ "prompt": "The two arguments are integers a and b with b >= 0. Print a raised to the power b. The result fits in 64 bits.",
+ "tests": [
+  {
+   "args": [
+    "2",
+    "10"
+   ],
+   "stdout": "1024\n"
+  },
+  {
+   "args": [
+    "5",
+    "0"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "-3",
+    "3"
+   ],
+   "stdout": "-27\n"
+  },
+  {
+   "args": [
+    "7",
+    "1"
+   ],
+   "stdout": "7\n"
+  },
+  {
+   "args": [
+    "2",
+    "62"
+   ],
+   "stdout": "4611686018427387904\n"
+  }
+ ]
+}

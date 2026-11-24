@@ -1,0 +1,38 @@
+{
+ "id": "adult_average",
+ "prompt": "Each argument has the form name:age. Print the average age of the people aged 18 or more, rounded down to a whole number. If there are none, print none.",
+ "tests": [
+  {
+   "args": [
+    "ann:31",
+    "bob:45",
+    "kid:9"
+   ],
+   "stdout": "38\n"
+  },
+  {
+   "args": [
+    "kid:9"
+   ],
+   "stdout": "none\n"
+  },
+  {
+   "args": [],
+   "stdout": "none\n"
+  },
+  {
+   "args": [
+    "a:18",
+    "b:19"
+   ],
+   "stdout": "18\n"
+  },
+  {
+   "args": [
+    "a:17",
+    "b:40"
+   ],
+   "stdout": "40\n"
+  }
+ ]
+}

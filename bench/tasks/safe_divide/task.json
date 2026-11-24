@@ -1,0 +1,43 @@
+{
+ "id": "safe_divide",
+ "prompt": "The two arguments are non-negative integers a and b. Print a divided by b, rounded down. If b is 0, print the line error: division by zero to standard error, print nothing to standard output, and exit with code 1.",
+ "tests": [
+  {
+   "args": [
+    "7",
+    "2"
+   ],
+   "stdout": "3\n"
+  },
+  {
+   "args": [
+    "1",
+    "0"
+   ],
+   "stdout": "",
+   "exit_code": 1
+  },
+  {
+   "args": [
+    "0",
+    "5"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "100",
+    "10"
+   ],
+   "stdout": "10\n"
+  },
+  {
+   "args": [
+    "0",
+    "0"
+   ],
+   "stdout": "",
+   "exit_code": 1
+  }
+ ]
+}

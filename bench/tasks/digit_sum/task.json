@@ -1,0 +1,36 @@
+{
+ "id": "digit_sum",
+ "prompt": "The argument is a non-negative integer. Print the sum of its decimal digits.",
+ "tests": [
+  {
+   "args": [
+    "1234"
+   ],
+   "stdout": "10\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "9"
+   ],
+   "stdout": "9\n"
+  },
+  {
+   "args": [
+    "999999999"
+   ],
+   "stdout": "81\n"
+  },
+  {
+   "args": [
+    "1000000"
+   ],
+   "stdout": "1\n"
+  }
+ ]
+}

@@ -1,0 +1,35 @@
+{
+ "id": "min_max",
+ "prompt": "The arguments are integers and there is at least one. Print the smallest and the largest, separated by a single space.",
+ "tests": [
+  {
+   "args": [
+    "3",
+    "9",
+    "2"
+   ],
+   "stdout": "2 9\n"
+  },
+  {
+   "args": [
+    "5"
+   ],
+   "stdout": "5 5\n"
+  },
+  {
+   "args": [
+    "-1",
+    "-7",
+    "0"
+   ],
+   "stdout": "-7 0\n"
+  },
+  {
+   "args": [
+    "4",
+    "4"
+   ],
+   "stdout": "4 4\n"
+  }
+ ]
+}

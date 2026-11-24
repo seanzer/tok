@@ -1,0 +1,31 @@
+{
+ "id": "reverse_args",
+ "prompt": "Print the arguments in reverse order on one line, separated by single spaces. With no arguments print an empty line.",
+ "tests": [
+  {
+   "args": [
+    "a",
+    "b",
+    "c"
+   ],
+   "stdout": "c b a\n"
+  },
+  {
+   "args": [],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "one"
+   ],
+   "stdout": "one\n"
+  },
+  {
+   "args": [
+    "x",
+    "y"
+   ],
+   "stdout": "y x\n"
+  }
+ ]
+}

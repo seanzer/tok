@@ -14,11 +14,13 @@ Rules:
   - a unary '-' is attached to its operand
   - comments start with '// ' and a trailing comment is two spaces after the code;
     a comment line is indented like the code after it, or like the block it ends
-  - one blank line before each top-level fn/type; never two blank lines in a row;
+  - the type name 'i64' is written 'int' (they are the same type)
+  - one blank line before each top-level fn/type/error; never two blank lines in a row;
     none at the start of the file or of a block
 """
 from .diag import Diag
 from .lexer import KEYWORDS, lex, lex_fragment
+from .types import ALIASES
 
 VALUE_WORDS = {"true", "false", "none"}
 BINARY = {"+", "-", "*", "/", "%", "==", "!=", "<=", ">=", "<", ">", "=", "+=", "-=", "*=", "/=", "%=", "->", "!"}
@@ -67,12 +69,23 @@ def gap(toks, i):
     return " "
 
 
+def spelling(text, toks, i):
+    """The canonical text of a token. `i64` is another name for `int`; the formatter writes `int`."""
+    t = toks[i]
+    if t.kind == "NAME" and t.val in ALIASES:
+        is_field = i > 0 and is_op(toks[i - 1], ".")
+        is_label = i + 1 < len(toks) and is_op(toks[i + 1], ":")
+        if not is_field and not is_label:
+            return ALIASES[t.val]
+    return text[t.col - 1:t.end - 1]
+
+
 def format_code(text, toks):
     out = []
     for i, t in enumerate(toks):
         if i:
             out.append(gap(toks, i))
-        out.append(text[t.col - 1:t.end - 1])
+        out.append(spelling(text, toks, i))
     return "".join(out)
 
 
@@ -118,7 +131,7 @@ def format_source(src):
             return False
         while i < len(rows) and top_comment(rows[i]):
             i += 1
-        return i < len(rows) and rows[i][0] == "code" and rows[i][1] == 0 and rows[i][3] in ("fn", "type")
+        return i < len(rows) and rows[i][0] == "code" and rows[i][1] == 0 and rows[i][3] in ("fn", "type", "error")
 
     out = []
     for i, row in enumerate(rows):

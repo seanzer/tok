@@ -1,0 +1,5 @@
+fn main(args: [str]) ! io
+  var total = 0
+  for field in (args[1] or "").split(",")
+    total += field.trim().to_int() or 0
+  print(total)

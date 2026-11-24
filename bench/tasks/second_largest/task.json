@@ -1,0 +1,41 @@
+{
+ "id": "second_largest",
+ "prompt": "The arguments are integers. Print the second largest distinct value. If there are fewer than two distinct values, print none.",
+ "tests": [
+  {
+   "args": [
+    "3",
+    "9",
+    "2"
+   ],
+   "stdout": "3\n"
+  },
+  {
+   "args": [],
+   "stdout": "none\n"
+  },
+  {
+   "args": [
+    "5",
+    "5"
+   ],
+   "stdout": "none\n"
+  },
+  {
+   "args": [
+    "4",
+    "4",
+    "1"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "-1",
+    "-2",
+    "-3"
+   ],
+   "stdout": "-2\n"
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+fn digit_sum(n: int) -> int
+  if n < 10
+    return n
+  n % 10 + digit_sum(n / 10)
+
+fn main(args: [str]) ! io
+  print(digit_sum((args[1] or "0").to_int() or 0))

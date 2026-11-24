@@ -1,0 +1,36 @@
+{
+ "id": "dedupe",
+ "prompt": "Print the arguments with duplicates removed, keeping the first occurrence of each, on one line separated by single spaces.",
+ "tests": [
+  {
+   "args": [
+    "a",
+    "b",
+    "a",
+    "c",
+    "b"
+   ],
+   "stdout": "a b c\n"
+  },
+  {
+   "args": [],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "x",
+    "x",
+    "x"
+   ],
+   "stdout": "x\n"
+  },
+  {
+   "args": [
+    "1",
+    "2",
+    "3"
+   ],
+   "stdout": "1 2 3\n"
+  }
+ ]
+}

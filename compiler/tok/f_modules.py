@@ -103,10 +103,17 @@ class Modules:
             self.err("E0103", f"mean needs a list of f64 or f32, found {self.type_str(ty)}", n["args"][0])
         e = ty[1]
         ct = NUMS[e[0]][0]
-        self.emit(f"if ({code}.len == 0) tok_panic({self.loc(n)}, \"mean of an empty list\");")
-        acc, i = self.hoist(f"(({ct})0)", e), self.new_tmp()
-        self.emit(f"for (int64_t {i} = 0; {i} < {code}.len; {i}++) {acc} += {code}.data[{i}];")
-        return f"({acc} / ({ct}){code}.len)", e
+        # an empty list has no mean: the result is an optional
+        out_ty = ("opt", e)
+        out = self.hoist(f"(({self.c(out_ty)}){{0}})", out_ty)
+        i = self.new_tmp()
+        self.emit(f"if ({code}.len > 0) {{")
+        self.emit(f"  {ct} {out}_s = 0;")
+        self.emit(f"  for (int64_t {i} = 0; {i} < {code}.len; {i}++) {out}_s += {code}.data[{i}];")
+        self.emit(f"  {out}.has = true;")
+        self.emit(f"  {out}.v = {out}_s / ({ct}){code}.len;")
+        self.emit("}")
+        return out, out_ty
 
     def minmax(self, n, want, op):
         name = n["name"]
@@ -115,15 +122,22 @@ class Modules:
         if len(args) == 1:
             w = self.num_want(want)
             code, ty = self.val(args[0], ("list", w) if w is not None else None)
+            code = self.hoist(code, ty) if ty != ERR else code
             if ty == ERR:
                 return "0", ERR
             if ty[0] != "list" or not is_num(ty[1]):
                 self.err("E0103", f"{name} with 1 argument needs a list of numbers, found {self.type_str(ty)}", args[0])
-            self.emit(f"if ({code}.len == 0) tok_panic({self.loc(n)}, \"{name} of an empty list\");")
-            acc, i = self.hoist(f"{code}.data[0]", ty[1]), self.new_tmp()
-            self.emit(f"for (int64_t {i} = 1; {i} < {code}.len; {i}++) "
-                      f"if ({code}.data[{i}] {op} {acc}) {acc} = {code}.data[{i}];")
-            return acc, ty[1]
+            # an empty list has no smallest or largest element: the result is an optional
+            out_ty = ("opt", ty[1])
+            out = self.hoist(f"(({self.c(out_ty)}){{0}})", out_ty)
+            i = self.new_tmp()
+            self.emit(f"if ({code}.len > 0) {{")
+            self.emit(f"  {out}.has = true;")
+            self.emit(f"  {out}.v = {code}.data[0];")
+            self.emit(f"  for (int64_t {i} = 1; {i} < {code}.len; {i}++) "
+                      f"if ({code}.data[{i}] {op} {out}.v) {out}.v = {code}.data[{i}];")
+            self.emit("}")
+            return out, out_ty
         a, b = args
         if self.is_literal(a) and not self.is_literal(b):
             bc, bt = self.val(b, want)
@@ -155,8 +169,10 @@ class Modules:
         if not is_num(ty) or NUMS[ty[0]][1] == "u":
             self.err("E0103", f"abs needs a signed number, found {self.type_str(ty)}", n["args"][0])
         t = self.hoist(code, ty)
+        if ty == ("int",):
+            return f"({t} < 0 ? tok_neg_int({t}, {self.loc(n)}) : {t})", ty
         if is_int(ty):
-            # like the other integer operations, abs of the smallest value wraps
+            # like the other operations on sized integers, abs of the smallest value wraps
             ct = NUMS[ty[0]][0]
             return f"({t} < 0 ? ({ct})(0 - (uint64_t){t}) : {t})", ty
         return f"({t} < 0 ? -{t} : {t})", ty

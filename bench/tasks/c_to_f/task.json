@@ -1,0 +1,36 @@
+{
+ "id": "c_to_f",
+ "prompt": "The argument is a whole number of degrees Celsius. Print the temperature in Fahrenheit as a whole number, rounded down (for example 37 gives 98, and -5 gives 23). Inputs are chosen so that the exact result is never negative.",
+ "tests": [
+  {
+   "args": [
+    "100"
+   ],
+   "stdout": "212\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "32\n"
+  },
+  {
+   "args": [
+    "37"
+   ],
+   "stdout": "98\n"
+  },
+  {
+   "args": [
+    "-5"
+   ],
+   "stdout": "23\n"
+  },
+  {
+   "args": [
+    "21"
+   ],
+   "stdout": "69\n"
+  }
+ ]
+}

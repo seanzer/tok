@@ -1,0 +1,41 @@
+{
+ "id": "gcd",
+ "prompt": "The two arguments are positive integers. Print their greatest common divisor.",
+ "tests": [
+  {
+   "args": [
+    "12",
+    "18"
+   ],
+   "stdout": "6\n"
+  },
+  {
+   "args": [
+    "7",
+    "13"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "100",
+    "10"
+   ],
+   "stdout": "10\n"
+  },
+  {
+   "args": [
+    "9",
+    "9"
+   ],
+   "stdout": "9\n"
+  },
+  {
+   "args": [
+    "1071",
+    "462"
+   ],
+   "stdout": "21\n"
+  }
+ ]
+}

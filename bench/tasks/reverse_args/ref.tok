@@ -1,0 +1,6 @@
+fn main(args: [str]) ! io
+  var out: [str] = []
+  n = args.len()
+  for i in 1..n - 1
+    out.push(args[n - i])
+  print(out.join(" "))

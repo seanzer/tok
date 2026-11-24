@@ -1,0 +1,36 @@
+{
+ "id": "binary",
+ "prompt": "The argument is a non-negative integer. Print it in binary, with no leading zeros (0 prints as 0).",
+ "tests": [
+  {
+   "args": [
+    "5"
+   ],
+   "stdout": "101\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "255"
+   ],
+   "stdout": "11111111\n"
+  },
+  {
+   "args": [
+    "1024"
+   ],
+   "stdout": "10000000000\n"
+  }
+ ]
+}

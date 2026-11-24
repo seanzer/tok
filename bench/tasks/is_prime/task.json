@@ -1,0 +1,48 @@
+{
+ "id": "is_prime",
+ "prompt": "The argument is a non-negative integer. Print prime if it is a prime number, otherwise print not prime.",
+ "tests": [
+  {
+   "args": [
+    "7"
+   ],
+   "stdout": "prime\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "not prime\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "not prime\n"
+  },
+  {
+   "args": [
+    "2"
+   ],
+   "stdout": "prime\n"
+  },
+  {
+   "args": [
+    "91"
+   ],
+   "stdout": "not prime\n"
+  },
+  {
+   "args": [
+    "7919"
+   ],
+   "stdout": "prime\n"
+  },
+  {
+   "args": [
+    "1000000007"
+   ],
+   "stdout": "prime\n"
+  }
+ ]
+}

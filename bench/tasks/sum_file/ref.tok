@@ -1,0 +1,6 @@
+fn main(args: [str]) ! io, fs
+  text = fs.read_text(args[1] or "") or e -> fail("cannot read file")
+  var total = 0
+  for line in text.lines()
+    total += line.trim().to_int() or 0
+  print(total)

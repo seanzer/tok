@@ -1,0 +1,31 @@
+{
+ "id": "upper_join",
+ "prompt": "Print the arguments in upper case on one line, joined by a hyphen. With no arguments print an empty line.",
+ "tests": [
+  {
+   "args": [
+    "ab",
+    "cd"
+   ],
+   "stdout": "AB-CD\n"
+  },
+  {
+   "args": [],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "x"
+   ],
+   "stdout": "X\n"
+  },
+  {
+   "args": [
+    "Mixed",
+    "Case",
+    "9"
+   ],
+   "stdout": "MIXED-CASE-9\n"
+  }
+ ]
+}

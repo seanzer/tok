@@ -1,0 +1,49 @@
+{
+ "id": "sum_file",
+ "prompt": "The argument is the path of a text file with one item per line. Print the sum of the lines that are integers; skip every other line. If the file cannot be read, print the line error: cannot read file to standard error and exit with code 1.",
+ "tests": [
+  {
+   "args": [
+    "n.txt"
+   ],
+   "stdout": "60\n",
+   "files": {
+    "n.txt": "10\n20\n30\n"
+   }
+  },
+  {
+   "args": [
+    "m.txt"
+   ],
+   "stdout": "5\n",
+   "files": {
+    "m.txt": "2\nabc\n\n3\n1.5\n"
+   }
+  },
+  {
+   "args": [
+    "none.txt"
+   ],
+   "stdout": "",
+   "exit_code": 1
+  },
+  {
+   "args": [
+    "z.txt"
+   ],
+   "stdout": "0\n",
+   "files": {
+    "z.txt": ""
+   }
+  },
+  {
+   "args": [
+    "neg.txt"
+   ],
+   "stdout": "-3\n",
+   "files": {
+    "neg.txt": " -5 \n2\n"
+   }
+  }
+ ]
+}

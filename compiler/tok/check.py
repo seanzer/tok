@@ -14,7 +14,7 @@ import os
 from .diag import Diag, make_fix
 from .lexer import lex
 from .parser import Parser
-from .types import (BOOL, ERR, F64, INT, NEVER, NONE, NUMS, STR, VOID, TypeGen, int_range, is_float, is_int,
+from .types import (ALIASES, BOOL, EKIND, ERR, ERRV, F64, INT, NEVER, NONE, NUMS, STR, VOID, TypeGen, int_range, is_float, is_int,
                     is_num, lossless, mangle)
 from . import runtime
 
@@ -43,10 +43,14 @@ def c_str(s, fmt=False):
     return "".join(out)
 
 
+RESERVED_TYPES = {"bool": ("bool",), "str": ("str",), "Error": ERRV, "ErrorKind": EKIND}
+
+
 class Module:
     def __init__(self, name, idx, path, src):
         self.name, self.idx, self.path, self.src = name, idx, path, src
         self.fns, self.types, self.failed = {}, {}, set()
+        self.errors = {}  # declared error kinds: name -> index in the program's kind table
         self.broken = False  # had lex or parse errors
 
 
@@ -75,6 +79,8 @@ class Core:
         self.builtin_mods = {}
         self.mod = self.cur = None
         self.buf, self.depth, self.scopes, self.tmp = [], 0, [], 0
+        self.sinks = [None]  # where the last expression of a block goes: None = the function result
+        self.kinds = ["Failed", "FsError"]  # every error kind in the program; the first two are built in
         self.setup()
         for t in (("list", STR), ("opt", INT), ("opt", F64), ("res", STR), ("res", VOID)):
             self.types.need(t)
@@ -119,10 +125,20 @@ class Core:
         mod.failed = p.failed_names
         for d in decls:
             d["mod"] = mod
+            if d["k"] == "error":
+                for t in d["names"]:
+                    if t.val in mod.fns or t.val in mod.types or t.val in mod.errors or t.val in self.free_fns \
+                            or t.val in self.kinds[:2] or t.val in RESERVED_TYPES:
+                        self.report(Diag("E0102", f"'{t.val}' is already defined", t.line, t.col, t.end), mod)
+                        continue
+                    mod.errors[t.val] = len(self.kinds)
+                    self.kinds.append(t.val)
+                continue
             t = d["name_tok"]
             table = mod.fns if d["k"] == "fn" else mod.types
-            if d["name"] in mod.fns or d["name"] in mod.types or d["name"] in self.free_fns or \
-                    (d["k"] == "type" and (d["name"] in NUMS or d["name"] in ("bool", "str"))):
+            if d["name"] in mod.fns or d["name"] in mod.types or d["name"] in self.free_fns or d["name"] in mod.errors or \
+                    d["name"] in self.kinds[:2] or \
+                    (d["k"] == "type" and (d["name"] in NUMS or d["name"] in ALIASES or d["name"] in RESERVED_TYPES)):
                 self.report(Diag("E0102", f"'{d['name']}' is already defined", t.line, t.col, t.end), mod)
                 continue
             table[d["name"]] = d
@@ -144,7 +160,7 @@ class Core:
         if k == "rec":
             m = self.modlist[t[1]]
             return t[2] if m is (self.mod or self.entry) else f"{m.name}.{t[2]}"
-        return {"void": "nothing", "never": "nothing", "error": "?"}.get(k, k)
+        return {"void": "nothing", "never": "nothing", "error": "?", "errv": "Error", "ekind": "ErrorKind"}.get(k, k)
 
     def resolve_type(self, tn, mod):
         k = tn["k"]
@@ -160,10 +176,10 @@ class Core:
             mod = self.get_module(tn["mod"], tn)
             if mod is None:
                 return ERR
-        elif name in NUMS:
-            return (name,)
-        elif name in ("bool", "str"):
-            return (name,)
+        elif name in NUMS or name in ALIASES:
+            return (ALIASES.get(name, name),)
+        elif name in RESERVED_TYPES:
+            return RESERVED_TYPES[name]
         if name in mod.types:
             return ("rec", mod.idx, name)
         if name in mod.failed or mod.broken:
@@ -276,6 +292,15 @@ class Core:
             self.err("E0102", f"{what} '{name}' is already defined in this function", n)
         if name in self.mod.fns or name in self.free_fns:
             self.err("E0102", f"'{name}' is a function and cannot be used as a variable name", n)
+        if self.kind_id(name) is not None:
+            self.err("E0102", f"'{name}' is an error kind and cannot be used as a variable name", n)
+
+    def kind_id(self, name, mod=None):
+        """The index of an error kind visible by this bare name, or None."""
+        mod = mod or self.mod
+        if mod is not None and name in mod.errors:
+            return mod.errors[name]
+        return self.kinds.index(name) if name in self.kinds[:2] else None
 
     # ---------------------------------------------------------- expressions
 
@@ -450,6 +475,8 @@ class Core:
                 return "0", ERR
             if is_float(ty):
                 return f"(-{code})", ty
+            if ty == INT:
+                return self.hoist(f"tok_neg_int({code}, {self.loc(n)})", ty), ty
             if is_int(ty) and NUMS[ty[0]][1] == "i":
                 return f"(({NUMS[ty[0]][0]})(0 - (uint64_t)({code})))", ty
             self.err("E0103", f"'-' needs a signed number, found {self.type_str(ty)}", n["e"])
@@ -495,7 +522,9 @@ class Core:
             return "0", ERR
         if lt != BOOL:
             self.err("E0103", f"'{op}' needs bool on both sides, found {self.type_str(lt)}", n["l"])
-        with self.capture(1) as pre:
+        # the right side only runs when the left side was true ('and') or false ('or')
+        proven = self.facts(n["l"])[0 if op == "and" else 1]
+        with self.capture(1) as pre, self.holding(proven, n["r"]):
             rc, rt = self.val(n["r"])
         if rt == ERR:
             return "0", ERR
@@ -556,9 +585,15 @@ class Core:
             if op == "%":
                 self.err("E0103", f"'%' needs integers, found {ty[0]}", n)
             return f"({a} {op} {b})"
+        return self.hoist(self.int_op(op, a, b, ty, n), ty)
+
+    def int_op(self, op, a, b, ty, n):
+        """Integer arithmetic as one C expression. `int` checks for overflow; the sized types wrap."""
         if op in ("/", "%"):
-            return self.hoist(f"tok_{'div' if op == '/' else 'mod'}_{ty[0]}({a}, {b}, {self.loc(n)})", ty)
-        return f"(({ct})((uint64_t)({a}) {op} (uint64_t)({b})))"
+            return f"tok_{'div' if op == '/' else 'mod'}_{ty[0]}({a}, {b}, {self.loc(n)})"
+        if ty == INT:
+            return f"tok_{ {'+': 'add', '-': 'sub', '*': 'mul'}[op] }_int({a}, {b}, {self.loc(n)})"
+        return f"(({NUMS[ty[0]][0]})((uint64_t)({a}) {op} (uint64_t)({b})))"
 
     # calls
 
@@ -692,11 +727,18 @@ class Core:
     def block(self, stmts, tail=False):
         self.scopes.append({})
         self.depth += 1
+        pushed = 0
         for i, s in enumerate(stmts):
             try:
                 self.stmt(s, tail and i == len(stmts) - 1)
             except Diag as d:
                 self.report(d)
+            # `if x == none` + return: x has a value in the statements that follow
+            after = self.facts_after(s)
+            if after:
+                self.holding(after, stmts[i + 1:]).__enter__()
+                pushed += 1
+        del self.narrowed[len(self.narrowed) - pushed:]
         self.depth -= 1
         self.scopes.pop()
 
@@ -794,6 +836,22 @@ class Core:
         self.assign(s["target"], s["op"], s["val"], s)
 
     def s_expr(self, s, is_tail):
+        sink = self.sinks[-1] if is_tail else None
+        if sink is not None:
+            # the last expression of a handler block is the value of the handler
+            var, want = sink
+            code, ty = self.val(s["val"], None if want == VOID else want, never=True)
+            if ty == NEVER or want == VOID:
+                return
+            if ty == VOID:
+                self.err("E0103", f"the handler must end in a value of type {self.type_str(want)}, "
+                                  f"but this call returns nothing", s["val"])
+            code = self.store(code, ty, s["val"], False)
+            code = self.coerce(code, ty, want, s["val"],
+                               f"the handler must end in a value of type {self.type_str(want)}, found {self.type_str(ty)}")
+            if want != ERR and ty != ERR:
+                self.emit(f"{var} = {code};")
+            return
         code, ty = self.val(s["val"], self.sig(self.cur)["ret"] if is_tail else None, never=True)
         if ty == NEVER:
             return
@@ -835,11 +893,14 @@ class Core:
 
     def s_if(self, s, is_tail):
         code = self.cond(s["cond"])
+        when_true, when_false = s["facts"] = self.facts(s["cond"])
         self.emit(f"if ({code}) {{")
-        self.block(s["then"], is_tail)
+        with self.holding(when_true, s["then"]):
+            self.block(s["then"], is_tail)
         if s["other"] is not None:
             self.emit("} else {")
-            self.block(s["other"], is_tail)
+            with self.holding(when_false, s["other"]):
+                self.block(s["other"], is_tail)
         self.emit("}")
 
     def s_for(self, s, is_tail):
@@ -880,7 +941,8 @@ class Core:
                 self.report(d)
                 c = "0"
             self.emit(f"if ({c}) {{")
-            self.block(s["body"])
+            with self.holding(self.facts(s["where"])[0], s["body"]):
+                self.block(s["body"])
             self.emit("}")
             self.depth -= 1
         else:
@@ -912,6 +974,7 @@ class Core:
         self.mod, self.cur = f["mod"], f
         sig = self.sig(f)
         self.buf, self.depth, self.tmp = [], 0, 0
+        self.sinks = [None]
         scope, t = {}, f["name_tok"]
         for (pname, pty), (_, _, ptok) in zip(sig["params"], f["params"]):
             if pname in scope:
@@ -952,18 +1015,29 @@ class Core:
             bodies.extend(f["c_body"])
             bodies.append("}")
             bodies.append("")
-        out = [runtime.PART1, self.runtime_numeric(), self.types.emit(), runtime.PART2, "\n".join(protos), "", "\n".join(bodies)]
+        out = [runtime.PART1, self.runtime_errors(), self.runtime_numeric(), self.types.emit(), runtime.PART2, "\n".join(protos), "", "\n".join(bodies)]
         if main is not None:
             arg = "tok_args(argc, argv)" if takes_args else ""
             out.append(f"int main(int argc, char** argv) {{\n  (void)argc;\n  (void)argv;\n  {main['c']}({arg});\n  return 0;\n}}")
         return "\n".join(out) + "\n"
+
+    def runtime_errors(self):
+        names = ", ".join('"' + c_str(k) + '"' for k in self.kinds)
+        return (f"static const char* const tok_kinds[] = {{ {names} }};\n"
+                "#define TOK_KIND_FS 1\n"
+                "TOK_UNUSED static const char* tok_kind_name(int32_t k) { return tok_kinds[k]; }\n"
+                "TOK_UNUSED static const char* tok_error_str(tok_error e) "
+                "{ return tok_fmt(\"%s: %s\", tok_kinds[e.kind], e.msg); }\n"
+                "TOK_UNUSED static bool tok_error_eq(tok_error a, tok_error b) "
+                "{ return a.kind == b.kind && strcmp(a.msg, b.msg) == 0; }\n")
 
     def runtime_numeric(self):
         out = []
         for name, (ct, kind, _) in NUMS.items():
             if kind == "f":
                 continue
-            for fn, op, neg in (("div", "/", f"({ct})(0 - (uint64_t)a)"), ("mod", "%", f"({ct})0")):
+            for fn, op, neg in (("div", "/", "tok_neg_int(a, loc)" if name == "int" else f"({ct})(0 - (uint64_t)a)"),
+                                ("mod", "%", f"({ct})0")):
                 guard = f" if (b == ({ct})-1) return {neg};" if kind == "i" else ""
                 out.append(f"TOK_UNUSED static {ct} tok_{fn}_{name}({ct} a, {ct} b, const char* loc) "
                            f"{{ if (b == 0) tok_panic(loc, \"division by zero\");{guard} return ({ct})(a {op} b); }}")

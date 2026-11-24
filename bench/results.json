@@ -1,0 +1,187 @@
+{
+ "tasks": 40,
+ "tokenizers": [
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct",
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct",
+  "hf openai-community/gpt2",
+  "tiktoken cl100k_base",
+  "tiktoken o200k_base"
+ ],
+ "unavailable": {},
+ "languages": {
+  "tiktoken o200k_base": {
+   "tok": {
+    "total": 3092,
+    "mean": 77.3,
+    "median": 73.0
+   },
+   "python": {
+    "total": 1552,
+    "mean": 38.8,
+    "median": 37.0
+   }
+  },
+  "tiktoken cl100k_base": {
+   "tok": {
+    "total": 3089,
+    "mean": 77.225,
+    "median": 73.0
+   },
+   "python": {
+    "total": 1544,
+    "mean": 38.6,
+    "median": 37.0
+   }
+  },
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
+   "tok": {
+    "total": 3103,
+    "mean": 77.575,
+    "median": 73.5
+   },
+   "python": {
+    "total": 1555,
+    "mean": 38.875,
+    "median": 37.0
+   }
+  },
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
+   "tok": {
+    "total": 3566,
+    "mean": 89.15,
+    "median": 82.5
+   },
+   "python": {
+    "total": 1990,
+    "mean": 49.75,
+    "median": 47.5
+   }
+  },
+  "hf openai-community/gpt2": {
+   "tok": {
+    "total": 3642,
+    "mean": 91.05,
+    "median": 85.5
+   },
+   "python": {
+    "total": 2153,
+    "mean": 53.825,
+    "median": 48.0
+   }
+  }
+ },
+ "ratio": {
+  "tiktoken o200k_base": {
+   "tok_over_python_total": 1.9922680412371134,
+   "median_per_task": 2.012802275960171,
+   "min_per_task": 0.810126582278481,
+   "max_per_task": 5.1923076923076925,
+   "tasks_where_tok_is_smaller": 1,
+   "tasks_equal": 1
+  },
+  "tiktoken cl100k_base": {
+   "tok_over_python_total": 2.0006476683937824,
+   "median_per_task": 2.0311293436293436,
+   "min_per_task": 0.8311688311688312,
+   "max_per_task": 5.1923076923076925,
+   "tasks_where_tok_is_smaller": 1,
+   "tasks_equal": 0
+  },
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
+   "tok_over_python_total": 1.9954983922829581,
+   "median_per_task": 2.0311293436293436,
+   "min_per_task": 0.8311688311688312,
+   "max_per_task": 5.1923076923076925,
+   "tasks_where_tok_is_smaller": 1,
+   "tasks_equal": 0
+  },
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
+   "tok_over_python_total": 1.791959798994975,
+   "median_per_task": 1.6989830508474575,
+   "min_per_task": 0.7450980392156863,
+   "max_per_task": 4.882352941176471,
+   "tasks_where_tok_is_smaller": 2,
+   "tasks_equal": 0
+  },
+  "hf openai-community/gpt2": {
+   "tok_over_python_total": 1.6915931258708778,
+   "median_per_task": 1.7362466725820762,
+   "min_per_task": 0.5909090909090909,
+   "max_per_task": 5.176470588235294,
+   "tasks_where_tok_is_smaller": 4,
+   "tasks_equal": 0
+  }
+ },
+ "indent": {
+  "tiktoken o200k_base": {
+   "tok_2_space": 3092,
+   "tok_4_space": 3092,
+   "difference": 0,
+   "percent": 0.0
+  },
+  "tiktoken cl100k_base": {
+   "tok_2_space": 3089,
+   "tok_4_space": 3089,
+   "difference": 0,
+   "percent": 0.0
+  },
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
+   "tok_2_space": 3103,
+   "tok_4_space": 3103,
+   "difference": 0,
+   "percent": 0.0
+  },
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
+   "tok_2_space": 3566,
+   "tok_4_space": 3566,
+   "difference": 0,
+   "percent": 0.0
+  },
+  "hf openai-community/gpt2": {
+   "tok_2_space": 3642,
+   "tok_4_space": 4400,
+   "difference": 758,
+   "percent": 20.812740252608457
+  }
+ },
+ "learn": {
+  "tiktoken o200k_base": {
+   "full": 2709,
+   "budget_1500": 1401,
+   "core_only": 1243
+  },
+  "tiktoken cl100k_base": {
+   "full": 2707,
+   "budget_1500": 1400,
+   "core_only": 1242
+  },
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
+   "full": 2754,
+   "budget_1500": 1420,
+   "core_only": 1248
+  },
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
+   "full": 3189,
+   "budget_1500": 1657,
+   "core_only": 1459
+  },
+  "hf openai-community/gpt2": {
+   "full": 3056,
+   "budget_1500": 1526,
+   "core_only": 1351
+  }
+ },
+ "bytes": {
+  "tok": 7948,
+  "python": 4691
+ },
+ "lines": {
+  "tok": 340,
+  "python": 234
+ },
+ "learn_chars": {
+  "full": 8017,
+  "approx_tokens_chars_over_3": 2673
+ },
+ "tok_indent_chars": 758
+}

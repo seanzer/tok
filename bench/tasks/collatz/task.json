@@ -1,0 +1,36 @@
+{
+ "id": "collatz",
+ "prompt": "The argument is a positive integer n. Repeat: if n is even halve it, otherwise replace it with 3n + 1. Print the number of steps needed to reach 1.",
+ "tests": [
+  {
+   "args": [
+    "6"
+   ],
+   "stdout": "8\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "27"
+   ],
+   "stdout": "111\n"
+  },
+  {
+   "args": [
+    "16"
+   ],
+   "stdout": "4\n"
+  },
+  {
+   "args": [
+    "97"
+   ],
+   "stdout": "118\n"
+  }
+ ]
+}

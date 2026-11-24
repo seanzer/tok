@@ -1,0 +1,41 @@
+{
+ "id": "replace_word",
+ "prompt": "The first argument is a word to find and the second is its replacement. Print the remaining arguments on one line separated by single spaces, with every argument that is exactly equal to the first word replaced.",
+ "tests": [
+  {
+   "args": [
+    "cat",
+    "dog",
+    "a",
+    "cat",
+    "sat"
+   ],
+   "stdout": "a dog sat\n"
+  },
+  {
+   "args": [
+    "x",
+    "y"
+   ],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "a",
+    "b",
+    "a",
+    "a"
+   ],
+   "stdout": "b b\n"
+  },
+  {
+   "args": [
+    "cat",
+    "dog",
+    "cats",
+    "concat"
+   ],
+   "stdout": "cats concat\n"
+  }
+ ]
+}

@@ -73,7 +73,7 @@ class Parser:
                     self.failed_names.add(self.toks[start + 1].val)
                 if self.i == start:
                     self.i += 1
-                while not self.at("EOF") and not (self.t.kind == "NAME" and self.t.val in ("fn", "type") and self.t.col == 1):
+                while not self.at("EOF") and not (self.t.kind == "NAME" and self.t.val in ("fn", "type", "error") and self.t.col == 1):
                     self.i += 1
         return decls
 
@@ -82,8 +82,10 @@ class Parser:
             return self.fn_decl()
         if self.at("NAME", "type"):
             return self.type_decl()
+        if self.at("NAME", "error") and self.t.col == 1:
+            return self.error_decl()
         t = self.t
-        raise Diag("E0010", f"expected 'fn' or 'type' at the top level, found {self.found()}", t.line, t.col, max(t.end, t.col + 1))
+        raise Diag("E0010", f"expected 'fn', 'type' or 'error' at the top level, found {self.found()}", t.line, t.col, max(t.end, t.col + 1))
 
     def ident(self, what):
         t = self.expect("NAME", what=what)
@@ -126,6 +128,29 @@ class Parser:
         self.expect("OP", "}", what="'}'")
         self.expect("NEWLINE", what="end of line")
         return node("type", start, name=name.val, name_tok=name, fields=fields)
+
+    def error_decl(self):
+        """error NotFound, Timeout   declares error kinds."""
+        start = self.expect("NAME", "error")
+        names = []
+        while True:
+            names.append(self.ident("an error kind name"))
+            if not self.eat("OP", ","):
+                break
+        self.expect("NEWLINE", what="end of line")
+        return node("error", start, name=names[0].val, name_tok=names[0], names=names)
+
+    def lam(self, first, p):
+        """x -> expr, or a handler block when the line ends at '->'."""
+        if self.at("NEWLINE"):
+            block = self.block()
+            last = self.toks[self.i - 1]
+            # the statement that holds the handler ends where the block ends
+            self.toks.insert(self.i, Tok("NEWLINE", None, last.line, last.col, last.end))
+            return {"k": "lam", "param": p.val, "param_tok": p, "body": None, "block": block,
+                    "line": first.line, "col": first.col, "end": p.end + 3}
+        body = self.expr()
+        return {"k": "lam", "param": p.val, "param_tok": p, "body": body, "line": first.line, "col": first.col, "end": body["end"]}
 
     def fn_decl(self):
         start = self.expect("NAME", "fn", what="'fn'")
@@ -345,8 +370,7 @@ class Parser:
                 self.i += 1
                 p = self.ident("a lambda parameter")
                 self.i += 2
-                body = self.expr()
-                return {"k": "lam", "param": p.val, "param_tok": p, "body": body, "line": t.line, "col": t.col, "end": body["end"]}
+                return self.lam(t, p)
             self.i += 1
             e = self.expr()
             close = self.expect("OP", ")", what="')'")
@@ -374,8 +398,7 @@ class Parser:
             self.i += 1
             if self.at("OP", "->"):
                 self.i += 1
-                body = self.expr()
-                return {"k": "lam", "param": t.val, "param_tok": t, "body": body, "line": t.line, "col": t.col, "end": body["end"]}
+                return self.lam(t, t)
             if self.eat("OP", "("):
                 args, close = self.args()
                 n = node("call", t, name=t.val, args=args)

@@ -1,0 +1,39 @@
+{
+ "id": "count_errors",
+ "prompt": "The argument is the path of a text file. Print the number of lines that contain the text ERROR. If the file cannot be read, print 0.",
+ "tests": [
+  {
+   "args": [
+    "app.log"
+   ],
+   "stdout": "2\n",
+   "files": {
+    "app.log": "INFO start\nERROR disk full\nWARN slow\nERROR timeout\nINFO done\n"
+   }
+  },
+  {
+   "args": [
+    "missing.log"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "e.log"
+   ],
+   "stdout": "0\n",
+   "files": {
+    "e.log": ""
+   }
+  },
+  {
+   "args": [
+    "x.log"
+   ],
+   "stdout": "3\n",
+   "files": {
+    "x.log": "ERROR\nxERRORx\nerror\nERROR ERROR\n"
+   }
+  }
+ ]
+}

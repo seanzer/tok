@@ -1,0 +1,16 @@
+fn is_prime(n: int) -> bool
+  if n < 2
+    return false
+  for d in 2..n - 1
+    if d * d > n
+      return true
+    if n % d == 0
+      return false
+  true
+
+fn main(args: [str]) ! io
+  n = (args[1] or "0").to_int() or 0
+  if is_prime(n)
+    print("prime")
+  else
+    print("not prime")

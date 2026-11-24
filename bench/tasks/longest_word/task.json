@@ -1,0 +1,36 @@
+{
+ "id": "longest_word",
+ "prompt": "Print the longest argument. If several have the same length, print the first of them. There is at least one argument.",
+ "tests": [
+  {
+   "args": [
+    "a",
+    "abc",
+    "ab"
+   ],
+   "stdout": "abc\n"
+  },
+  {
+   "args": [
+    "same",
+    "size",
+    "word"
+   ],
+   "stdout": "same\n"
+  },
+  {
+   "args": [
+    "x"
+   ],
+   "stdout": "x\n"
+  },
+  {
+   "args": [
+    "hi",
+    "hello",
+    "howdy"
+   ],
+   "stdout": "hello\n"
+  }
+ ]
+}

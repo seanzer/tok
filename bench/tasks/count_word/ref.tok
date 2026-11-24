@@ -1,0 +1,7 @@
+fn main(args: [str]) ! io
+  word = args[1] or ""
+  var count = 0
+  for i in 2..args.len() - 1
+    if args[i] == word
+      count += 1
+  print(count)

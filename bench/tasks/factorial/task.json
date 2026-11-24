@@ -1,0 +1,30 @@
+{
+ "id": "factorial",
+ "prompt": "The argument is an integer n from 0 to 20. Print n factorial.",
+ "tests": [
+  {
+   "args": [
+    "5"
+   ],
+   "stdout": "120\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "20"
+   ],
+   "stdout": "2432902008176640000\n"
+  }
+ ]
+}

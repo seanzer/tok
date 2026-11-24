@@ -1,0 +1,37 @@
+{
+ "id": "dot_product",
+ "prompt": "There is an even number of integer arguments. The first half is one vector and the second half is another. Print their dot product.",
+ "tests": [
+  {
+   "args": [
+    "1",
+    "2",
+    "3",
+    "4"
+   ],
+   "stdout": "11\n"
+  },
+  {
+   "args": [],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "2",
+    "5"
+   ],
+   "stdout": "10\n"
+  },
+  {
+   "args": [
+    "1",
+    "0",
+    "-1",
+    "4",
+    "5",
+    "6"
+   ],
+   "stdout": "-2\n"
+  }
+ ]
+}

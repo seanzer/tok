@@ -1,0 +1,54 @@
+{
+ "id": "triangle",
+ "prompt": "The three arguments are positive integers, the side lengths of a possible triangle. Print invalid if they cannot form a triangle (one side is at least the sum of the other two). Otherwise print equilateral, isosceles or scalene.",
+ "tests": [
+  {
+   "args": [
+    "3",
+    "4",
+    "5"
+   ],
+   "stdout": "scalene\n"
+  },
+  {
+   "args": [
+    "2",
+    "2",
+    "2"
+   ],
+   "stdout": "equilateral\n"
+  },
+  {
+   "args": [
+    "2",
+    "2",
+    "3"
+   ],
+   "stdout": "isosceles\n"
+  },
+  {
+   "args": [
+    "1",
+    "2",
+    "3"
+   ],
+   "stdout": "invalid\n"
+  },
+  {
+   "args": [
+    "5",
+    "1",
+    "1"
+   ],
+   "stdout": "invalid\n"
+  },
+  {
+   "args": [
+    "4",
+    "7",
+    "4"
+   ],
+   "stdout": "isosceles\n"
+  }
+ ]
+}

@@ -53,6 +53,8 @@ class Methods:
         lam = n["args"][0]
         if lam["k"] != "lam":
             self.err("E0113", f"'{n['name']}' needs a lambda, for example xs.{n['name']}(x -> ...)", lam)
+        if lam["body"] is None:
+            self.err("E0113", f"'{n['name']}' needs a one-line lambda; a block after '->' is only for 'call() or e ->'", lam)
         pt = lam["param_tok"]
         self.check_new_name(lam["param"], {"line": pt.line, "col": pt.col, "end": pt.end}, "lambda parameter")
         with self.capture(1) as pre:
@@ -156,5 +158,7 @@ class Methods:
             raise Diag("E0109", f"'sum' works on lists of numbers, found {self.type_str(bt)}", n["line"], n["name_col"], n["end"])
         acc = self.hoist(f"(({NUMS[e[0]][0]})0)", e)
         i = self.new_tmp()
-        self.emit(f"for (int64_t {i} = 0; {i} < {bc}.len; {i}++) {acc} = {self.arith('+', acc, f'{bc}.data[{i}]', e, n)};")
+        item = f"{bc}.data[{i}]"
+        step = f"({acc} + {item})" if NUMS[e[0]][1] == "f" else self.int_op("+", acc, item, e, n)
+        self.emit(f"for (int64_t {i} = 0; {i} < {bc}.len; {i}++) {acc} = {step};")
         return acc, e

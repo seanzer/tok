@@ -1,0 +1,36 @@
+{
+ "id": "leap_year",
+ "prompt": "The argument is a year. Print leap if it is a leap year in the Gregorian calendar, otherwise print common.",
+ "tests": [
+  {
+   "args": [
+    "2024"
+   ],
+   "stdout": "leap\n"
+  },
+  {
+   "args": [
+    "1900"
+   ],
+   "stdout": "common\n"
+  },
+  {
+   "args": [
+    "2000"
+   ],
+   "stdout": "leap\n"
+  },
+  {
+   "args": [
+    "2023"
+   ],
+   "stdout": "common\n"
+  },
+  {
+   "args": [
+    "2100"
+   ],
+   "stdout": "common\n"
+  }
+ ]
+}

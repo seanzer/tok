@@ -1,0 +1,36 @@
+{
+ "id": "fibonacci",
+ "prompt": "The argument is an integer n from 0 to 90. Print the n-th Fibonacci number, where F(0) = 0 and F(1) = 1.",
+ "tests": [
+  {
+   "args": [
+    "10"
+   ],
+   "stdout": "55\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "2"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "90"
+   ],
+   "stdout": "2880067194370816120\n"
+  }
+ ]
+}

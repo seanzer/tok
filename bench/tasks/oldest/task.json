@@ -1,0 +1,35 @@
+{
+ "id": "oldest",
+ "prompt": "Each argument has the form name:age, for example ann:31. Print the name of the oldest person. If several share the highest age, print the first of them. There is at least one argument.",
+ "tests": [
+  {
+   "args": [
+    "ann:31",
+    "bob:45",
+    "cy:20"
+   ],
+   "stdout": "bob\n"
+  },
+  {
+   "args": [
+    "solo:1"
+   ],
+   "stdout": "solo\n"
+  },
+  {
+   "args": [
+    "a:30",
+    "b:30"
+   ],
+   "stdout": "a\n"
+  },
+  {
+   "args": [
+    "x:5",
+    "y:7",
+    "z:7"
+   ],
+   "stdout": "y\n"
+  }
+ ]
+}

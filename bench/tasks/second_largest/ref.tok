@@ -1,0 +1,17 @@
+fn nums(args: [str]) -> [int]
+  var out: [int] = []
+  for i in 1..args.len() - 1
+    out.push(args[i].to_int() or 0)
+  out
+
+fn main(args: [str]) ! io
+  xs = nums(args)
+  top = max(xs)
+  if top == none
+    print("none")
+    return
+  second = max(xs.where(x -> x < top))
+  if second
+    print(second)
+  else
+    print("none")

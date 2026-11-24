@@ -1,7 +1,8 @@
-// Design doc Example B: the normalize kernel, as written, plus a main to run it.
+// Design doc Example B: the normalize kernel, plus a main to run it.
+// One deviation from the doc's text: mean of an empty list is `none`, so each mean gets a default.
 fn normalize(xs: [f64]) -> [f64]
-  m = mean(xs)
-  s = sqrt(mean(xs.map(x -> (x - m) * (x - m))))
+  m = mean(xs) or 0.0
+  s = sqrt(mean(xs.map(x -> (x - m) * (x - m))) or 1.0)
   xs.map(x -> (x - m) / s)
 
 fn main() ! io

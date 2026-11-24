@@ -1,0 +1,39 @@
+{
+ "id": "file_stats",
+ "prompt": "The argument is the path of a text file. Print one line of the form 3 lines, 7 words, counting its lines and its words (words are separated by spaces). If the file cannot be read, print 0 lines, 0 words.",
+ "tests": [
+  {
+   "args": [
+    "t.txt"
+   ],
+   "stdout": "3 lines, 7 words\n",
+   "files": {
+    "t.txt": "one two three\nfour  five\nsix seven\n"
+   }
+  },
+  {
+   "args": [
+    "no.txt"
+   ],
+   "stdout": "0 lines, 0 words\n"
+  },
+  {
+   "args": [
+    "e.txt"
+   ],
+   "stdout": "0 lines, 0 words\n",
+   "files": {
+    "e.txt": ""
+   }
+  },
+  {
+   "args": [
+    "b.txt"
+   ],
+   "stdout": "3 lines, 2 words\n",
+   "files": {
+    "b.txt": "a\n\nb\n"
+   }
+  }
+ ]
+}

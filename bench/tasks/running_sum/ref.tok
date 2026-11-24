@@ -1,0 +1,7 @@
+fn main(args: [str]) ! io
+  var total = 0
+  var out: [str] = []
+  for i in 1..args.len() - 1
+    total += args[i].to_int() or 0
+    out.push("{total}")
+  print(out.join(" "))

@@ -1,0 +1,3 @@
+import sys
+
+print(max(sys.argv[1:], key=len))

@@ -3,10 +3,11 @@ from .check import Core
 from .f_lists import Lists
 from .f_methods import Methods
 from .f_modules import Modules
+from .f_narrow import Narrow
 from .f_numeric import Numeric
 from .f_optres import OptRes
 
-MIXINS = [Numeric, Modules, Methods, OptRes, Lists]
+MIXINS = [Narrow, Numeric, Modules, Methods, OptRes, Lists]
 
 
 def make_compiler():

@@ -1,0 +1,38 @@
+{
+ "id": "count_word",
+ "prompt": "The first argument is a word. Print how many of the remaining arguments are exactly equal to it.",
+ "tests": [
+  {
+   "args": [
+    "a",
+    "a",
+    "b",
+    "a"
+   ],
+   "stdout": "2\n"
+  },
+  {
+   "args": [
+    "x"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "cat",
+    "Cat",
+    "cats",
+    "cat"
+   ],
+   "stdout": "1\n"
+  },
+  {
+   "args": [
+    "z",
+    "a",
+    "b"
+   ],
+   "stdout": "0\n"
+  }
+ ]
+}

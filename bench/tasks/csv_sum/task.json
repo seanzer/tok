@@ -1,0 +1,36 @@
+{
+ "id": "csv_sum",
+ "prompt": "The single argument is a comma-separated list of integers such as 3,4,5. Print their sum. Fields that are not integers (including empty fields) count as 0.",
+ "tests": [
+  {
+   "args": [
+    "3,4,5"
+   ],
+   "stdout": "12\n"
+  },
+  {
+   "args": [
+    ""
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "7"
+   ],
+   "stdout": "7\n"
+  },
+  {
+   "args": [
+    "1,,x,2"
+   ],
+   "stdout": "3\n"
+  },
+  {
+   "args": [
+    " 10 , -4 "
+   ],
+   "stdout": "6\n"
+  }
+ ]
+}

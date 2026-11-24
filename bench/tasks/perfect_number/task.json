@@ -1,0 +1,42 @@
+{
+ "id": "perfect_number",
+ "prompt": "The argument is a positive integer. Print perfect if it equals the sum of its proper divisors (the divisors smaller than itself), otherwise print not perfect.",
+ "tests": [
+  {
+   "args": [
+    "6"
+   ],
+   "stdout": "perfect\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdout": "not perfect\n"
+  },
+  {
+   "args": [
+    "28"
+   ],
+   "stdout": "perfect\n"
+  },
+  {
+   "args": [
+    "12"
+   ],
+   "stdout": "not perfect\n"
+  },
+  {
+   "args": [
+    "496"
+   ],
+   "stdout": "perfect\n"
+  },
+  {
+   "args": [
+    "497"
+   ],
+   "stdout": "not perfect\n"
+  }
+ ]
+}

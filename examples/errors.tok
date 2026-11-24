@@ -1,0 +1,23 @@
+// Typed errors: declare kinds, fail with one, branch on which occurred. The syntax is provisional.
+error NotFound, Timeout
+
+type User = { id: int, name: str }
+
+fn load(id: int) -> User ! err
+  if id < 0
+    fail(NotFound, "no user {id}")
+  if id > 100
+    fail(Timeout, "user {id} took too long")
+  User { id: id, name: "user{id}" }
+
+fn name_of(id: int) -> str ! err
+  user = load(id) or e ->
+    if e.kind == NotFound
+      return "anonymous"
+    fail(e)
+  user.name
+
+fn main() ! io
+  print(name_of(7)?)
+  print(name_of(-1)?)
+  print(name_of(500) or e -> "gave up: {e.kind}, {e.msg}")

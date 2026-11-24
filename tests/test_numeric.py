@@ -86,7 +86,7 @@ class SizedNumberTests(TokCase):
                '  print(a + b)\n')
         e = self.check_err(src)
         self.assertEqual(e["code"], "E0106")
-        self.assertEqual(e["fix"]["edits"], [{"line": 4, "col": 9, "insert": "i64("}, {"line": 4, "col": 10, "insert": ")"}])
+        self.assertEqual(e["fix"]["edits"], [{"line": 4, "col": 9, "insert": "int("}, {"line": 4, "col": 10, "insert": ")"}])
         self.assertEqual(self.fix_and_run(src), "12\n")
 
     def test_fixes_for_arguments_bindings_and_right_operands(self):

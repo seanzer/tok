@@ -87,9 +87,24 @@ class MathTests(TokCase):
                '  print("{max([3, 9, 2])} {min(2.5, 1)} {max(1, 2)} {abs(0 - 5)} {abs(-2.5)} {min([4, 1])}")\n')
         self.assertEqual(self.run_src(src), "4.0 1.4142135623730951 5.0 1.5 9.0 2.0\n9 1.0 2 5 2.5 1\n")
 
-    def test_empty_list_panics(self):
-        _, err = self.run_fail('fn main() ! io\n  xs: [f64] = []\n  print(mean(xs))\n', 70)
-        self.assertIn("mean of an empty list (f.tok:3)", err)
+    def test_empty_list_gives_none(self):
+        src = ('fn spread(xs: [int]) -> int\n'
+               '  (max(xs) or 0) - (min(xs) or 0)\n\n'
+               'fn main() ! io\n'
+               '  xs: [f64] = []\n'
+               '  ns: [int] = []\n'
+               '  bs: [u8] = [7, 3]\n'
+               '  print("{mean(xs)} {min(xs)} {max(ns)} {mean(xs) or 0.5} {mean(xs) == none} {max(ns) or -1}")\n'
+               '  print("{mean([1.0, 2.0])} {max(bs)} {min(bs) or 0} {spread(ns)} {spread([4, 9, 1])}")\n'
+               '  m: f64? = mean([2.0, 4.0])\n'
+               '  if m\n'
+               '    print("has a mean")\n')
+        self.assertEqual(self.run_src(src), "none none none 0.5 true -1\n1.5 7 3 0 8\nhas a mean\n")
+
+    def test_mean_of_a_list_is_not_a_plain_number(self):
+        e = self.check_err('fn main() ! io\n  xs = [1.0, 2.0]\n  print(mean(xs) + 1.0)\n')
+        self.assertEqual(e["code"], "E0103")
+        self.assertIn("f64?", e["message"])
 
     def test_errors(self):
         cases = {

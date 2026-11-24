@@ -4,17 +4,17 @@ There are no implicit conversions between numeric types. A conversion is written
 call to the target type, for example f64(n) or u8(x).
 """
 from .diag import make_fix
-from .types import ERR, NUMS, int_range, is_float, is_int, is_num, lossless
+from .types import ALIASES, ERR, NUMS, int_range, is_float, is_int, is_num, lossless
 
 
 class Numeric:
     def setup(self):
         super().setup()
-        for name in NUMS:
+        for name in list(NUMS) + list(ALIASES):
             self.free_fns[name] = self.b_convert
 
     def b_convert(self, n, want):
-        dst = (n["name"],)
+        dst = (ALIASES.get(n["name"], n["name"]),)
         if len(n["args"]) != 1:
             self.err("E0104", f"{dst[0]}(...) converts 1 number, found {len(n['args'])} argument(s)", n)
         arg = n["args"][0]

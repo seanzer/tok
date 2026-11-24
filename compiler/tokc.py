@@ -16,6 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tok.compiler import compile_file  # noqa: E402
 from tok.diag import apply_fix  # noqa: E402
 from tok.fmt import cmd_fmt  # noqa: E402
+from tok.learn import cmd_learn  # noqa: E402
+from tok.serve import cmd_serve  # noqa: E402
 
 
 def cc_build(c_code, out_path, optimize):
@@ -51,10 +53,13 @@ USAGE = """usage:
   tokc fix <file.tok>              apply suggested fixes until the file checks
   tokc fmt <file.tok> [--check]    rewrite the file in the canonical layout (--check: only report)
   tokc emit-c <file.tok>           print the generated C
+  tokc learn [--budget N]          print the language guide for a model (N: about N tokens, characters / 3)
+  tokc serve                       tool server: JSON-RPC over stdio (check, fix, run, format, doc)
 """
 
 COMMANDS = {"run", "build", "check", "fix", "emit-c"}
 EXTRA = {"fmt": cmd_fmt}
+NO_FILE = {"learn": cmd_learn, "serve": cmd_serve}
 
 
 def cmd_fix(path, src):
@@ -83,6 +88,8 @@ def cmd_fix(path, src):
 
 
 def main(argv):
+    if argv and argv[0] in NO_FILE:
+        return NO_FILE[argv[0]](argv[1:])
     if len(argv) < 2 or argv[0] not in COMMANDS | set(EXTRA):
         sys.stderr.write(USAGE)
         return 64

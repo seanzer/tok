@@ -1,0 +1,8 @@
+fn nums(args: [str]) -> [int]
+  var out: [int] = []
+  for i in 1..args.len() - 1
+    out.push(args[i].to_int() or 0)
+  out
+
+fn main(args: [str]) ! io
+  print(nums(args).where(n -> n % 2 == 0).len())
