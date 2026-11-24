@@ -1,0 +1,27 @@
+{
+ "id": "stdin_unique_words",
+ "group": "added",
+ "prompt": "Standard input is text; words are separated by whitespace. Print how many different words it has.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "a b a c\n",
+   "stdout": "3\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": "0\n"
+  },
+  {
+   "args": [],
+   "stdin": "to be or not to be\nto do\n",
+   "stdout": "5\n"
+  },
+  {
+   "args": [],
+   "stdin": "same same\nsame",
+   "stdout": "1\n"
+  }
+ ]
+}

@@ -1,0 +1,5 @@
+fn main(args: [str]) ! io
+  if (args[1] or "").chars().sort() == (args[2] or "").chars().sort()
+    print("yes")
+  else
+    print("no")

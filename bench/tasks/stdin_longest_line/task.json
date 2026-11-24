@@ -1,0 +1,27 @@
+{
+ "id": "stdin_longest_line",
+ "group": "added",
+ "prompt": "Print the longest line of standard input. If several have the same length, print the first of them. With no input print an empty line.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "ab\nabcd\nxyz\n",
+   "stdout": "abcd\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": "\n"
+  },
+  {
+   "args": [],
+   "stdin": "aa\nbb\nc\n",
+   "stdout": "aa\n"
+  },
+  {
+   "args": [],
+   "stdin": "short\nthe longest one\nmid size",
+   "stdout": "the longest one\n"
+  }
+ ]
+}

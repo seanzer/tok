@@ -1,0 +1,36 @@
+{
+ "id": "common_prefix",
+ "group": "added",
+ "prompt": "The arguments are words and there is at least one. Print the longest text that every one of them starts with (an empty line if there is none).",
+ "tests": [
+  {
+   "args": [
+    "interview",
+    "internet",
+    "interval"
+   ],
+   "stdout": "inter\n"
+  },
+  {
+   "args": [
+    "abc",
+    "xyz"
+   ],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "solo"
+   ],
+   "stdout": "solo\n"
+  },
+  {
+   "args": [
+    "ab",
+    "abc",
+    "abd"
+   ],
+   "stdout": "ab\n"
+  }
+ ]
+}

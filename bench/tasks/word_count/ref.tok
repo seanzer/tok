@@ -1,3 +1,2 @@
 fn main(args: [str]) ! io
-  text = args[1] or ""
-  print(text.split(" ").where(w -> w != "").len())
+  print((args[1] or "").words().len())

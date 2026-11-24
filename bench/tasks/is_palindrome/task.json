@@ -1,0 +1,37 @@
+{
+ "id": "is_palindrome",
+ "group": "added",
+ "prompt": "The argument is a word. Print yes if it reads the same forwards and backwards, ignoring upper and lower case, otherwise print no.",
+ "tests": [
+  {
+   "args": [
+    "Level"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "hello"
+   ],
+   "stdout": "no\n"
+  },
+  {
+   "args": [
+    "a"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "ab"
+   ],
+   "stdout": "no\n"
+  },
+  {
+   "args": [
+    "abBA"
+   ],
+   "stdout": "yes\n"
+  }
+ ]
+}

@@ -1,0 +1,27 @@
+{
+ "id": "stdin_average",
+ "group": "added",
+ "prompt": "Standard input has numbers separated by whitespace. Print their average with exactly 2 digits after the decimal point. With no numbers print none.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "1 2 4\n",
+   "stdout": "2.33\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": "none\n"
+  },
+  {
+   "args": [],
+   "stdin": "2.5\n3.5\n",
+   "stdout": "3.00\n"
+  },
+  {
+   "args": [],
+   "stdin": "-1 0 0 0",
+   "stdout": "-0.25\n"
+  }
+ ]
+}

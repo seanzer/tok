@@ -1,0 +1,653 @@
+{
+ "bytes": {
+  "python": 4691,
+  "tok": 7948
+ },
+ "lines": {
+  "python": 234,
+  "tok": 340
+ },
+ "revision": "144c8d94e6c9",
+ "tasks": {
+  "adult_average": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 56,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 69,
+    "hf openai-community/gpt2": 64,
+    "tiktoken cl100k_base": 55,
+    "tiktoken o200k_base": 53
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 101,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 105,
+    "hf openai-community/gpt2": 116,
+    "tiktoken cl100k_base": 100,
+    "tiktoken o200k_base": 100
+   }
+  },
+  "binary": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 14,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 22,
+    "hf openai-community/gpt2": 23,
+    "tiktoken cl100k_base": 14,
+    "tiktoken o200k_base": 14
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 64,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 75,
+    "hf openai-community/gpt2": 71,
+    "tiktoken cl100k_base": 64,
+    "tiktoken o200k_base": 64
+   }
+  },
+  "c_to_f": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 27,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 32,
+    "hf openai-community/gpt2": 28,
+    "tiktoken cl100k_base": 25,
+    "tiktoken o200k_base": 25
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 46,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 48,
+    "hf openai-community/gpt2": 43,
+    "tiktoken cl100k_base": 44,
+    "tiktoken o200k_base": 44
+   }
+  },
+  "collatz": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 55,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 59,
+    "hf openai-community/gpt2": 59,
+    "tiktoken cl100k_base": 55,
+    "tiktoken o200k_base": 56
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 94,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 99,
+    "hf openai-community/gpt2": 98,
+    "tiktoken cl100k_base": 94,
+    "tiktoken o200k_base": 95
+   }
+  },
+  "count_errors": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 40,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 52,
+    "hf openai-community/gpt2": 63,
+    "tiktoken cl100k_base": 40,
+    "tiktoken o200k_base": 41
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 41,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 54,
+    "hf openai-community/gpt2": 54,
+    "tiktoken cl100k_base": 41,
+    "tiktoken o200k_base": 41
+   }
+  },
+  "count_evens": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 26,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 31,
+    "hf openai-community/gpt2": 30,
+    "tiktoken cl100k_base": 26,
+    "tiktoken o200k_base": 26
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 78,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 96,
+    "hf openai-community/gpt2": 92,
+    "tiktoken cl100k_base": 78,
+    "tiktoken o200k_base": 78
+   }
+  },
+  "count_word": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 15,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 24,
+    "hf openai-community/gpt2": 25,
+    "tiktoken cl100k_base": 15,
+    "tiktoken o200k_base": 15
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 58,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 62,
+    "hf openai-community/gpt2": 66,
+    "tiktoken cl100k_base": 58,
+    "tiktoken o200k_base": 58
+   }
+  },
+  "csv_sum": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 39,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 51,
+    "hf openai-community/gpt2": 67,
+    "tiktoken cl100k_base": 39,
+    "tiktoken o200k_base": 40
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 47,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 55,
+    "hf openai-community/gpt2": 57,
+    "tiktoken cl100k_base": 47,
+    "tiktoken o200k_base": 48
+   }
+  },
+  "dedupe": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 33,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 44,
+    "hf openai-community/gpt2": 52,
+    "tiktoken cl100k_base": 33,
+    "tiktoken o200k_base": 34
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 54,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 68,
+    "hf openai-community/gpt2": 73,
+    "tiktoken cl100k_base": 54,
+    "tiktoken o200k_base": 54
+   }
+  },
+  "digit_sum": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 16,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 23,
+    "hf openai-community/gpt2": 24,
+    "tiktoken cl100k_base": 16,
+    "tiktoken o200k_base": 16
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 68,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 79,
+    "hf openai-community/gpt2": 73,
+    "tiktoken cl100k_base": 65,
+    "tiktoken o200k_base": 65
+   }
+  },
+  "dot_product": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 47,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 61,
+    "hf openai-community/gpt2": 61,
+    "tiktoken cl100k_base": 47,
+    "tiktoken o200k_base": 47
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 112,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 136,
+    "hf openai-community/gpt2": 133,
+    "tiktoken cl100k_base": 112,
+    "tiktoken o200k_base": 112
+   }
+  },
+  "factorial": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 33,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 39,
+    "hf openai-community/gpt2": 41,
+    "tiktoken cl100k_base": 33,
+    "tiktoken o200k_base": 33
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 54,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 58,
+    "hf openai-community/gpt2": 58,
+    "tiktoken cl100k_base": 54,
+    "tiktoken o200k_base": 54
+   }
+  },
+  "fibonacci": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 37,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 45,
+    "hf openai-community/gpt2": 46,
+    "tiktoken cl100k_base": 37,
+    "tiktoken o200k_base": 37
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 73,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 75,
+    "hf openai-community/gpt2": 79,
+    "tiktoken cl100k_base": 73,
+    "tiktoken o200k_base": 73
+   }
+  },
+  "file_stats": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 65,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 89,
+    "hf openai-community/gpt2": 100,
+    "tiktoken cl100k_base": 65,
+    "tiktoken o200k_base": 66
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 70,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 87,
+    "hf openai-community/gpt2": 87,
+    "tiktoken cl100k_base": 70,
+    "tiktoken o200k_base": 70
+   }
+  },
+  "fizzbuzz": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 74,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 88,
+    "hf openai-community/gpt2": 116,
+    "tiktoken cl100k_base": 73,
+    "tiktoken o200k_base": 73
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 94,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 102,
+    "hf openai-community/gpt2": 118,
+    "tiktoken cl100k_base": 93,
+    "tiktoken o200k_base": 93
+   }
+  },
+  "gcd": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 36,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 48,
+    "hf openai-community/gpt2": 49,
+    "tiktoken cl100k_base": 36,
+    "tiktoken o200k_base": 36
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 88,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 100,
+    "hf openai-community/gpt2": 99,
+    "tiktoken cl100k_base": 88,
+    "tiktoken o200k_base": 88
+   }
+  },
+  "is_prime": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 74,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 86,
+    "hf openai-community/gpt2": 121,
+    "tiktoken cl100k_base": 74,
+    "tiktoken o200k_base": 74
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 110,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 119,
+    "hf openai-community/gpt2": 133,
+    "tiktoken cl100k_base": 110,
+    "tiktoken o200k_base": 110
+   }
+  },
+  "leap_year": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 50,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 54,
+    "hf openai-community/gpt2": 46,
+    "tiktoken cl100k_base": 46,
+    "tiktoken o200k_base": 46
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 74,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 77,
+    "hf openai-community/gpt2": 72,
+    "tiktoken cl100k_base": 70,
+    "tiktoken o200k_base": 70
+   }
+  },
+  "longest_word": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 13,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 21,
+    "hf openai-community/gpt2": 21,
+    "tiktoken cl100k_base": 13,
+    "tiktoken o200k_base": 13
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 55,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 65,
+    "hf openai-community/gpt2": 69,
+    "tiktoken cl100k_base": 55,
+    "tiktoken o200k_base": 55
+   }
+  },
+  "make_change": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 51,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 66,
+    "hf openai-community/gpt2": 65,
+    "tiktoken cl100k_base": 49,
+    "tiktoken o200k_base": 49
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 77,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 90,
+    "hf openai-community/gpt2": 88,
+    "tiktoken cl100k_base": 75,
+    "tiktoken o200k_base": 75
+   }
+  },
+  "max_arg": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 28,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 39,
+    "hf openai-community/gpt2": 39,
+    "tiktoken cl100k_base": 28,
+    "tiktoken o200k_base": 28
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 83,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 103,
+    "hf openai-community/gpt2": 105,
+    "tiktoken cl100k_base": 83,
+    "tiktoken o200k_base": 83
+   }
+  },
+  "min_max": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 25,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 37,
+    "hf openai-community/gpt2": 37,
+    "tiktoken cl100k_base": 25,
+    "tiktoken o200k_base": 25
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 84,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 106,
+    "hf openai-community/gpt2": 102,
+    "tiktoken cl100k_base": 84,
+    "tiktoken o200k_base": 84
+   }
+  },
+  "oldest": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 56,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 76,
+    "hf openai-community/gpt2": 86,
+    "tiktoken cl100k_base": 56,
+    "tiktoken o200k_base": 57
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 117,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 140,
+    "hf openai-community/gpt2": 145,
+    "tiktoken cl100k_base": 117,
+    "tiktoken o200k_base": 117
+   }
+  },
+  "palindrome_list": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 25,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 32,
+    "hf openai-community/gpt2": 32,
+    "tiktoken cl100k_base": 25,
+    "tiktoken o200k_base": 25
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 71,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 78,
+    "hf openai-community/gpt2": 85,
+    "tiktoken cl100k_base": 71,
+    "tiktoken o200k_base": 71
+   }
+  },
+  "perfect_number": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 50,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 56,
+    "hf openai-community/gpt2": 56,
+    "tiktoken cl100k_base": 50,
+    "tiktoken o200k_base": 50
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 85,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 86,
+    "hf openai-community/gpt2": 89,
+    "tiktoken cl100k_base": 85,
+    "tiktoken o200k_base": 85
+   }
+  },
+  "power": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 17,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 26,
+    "hf openai-community/gpt2": 27,
+    "tiktoken cl100k_base": 17,
+    "tiktoken o200k_base": 17
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 73,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 78,
+    "hf openai-community/gpt2": 77,
+    "tiktoken cl100k_base": 73,
+    "tiktoken o200k_base": 73
+   }
+  },
+  "primes_upto": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 65,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 81,
+    "hf openai-community/gpt2": 88,
+    "tiktoken cl100k_base": 65,
+    "tiktoken o200k_base": 65
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 113,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 130,
+    "hf openai-community/gpt2": 139,
+    "tiktoken cl100k_base": 113,
+    "tiktoken o200k_base": 113
+   }
+  },
+  "range_sum": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 36,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 50,
+    "hf openai-community/gpt2": 49,
+    "tiktoken cl100k_base": 36,
+    "tiktoken o200k_base": 36
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 78,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 86,
+    "hf openai-community/gpt2": 86,
+    "tiktoken cl100k_base": 78,
+    "tiktoken o200k_base": 78
+   }
+  },
+  "replace_word": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 37,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 47,
+    "hf openai-community/gpt2": 47,
+    "tiktoken cl100k_base": 37,
+    "tiktoken o200k_base": 37
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 79,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 96,
+    "hf openai-community/gpt2": 106,
+    "tiktoken cl100k_base": 79,
+    "tiktoken o200k_base": 79
+   }
+  },
+  "reverse_args": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 15,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 22,
+    "hf openai-community/gpt2": 22,
+    "tiktoken cl100k_base": 15,
+    "tiktoken o200k_base": 15
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 51,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 63,
+    "hf openai-community/gpt2": 63,
+    "tiktoken cl100k_base": 51,
+    "tiktoken o200k_base": 51
+   }
+  },
+  "running_sum": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 37,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 50,
+    "hf openai-community/gpt2": 54,
+    "tiktoken cl100k_base": 37,
+    "tiktoken o200k_base": 38
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 65,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 77,
+    "hf openai-community/gpt2": 78,
+    "tiktoken cl100k_base": 65,
+    "tiktoken o200k_base": 65
+   }
+  },
+  "safe_divide": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 49,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 66,
+    "hf openai-community/gpt2": 70,
+    "tiktoken cl100k_base": 49,
+    "tiktoken o200k_base": 49
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 91,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 100,
+    "hf openai-community/gpt2": 99,
+    "tiktoken cl100k_base": 91,
+    "tiktoken o200k_base": 91
+   }
+  },
+  "second_largest": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 37,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 47,
+    "hf openai-community/gpt2": 48,
+    "tiktoken cl100k_base": 37,
+    "tiktoken o200k_base": 37
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 114,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 142,
+    "hf openai-community/gpt2": 147,
+    "tiktoken cl100k_base": 114,
+    "tiktoken o200k_base": 114
+   }
+  },
+  "sort_ints": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 26,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 34,
+    "hf openai-community/gpt2": 34,
+    "tiktoken cl100k_base": 26,
+    "tiktoken o200k_base": 26
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 135,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 166,
+    "hf openai-community/gpt2": 176,
+    "tiktoken cl100k_base": 135,
+    "tiktoken o200k_base": 135
+   }
+  },
+  "sum_args": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 17,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 24,
+    "hf openai-community/gpt2": 24,
+    "tiktoken cl100k_base": 17,
+    "tiktoken o200k_base": 17
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 48,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 53,
+    "hf openai-community/gpt2": 52,
+    "tiktoken cl100k_base": 48,
+    "tiktoken o200k_base": 48
+   }
+  },
+  "sum_file": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 77,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 102,
+    "hf openai-community/gpt2": 132,
+    "tiktoken cl100k_base": 77,
+    "tiktoken o200k_base": 79
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 64,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 76,
+    "hf openai-community/gpt2": 78,
+    "tiktoken cl100k_base": 64,
+    "tiktoken o200k_base": 64
+   }
+  },
+  "times_table": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 38,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 48,
+    "hf openai-community/gpt2": 48,
+    "tiktoken cl100k_base": 37,
+    "tiktoken o200k_base": 37
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 54,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 59,
+    "hf openai-community/gpt2": 58,
+    "tiktoken cl100k_base": 53,
+    "tiktoken o200k_base": 53
+   }
+  },
+  "triangle": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 88,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 105,
+    "hf openai-community/gpt2": 114,
+    "tiktoken cl100k_base": 88,
+    "tiktoken o200k_base": 89
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 160,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 176,
+    "hf openai-community/gpt2": 179,
+    "tiktoken cl100k_base": 160,
+    "tiktoken o200k_base": 161
+   }
+  },
+  "upper_join": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 19,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 26,
+    "hf openai-community/gpt2": 26,
+    "tiktoken cl100k_base": 19,
+    "tiktoken o200k_base": 19
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 47,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 58,
+    "hf openai-community/gpt2": 58,
+    "tiktoken cl100k_base": 47,
+    "tiktoken o200k_base": 47
+   }
+  },
+  "word_count": {
+   "python": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 12,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 18,
+    "hf openai-community/gpt2": 19,
+    "tiktoken cl100k_base": 12,
+    "tiktoken o200k_base": 12
+   },
+   "tok": {
+    "hf Qwen/Qwen2.5-Coder-7B-Instruct": 33,
+    "hf deepseek-ai/deepseek-coder-6.7b-instruct": 43,
+    "hf openai-community/gpt2": 41,
+    "tiktoken cl100k_base": 33,
+    "tiktoken o200k_base": 33
+   }
+  }
+ }
+}

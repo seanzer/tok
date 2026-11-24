@@ -1,10 +1,6 @@
 fn main(args: [str]) ! io
-  n = args.len() - 1
-  var same = true
-  for i in 1..n
-    if args[i] != args[n + 1 - i]
-      same = false
-  if same
+  words = args.drop(1)
+  if words == words.reverse()
     print("yes")
   else
     print("no")

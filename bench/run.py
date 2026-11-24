@@ -26,6 +26,7 @@ def main(argv):
     ap.add_argument("--lang", required=True, choices=sorted(harness.LANGS))
     ap.add_argument("--model")
     ap.add_argument("--tasks", help="comma-separated task ids")
+    ap.add_argument("--group", choices=["original", "added"], help="only the 40 original tasks, or only the added ones")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--cap", type=int, default=3, help="attempts per task")
     ap.add_argument("--budget", type=int, help="trim the Tok guide (tokc learn --budget)")
@@ -35,7 +36,7 @@ def main(argv):
     ap.add_argument("--out")
     a = ap.parse_args(argv)
 
-    tasks = harness.load_tasks(set(a.tasks.split(",")) if a.tasks else None)
+    tasks = harness.load_tasks(set(a.tasks.split(",")) if a.tasks else None, group=a.group)
     if a.limit:
         tasks = tasks[:a.limit]
     if not tasks:

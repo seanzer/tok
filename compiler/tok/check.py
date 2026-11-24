@@ -82,7 +82,7 @@ class Core:
         self.sinks = [None]  # where the last expression of a block goes: None = the function result
         self.kinds = ["Failed", "FsError"]  # every error kind in the program; the first two are built in
         self.setup()
-        for t in (("list", STR), ("opt", INT), ("opt", F64), ("res", STR), ("res", VOID)):
+        for t in (("list", STR), ("list", INT), ("opt", INT), ("opt", F64), ("opt", STR), ("res", STR), ("res", VOID)):
             self.types.need(t)
         self.entry = self.add_module("", entry_path, src)
 
@@ -491,7 +491,7 @@ class Core:
         op = n["op"]
         if op in ("and", "or"):
             return self.logic(n, want)
-        arith = op in ("+", "-", "*", "/", "%")
+        arith = op in ("+", "-", "*", "/", "%", "**")
         l, r = n["l"], n["r"]
         if self.is_literal(l) and not self.is_literal(r):
             rc, rt = self.val(r, want if arith else None)
@@ -569,7 +569,7 @@ class Core:
                 if op in ("<", "<=", ">", ">="):
                     return f"({lc} {op} {rc})", BOOL
                 return self.arith(op, lc, rc, lt, n), lt
-            what = "numbers" if op in ("-", "*", "/", "%") else "numbers or strings"
+            what = "numbers" if op in ("-", "*", "/", "%", "**") else "numbers or strings"
             self.err("E0103", f"'{op}' needs {what}, found {self.type_str(lt)}", n)
         if is_num(lt) and is_num(rt):
             self.err("E0106", f"'{op}' needs the same type on both sides, found {self.type_str(lt)} and {self.type_str(rt)}",
@@ -581,11 +581,26 @@ class Core:
 
     def arith(self, op, a, b, ty, n):
         ct, kind, _ = NUMS[ty[0]]
+        if op == "**":
+            return self.power(a, b, ty, n)
         if kind == "f":
             if op == "%":
                 self.err("E0103", f"'%' needs integers, found {ty[0]}", n)
             return f"({a} {op} {b})"
         return self.hoist(self.int_op(op, a, b, ty, n), ty)
+
+    def power(self, a, b, ty, n):
+        """a ** b. `int` stops the program on overflow or a negative exponent; sized integers wrap."""
+        ct, kind, _ = NUMS[ty[0]]
+        if kind == "f":
+            return f"pow({a}, {b})" if ty == F64 else f"powf({a}, {b})"
+        if ty == INT:
+            return self.hoist(f"tok_pow_int({a}, {b}, {self.loc(n)})", ty)
+        e = self.hoist(b, ty)
+        if kind == "i":
+            self.emit(f"if ({e} < 0) tok_panic({self.loc(n)}, \"negative exponent %lld: an integer power needs an "
+                      f"exponent of 0 or more\", (long long){e});")
+        return self.hoist(f"(({ct})tok_pow_wrap((uint64_t)({a}), (uint64_t){e}))", ty)
 
     def int_op(self, op, a, b, ty, n):
         """Integer arithmetic as one C expression. `int` checks for overflow; the sized types wrap."""
@@ -664,6 +679,8 @@ class Core:
                     self.expr(a)
             return "0", ERR
         h = self.methods.get((bt[0], n["name"]))
+        if h is None and bt[0] == "opt" and (bt[1][0], n["name"]) in self.methods:
+            return self.opt_call(n, bc, bt, want)
         if h is None:
             known = sorted(m for k, m in self.methods if k == bt[0])
             hint = f" (methods on {self.type_str(bt)}: {', '.join(known)})" if known else ""

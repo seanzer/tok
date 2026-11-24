@@ -1,0 +1,6 @@
+fn main(args: [str]) ! io
+  s = (args[1] or "").lower()
+  if s == s.reverse()
+    print("yes")
+  else
+    print("no")

@@ -23,11 +23,12 @@ from tok import docs, learn, tools  # noqa: E402
 
 TASK_DIR = os.path.join(HERE, "tasks")
 LANGS = {"tok": "ref.tok", "python": "ref.py"}
-IO_RULES = ("The program gets its input as command-line arguments. It must print exactly what is asked to standard "
-            "output, each line ending in a newline, and nothing else.")
+IO_RULES = ("The program gets its input as command-line arguments or on standard input, as the task says. It must print "
+            "exactly what is asked to standard output, each line ending in a newline, and nothing else.")
 
 
-def load_tasks(only=None, task_dir=TASK_DIR):
+def load_tasks(only=None, task_dir=TASK_DIR, group=None):
+    """Tasks in name order. A task's `group` is "original" (the first 40) or "added" (stdin and string tasks)."""
     out = []
     for name in sorted(os.listdir(task_dir)):
         path = os.path.join(task_dir, name, "task.json")
@@ -35,7 +36,9 @@ def load_tasks(only=None, task_dir=TASK_DIR):
             with open(path) as fh:
                 t = json.load(fh)
             t["dir"] = os.path.join(task_dir, name)
-            out.append(t)
+            t.setdefault("group", "original")
+            if group is None or t["group"] == group:
+                out.append(t)
     return out
 
 
@@ -56,7 +59,10 @@ def system_prompt(lang, budget=None):
 def task_prompt(task):
     ex = task["tests"][0]
     shown = " ".join(json.dumps(a) for a in ex["args"]) or "(no arguments)"
-    return (f"{task['prompt']}\n\nExample: with the arguments {shown} the program prints:\n"
+    given = f"with the arguments {shown}"
+    if "stdin" in ex:
+        given = f"with the standard input {json.dumps(ex['stdin'])}" + (f" and the arguments {shown}" if ex["args"] else "")
+    return (f"{task['prompt']}\n\nExample: {given} the program prints:\n"
             f"{ex['stdout'] if ex['stdout'] else '(nothing)'}")
 
 
@@ -67,7 +73,7 @@ def extract_code(reply):
     return code if code.endswith("\n") else code + "\n"
 
 
-def run_python(src, args, files, timeout):
+def run_python(src, args, files, timeout, stdin=""):
     with tempfile.TemporaryDirectory(prefix="pyrun") as d:
         for name, text in (files or {}).items():
             with open(os.path.join(d, name), "w") as fh:
@@ -76,7 +82,7 @@ def run_python(src, args, files, timeout):
             fh.write(src)
         try:
             r = subprocess.run([sys.executable, "main.py"] + list(args), cwd=d, capture_output=True, text=True,
-                               errors="replace", timeout=timeout, stdin=subprocess.DEVNULL)
+                               errors="replace", timeout=timeout, input=stdin or "")
         except subprocess.TimeoutExpired:
             return {"ok": False, "stage": "run", "timed_out": True}
         return {"ok": r.returncode == 0, "stage": "run", "exit_code": r.returncode, "stdout": r.stdout, "stderr": r.stderr}
@@ -92,14 +98,14 @@ def evaluate(lang, src, task, timeout=10.0):
     failure = None
     for i, t in enumerate(task["tests"]):
         if lang == "tok":
-            r = tools.run(src, t["args"], t.get("files"), timeout)
+            r = tools.run(src, t["args"], t.get("files"), timeout, stdin=t.get("stdin", ""))
         else:
-            r = run_python(src, t["args"], t.get("files"), timeout)
+            r = run_python(src, t["args"], t.get("files"), timeout, t.get("stdin", ""))
         want_code = t.get("exit_code", 0)
         if r.get("stdout") == t["stdout"] and r.get("exit_code") == want_code:
             passed += 1
         elif failure is None:
-            failure = {"test": i, "args": t["args"], "files": sorted(t.get("files", {})), "stdout": r.get("stdout", ""),
+            failure = {"test": i, "args": t["args"], "stdin": t.get("stdin"), "files": sorted(t.get("files", {})), "stdout": r.get("stdout", ""),
                        "stderr": (r.get("stderr") or "")[-1500:], "exit_code": r.get("exit_code"),
                        "timed_out": bool(r.get("timed_out")), "expected_exit_code": want_code,
                        "expected_stdout": t["stdout"], "stage": r.get("stage")}
@@ -122,6 +128,8 @@ def feedback(lang, result, show_expected=False):
                 "\nFix every error and reply with the complete corrected program in a single fenced code block.")
     f = result["failure"]
     shown = {"args": f["args"], "stdout": f["stdout"], "stderr": f["stderr"], "exit_code": f["exit_code"]}
+    if f["stdin"] is not None:
+        shown["stdin"] = f["stdin"]
     if f["files"]:
         shown["files_present"] = f["files"]
     if f["timed_out"]:

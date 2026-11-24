@@ -283,7 +283,16 @@ class Parser:
         if self.eat("OP", "-"):
             e = self.unary()
             return {"k": "un", "op": "-", "e": e, "line": t.line, "col": t.col, "end": e["end"]}
-        return self.postfix()
+        return self.power()
+
+    def power(self):
+        """a ** b binds tighter than a unary minus on its left and groups to the right, as in Python:
+        -2 ** 2 is -(2 ** 2), 2 ** 3 ** 2 is 2 ** (3 ** 2), and 2.0 ** -1.0 is allowed."""
+        base = self.postfix()
+        if self.eat("OP", "**"):
+            exp = self.unary()
+            return {"k": "bin", "op": "**", "l": base, "r": exp, "line": base["line"], "col": base["col"], "end": exp["end"]}
+        return base
 
     def args(self):
         out = []

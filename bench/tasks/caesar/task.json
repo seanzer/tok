@@ -1,0 +1,35 @@
+{
+ "id": "caesar",
+ "group": "added",
+ "prompt": "The first argument is text made of lower-case letters and spaces. The second is a shift from 0 to 25. Print the text with every letter moved that many places forward in the alphabet, wrapping from z to a; spaces stay.",
+ "tests": [
+  {
+   "args": [
+    "hello world",
+    "3"
+   ],
+   "stdout": "khoor zruog\n"
+  },
+  {
+   "args": [
+    "abc",
+    "0"
+   ],
+   "stdout": "abc\n"
+  },
+  {
+   "args": [
+    "z",
+    "1"
+   ],
+   "stdout": "a\n"
+  },
+  {
+   "args": [
+    "xyza bc",
+    "25"
+   ],
+   "stdout": "wxyz ab\n"
+  }
+ ]
+}

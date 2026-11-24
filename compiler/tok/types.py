@@ -64,6 +64,15 @@ def lossless(src, dst):
     return dk == "i" and db >= sb
 
 
+def comparable(t):
+    """Types with an order: numbers and strings. These can be sorted and have a smallest and largest."""
+    return t[0] in NUMS or t == STR
+
+
+def less(t, a, b):
+    return f"(strcmp({a}, {b}) < 0)" if t == STR else f"({a} < {b})"
+
+
 def mangle(t):
     k = t[0]
     if k == "list":
@@ -267,6 +276,32 @@ class TypeGen:
                        f"if (!{self.eq(e, 'a.data[i]', 'b.data[i]')}) return false; return true; }}"))
             hs.append((f"{S} bool tok_has_{m}({T} l, {E} x)",
                        f"{{ for (int64_t i = 0; i < l.len; i++) if ({self.eq(e, 'l.data[i]', 'x')}) return true; return false; }}"))
+            hs.append((f"{S} {T} tok_slice_{m}({T} l, int64_t a, int64_t b)",
+                       f"{{ if (a < 0) a = 0; if (b > l.len) b = l.len; if (b < a) b = a; {T} r = tok_new_{m}(b - a); "
+                       f"for (int64_t i = 0; i < b - a; i++) r.data[i] = {self.copy(e, 'l.data[a + i]')}; "
+                       f"r.len = b - a; return r; }}"))
+            hs.append((f"{S} {T} tok_rev_{m}({T} l)",
+                       f"{{ {T} r = tok_new_{m}(l.len); for (int64_t i = 0; i < l.len; i++) "
+                       f"r.data[i] = {self.copy(e, 'l.data[l.len - 1 - i]')}; r.len = l.len; return r; }}"))
+            hs.append((f"{S} int64_t tok_find_{m}({T} l, {E} x)",
+                       f"{{ for (int64_t i = 0; i < l.len; i++) if ({self.eq(e, 'l.data[i]', 'x')}) return i; return -1; }}"))
+            hs.append((f"{S} {T} tok_uniq_{m}({T} l)",
+                       f"{{ {T} r = tok_new_{m}(l.len); for (int64_t i = 0; i < l.len; i++) {{ bool dup = false; "
+                       f"for (int64_t j = 0; j < r.len; j++) if ({self.eq(e, 'r.data[j]', 'l.data[i]')}) {{ dup = true; break; }} "
+                       f"if (!dup) r.data[r.len++] = {self.copy(e, 'l.data[i]')}; }} return r; }}"))
+            if comparable(e):
+                # the order of the elements as a list of indexes: a stable merge sort
+                self.need(("list", INT))
+                hs.append((f"{S} tok_T_Lint tok_order_{m}({T} l)",
+                           "{ tok_T_Lint r = tok_new_Lint(l.len); for (int64_t i = 0; i < l.len; i++) r.data[i] = i; "
+                           "r.len = l.len; int64_t* tmp = (int64_t*)tok_alloc((size_t)(l.len > 0 ? l.len : 1) * sizeof(int64_t)); "
+                           "for (int64_t w = 1; w < l.len; w *= 2) { for (int64_t lo = 0; lo < l.len; lo += 2 * w) { "
+                           "int64_t mid = lo + w < l.len ? lo + w : l.len, hi = lo + 2 * w < l.len ? lo + 2 * w : l.len; "
+                           "int64_t i = lo, j = mid, k = lo; while (i < mid && j < hi) { "
+                           f"if ({less(e, 'l.data[r.data[j]]', 'l.data[r.data[i]]')}) tmp[k++] = r.data[j++]; "
+                           "else tmp[k++] = r.data[i++]; } while (i < mid) tmp[k++] = r.data[i++]; "
+                           "while (j < hi) tmp[k++] = r.data[j++]; } "
+                           "memcpy(r.data, tmp, (size_t)l.len * sizeof(int64_t)); } return r; }"))
             hs.append((f"{S} const char* tok_str_{m}({T} l)",
                        f"{{ const char* s = \"[\"; for (int64_t i = 0; i < l.len; i++) "
                        f"s = tok_fmt(\"%s%s%s\", s, i ? \", \" : \"\", {self.to_repr(e, 'l.data[i]')}); "

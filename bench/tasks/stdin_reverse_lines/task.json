@@ -1,0 +1,27 @@
+{
+ "id": "stdin_reverse_lines",
+ "group": "added",
+ "prompt": "Print the lines of standard input in reverse order, last line first.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "one\ntwo\nthree\n",
+   "stdout": "three\ntwo\none\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": ""
+  },
+  {
+   "args": [],
+   "stdin": "a\n",
+   "stdout": "a\n"
+  },
+  {
+   "args": [],
+   "stdin": "x\ny",
+   "stdout": "y\nx\n"
+  }
+ ]
+}

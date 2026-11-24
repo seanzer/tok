@@ -1,0 +1,27 @@
+{
+ "id": "stdin_sum",
+ "group": "added",
+ "prompt": "Standard input has one integer per line. Print their sum. With no input print 0.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "1\n2\n3\n",
+   "stdout": "6\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": "0\n"
+  },
+  {
+   "args": [],
+   "stdin": "-5\n5\n10\n",
+   "stdout": "10\n"
+  },
+  {
+   "args": [],
+   "stdin": "42",
+   "stdout": "42\n"
+  }
+ ]
+}

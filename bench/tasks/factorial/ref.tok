@@ -1,6 +1,5 @@
 fn main(args: [str]) ! io
-  n = (args[1] or "0").to_int() or 0
   var f = 1
-  for i in 1..n
+  for i in 1..args[1].to_int() or 0
     f *= i
   print(f)

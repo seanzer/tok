@@ -1,0 +1,35 @@
+{
+ "id": "stdin_grep",
+ "group": "added",
+ "prompt": "The argument is a piece of text. Print every line of standard input that contains it, in order.",
+ "tests": [
+  {
+   "args": [
+    "error"
+   ],
+   "stdin": "an error here\nall fine\nerror again\n",
+   "stdout": "an error here\nerror again\n"
+  },
+  {
+   "args": [
+    "x"
+   ],
+   "stdin": "abc\n",
+   "stdout": ""
+  },
+  {
+   "args": [
+    "a"
+   ],
+   "stdin": "",
+   "stdout": ""
+  },
+  {
+   "args": [
+    "a b"
+   ],
+   "stdin": "a b\nab\nb a\n",
+   "stdout": "a b\n"
+  }
+ ]
+}

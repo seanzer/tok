@@ -1,5 +1,2 @@
 fn main(args: [str]) ! io
-  var out: [str] = []
-  for i in 1..args.len() - 1
-    out.push(args[i].upper())
-  print(out.join("-"))
+  print(args.drop(1).map(a -> a.upper()).join("-"))

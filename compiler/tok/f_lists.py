@@ -1,6 +1,6 @@
 """Lists: [T] literals, indexing, len, push, and for-in loops."""
 from .diag import Diag
-from .types import ERR, INT, NONE, VOID, mangle, is_int
+from .types import ERR, INT, NONE, STR, VOID, mangle, is_int
 
 
 class Lists:
@@ -61,10 +61,29 @@ class Lists:
         if bt == ERR:
             self.expr(n["idx"])
             return "0", ERR
+        checked = n.get("checked")  # under `or`: a missing element is none instead of stopping the program
+        has = ""
+        if checked and bt[0] == "opt" and (bt[1] == STR or bt[1][0] == "list"):
+            # the base is itself a checked lookup that may have found nothing
+            src = self.hoist(bc, bt)
+            has, bc, bt = f"{src}.has && ", f"{src}.v", bt[1]
+        if bt == STR:
+            idx = self.index_code(n)
+            if checked:
+                ot = ("opt", STR)
+                code = f"tok_s_at_opt({bc}, {idx})"
+                return self.hoist(f"{has}true ? {code} : (({self.c(ot)}){{0}})" if has else code, ot), ot
+            return self.hoist(f"tok_s_at({bc}, {idx}, {self.loc(n)})", STR), STR
         if bt[0] != "list":
-            hint = " (use .lines() or .split() to get a list)" if bt[0] == "str" else ""
-            self.err("E0103", f"only lists can be indexed, found {self.type_str(bt)}{hint}", n["base"])
+            self.err("E0103", f"only lists and strs can be indexed, found {self.type_str(bt)}", n["base"])
         idx = self.index_code(n)
+        if checked:
+            elem = bt[1]
+            inside = f"({has}{idx} >= 0 && {idx} < {bc}.len)"
+            if elem[0] == "opt":
+                return self.hoist(f"{inside} ? {bc}.data[{idx}] : (({self.c(elem)}){{0}})", elem), elem
+            ot = ("opt", elem)
+            return self.hoist(f"{inside} ? (({self.c(ot)}){{.has = true, .v = {bc}.data[{idx}]}}) : (({self.c(ot)}){{0}})", ot), ot
         return self.hoist(f"tok_at_{mangle(bt)}({bc}, {idx}, {self.loc(n)})", bt[1]), bt[1]
 
     def place_index(self, n):
@@ -72,7 +91,9 @@ class Lists:
         if bt == ERR:
             return "0", ERR, v, root
         if bt[0] != "list":
-            self.err("E0103", f"only lists can be indexed, found {self.type_str(bt)}", n["base"])
+            why = "a str cannot be changed in place; build a new one" if bt == STR else \
+                f"only lists can be indexed, found {self.type_str(bt)}"
+            self.err("E0103", why, n["base"])
         idx = self.index_code(n)
         return f"{bc}.data[tok_idx({idx}, {bc}.len, {self.loc(n)})]", bt[1], v, root
 
@@ -85,7 +106,7 @@ class Lists:
             self.loop_body(s, s["var"], ERR, False)
             return
         if ty[0] != "list":
-            hint = " (use .lines() or .split() to get a list)" if ty[0] == "str" else "; a range is written a..b"
+            hint = " (use .chars(), .words(), .lines() or .split() to get a list)" if ty[0] == "str" else "; a range is written a..b"
             self.err("E0103", f"'for' needs a list or a range, found {self.type_str(ty)}{hint}", it)
         # iterate over the value the list had when the loop started
         t = self.hoist(self.store(code, ty, it, False), ty)

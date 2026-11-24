@@ -148,9 +148,9 @@ class NarrowingTests(TokCase):
             # assigned in a loop inside the block: an earlier line of the loop runs again afterwards
             'var k: int? = 5\n  if k\n    for i in 1..3\n      print(k + i)\n      k = none\n',
             # a field of a var record
-            'var u = User { id: 1, name: "a", email: "e" }\n  if u.email\n    print(u.email.len())\n    u.email = none\n',
+            'var u = User { id: 1, name: "a", email: "e" }\n  if u.email\n    print(u.email.len() + 1)\n    u.email = none\n',
             # the whole record is replaced
-            'var u = User { id: 1, name: "a", email: "e" }\n  if u.email\n    u = User { id: 2, name: "b" }\n    print(u.email.len())\n',
+            'var u = User { id: 1, name: "a", email: "e" }\n  if u.email\n    u = User { id: 2, name: "b" }\n    print(u.email.len() + 1)\n',
             # guard clause, then reassigned before the use
             'var k: int? = 5\n  if k == none\n    return\n  k = none\n  print(k + 1)\n',
             # a list element is not a narrowable path

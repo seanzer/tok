@@ -1,0 +1,11 @@
+fn main() ! io
+  words = io.read_all().words()
+  var best = ""
+  var most = 0
+  for w in words.unique()
+    n = words.where(x -> x == w).len()
+    if n > most
+      best = w
+      most = n
+  if most > 0
+    print("{best} {most}")

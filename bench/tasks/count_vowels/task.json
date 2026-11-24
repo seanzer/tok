@@ -1,0 +1,31 @@
+{
+ "id": "count_vowels",
+ "group": "added",
+ "prompt": "The argument is a line of text. Print how many of its letters are vowels (a, e, i, o, u), in either case.",
+ "tests": [
+  {
+   "args": [
+    "Education"
+   ],
+   "stdout": "5\n"
+  },
+  {
+   "args": [
+    "rhythm"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "AEIOU"
+   ],
+   "stdout": "5\n"
+  },
+  {
+   "args": [
+    "a quick brown fox"
+   ],
+   "stdout": "5\n"
+  }
+ ]
+}

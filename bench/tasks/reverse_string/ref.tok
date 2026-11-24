@@ -1,0 +1,2 @@
+fn main(args: [str]) ! io
+  print((args[1] or "").reverse())

@@ -1,12 +1,6 @@
 fn main(args: [str]) ! io
-  var total = 0
-  var count = 0
-  for i in 1..args.len() - 1
-    age = (args[i].split(":")[1] or "0").to_int() or 0
-    if age >= 18
-      total += age
-      count += 1
-  if count == 0
+  ages = args.drop(1).map(a -> a.split(":")[1].to_int() or 0).where(a -> a >= 18)
+  if ages.len() == 0
     print("none")
   else
-    print(total / count)
+    print(ages.sum() / ages.len())

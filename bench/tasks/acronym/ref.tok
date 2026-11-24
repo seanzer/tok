@@ -1,0 +1,2 @@
+fn main(args: [str]) ! io
+  print(args.drop(1).map(w -> w.first(1).upper()).join(""))

@@ -91,6 +91,10 @@ class ServeTests(unittest.TestCase):
                                             "  print(fs.read_text(\"data.txt\")?.trim())\n",
                              args=["21"], files={"geo.tok": "fn twice(n: int) -> int\n  n * 2\n", "data.txt": "hi\n"})
         self.assertEqual(out["stdout"], "42\nhi\n")
+        out, _ = self.s.tool("run", source="fn main() ! io\n  print(io.read_all().words().len())\n", stdin="a b\nc\n")
+        self.assertEqual((out["ok"], out["stdout"]), (True, "3\n"))
+        out, _ = self.s.tool("run", source="fn main() ! io\n  print(io.read_line())\n")
+        self.assertEqual(out["stdout"], "none\n")
         out, is_err = self.s.tool("run", source="fn main() ! io\n  print(1 +)\n")
         self.assertEqual((out["stage"], is_err, out["errors"][0]["file"]), ("check", True, "main.tok"))
         out, is_err = self.s.tool("run", source="fn f() ! err\n  fail(\"boom\")\n\nfn main()\n  f()?\n")

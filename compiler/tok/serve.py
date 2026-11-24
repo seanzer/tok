@@ -32,6 +32,7 @@ TOOLS = [
                                    "check errors.",
      "inputSchema": schema({"args": {"type": "array", "items": {"type": "string"}},
                             "files": {"type": "object", "description": "Extra files (modules, data): name -> text"},
+                            "stdin": {"type": "string", "description": "Text for the program's standard input"},
                             "timeout": {"type": "number"}})},
     {"name": "format", "description": "Rewrite a program in the canonical layout. Returns {ok, source, changed}.",
      "inputSchema": schema()},
@@ -73,10 +74,10 @@ def call_tool(name, a):
     if name == "format":
         return tools.fmt(src)
     if name == "run":
-        args, files, timeout = a.get("args", []), a.get("files"), a.get("timeout", 10.0)
+        args, files, timeout, stdin = a.get("args", []), a.get("files"), a.get("timeout", 10.0), a.get("stdin", "")
         if not isinstance(args, list) or (files is not None and not isinstance(files, dict)) \
-                or not isinstance(timeout, (int, float)):
-            raise BadParams("run takes args: [str], files: {name: text}, timeout: seconds")
+                or not isinstance(timeout, (int, float)) or not isinstance(stdin, str):
+            raise BadParams("run takes args: [str], files: {name: text}, stdin: text, timeout: seconds")
         if "source" not in a:
             # a file on disk keeps its own folder, so its modules are found
             import os
@@ -87,7 +88,7 @@ def call_tool(name, a):
                 if f.endswith(".tok") and os.path.abspath(full) != os.path.abspath(path) and f not in files:
                     with open(full) as fh:
                         files[f] = fh.read()
-        return tools.run(src, args, files, min(float(timeout), 60.0))
+        return tools.run(src, args, files, min(float(timeout), 60.0), stdin=stdin)
     raise BadParams(f"unknown tool {name!r}")
 
 

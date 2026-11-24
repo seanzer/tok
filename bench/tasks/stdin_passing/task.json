@@ -1,0 +1,35 @@
+{
+ "id": "stdin_passing",
+ "group": "added",
+ "prompt": "Each line of standard input has the form name,score with an integer score. The argument is a minimum score. Print the names whose score is at least the minimum, one per line, in input order.",
+ "tests": [
+  {
+   "args": [
+    "70"
+   ],
+   "stdin": "ann,81\nbob,45\ncy,70\n",
+   "stdout": "ann\ncy\n"
+  },
+  {
+   "args": [
+    "1"
+   ],
+   "stdin": "",
+   "stdout": ""
+  },
+  {
+   "args": [
+    "6"
+   ],
+   "stdin": "x,5\n",
+   "stdout": ""
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdin": "a,-1\nb,0\nc,1\n",
+   "stdout": "b\nc\n"
+  }
+ ]
+}

@@ -1,6 +1,2 @@
 fn main(args: [str]) ! io
-  var best = args[1] or ""
-  for i in 2..args.len() - 1
-    if args[i].len() > best.len()
-      best = args[i]
-  print(best)
+  print(args.drop(1).max(a -> a.len()) or "")

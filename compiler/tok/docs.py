@@ -51,12 +51,24 @@ BUILTINS = {
     "min": "min(a, b) -> the smaller; min(xs) -> optional, none for an empty list",
     "max": "max(a, b) -> the larger; max(xs) -> optional, none for an empty list",
     "mean": "mean(xs: [f64]) -> f64?, none for an empty list",
+    "io.read_line": "io.read_line() -> str? ! io: the next line of standard input without its newline, none at the end.",
+    "io.read_all": "io.read_all() -> str ! io: the rest of standard input.",
+    "**": "a ** b: power. Binds tighter than a unary minus on its left (-2 ** 2 is -4) and groups to the right. "
+          "int stops the program on overflow or a negative exponent; f64 uses pow.",
+    "int": "integer methods: to_str(base) -> str, the digits in base 2 to 36. \"{n}\" gives the decimal text.",
+    "f64": "float methods: fixed(digits) -> str, exactly that many digits after the point.",
     "fs.read_text": "fs.read_text(path: str) -> str ! fs, err",
     "fs.write_text": "fs.write_text(path: str, text: str) ! fs, err",
-    "str": "str methods: len, contains(s), starts_with(s), ends_with(s), trim, upper, lower, lines, split(sep), "
-           "replace(a, b), find(s) -> int?, to_int() -> int?, to_f64() -> f64?. No indexing or slicing.",
-    "list": "list methods: len, push(v), map(x -> e), where(x -> cond), any(x -> cond), all(x -> cond), first(n), "
-            "contains(v), join(sep) on [str], sum. xs[i], and `xs[i] or d` for a checked lookup.",
+    "str": "str methods: len, contains(s), starts_with(s), ends_with(s), trim, upper, lower, lines, split(sep), words, "
+           "chars, replace(a, b), reverse, repeat(n), first(n), last(n), drop(n), find(s) -> int?, to_int() -> int?, "
+           "to_f64() -> f64?. s[i] is a one-character str (bytes; out of range stops the program, `s[i] or d` does not).",
+    "list": "list methods: len, push(v), map(x -> e), where(x -> cond), any(x -> cond), all(x -> cond), contains(v), "
+            "index_of(v) -> int?, sum, join(sep) on strs, numbers and bools, first(n), last(n), drop(n), reverse, unique, "
+            "sort() on numbers and strs, sort(x -> key) (stable), min(), max(), min(x -> key), max(x -> key) -> optional. "
+            "Only push changes the list. xs[i], and `xs[i] or d` for a checked lookup.",
+    "or": "`v or d`: the value of an optional, or d. `call() or d`: the default when a call fails. Under `or`, every "
+          "lookup in the chain on the left is checked: `args[1].to_int() or 0` gives 0 when the argument is missing. "
+          "A method called on an optional gives an optional.",
     "Error": "Error: a caught error. Fields: kind (ErrorKind), msg (str). Bound by `call() or e -> ...`.",
 }
 

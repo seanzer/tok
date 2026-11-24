@@ -1,0 +1,31 @@
+{
+ "id": "circle_area",
+ "group": "added",
+ "prompt": "The argument is the radius of a circle, a number. Print its area with exactly 2 digits after the decimal point, using 3.14159 for pi.",
+ "tests": [
+  {
+   "args": [
+    "2"
+   ],
+   "stdout": "12.57\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdout": "0.00\n"
+  },
+  {
+   "args": [
+    "1.5"
+   ],
+   "stdout": "7.07\n"
+  },
+  {
+   "args": [
+    "10"
+   ],
+   "stdout": "314.16\n"
+  }
+ ]
+}

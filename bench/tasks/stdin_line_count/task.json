@@ -1,0 +1,27 @@
+{
+ "id": "stdin_line_count",
+ "group": "added",
+ "prompt": "Print the number of lines on standard input. A last line without a newline still counts.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "a\nb\nc\n",
+   "stdout": "3\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": "0\n"
+  },
+  {
+   "args": [],
+   "stdin": "one\n\nthree",
+   "stdout": "3\n"
+  },
+  {
+   "args": [],
+   "stdin": "x\n",
+   "stdout": "1\n"
+  }
+ ]
+}

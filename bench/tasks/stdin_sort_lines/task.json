@@ -1,0 +1,27 @@
+{
+ "id": "stdin_sort_lines",
+ "group": "added",
+ "prompt": "Print the lines of standard input in ascending order, one per line. The lines are lower-case words.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "pear\napple\nfig\n",
+   "stdout": "apple\nfig\npear\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": ""
+  },
+  {
+   "args": [],
+   "stdin": "b\na\nb\na\n",
+   "stdout": "a\na\nb\nb\n"
+  },
+  {
+   "args": [],
+   "stdin": "zeta",
+   "stdout": "zeta\n"
+  }
+ ]
+}

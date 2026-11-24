@@ -1,0 +1,31 @@
+{
+ "id": "char_histogram",
+ "group": "added",
+ "prompt": "The argument is a word. For each different character, in order of first appearance, print one line with the character, a space, and how many times it occurs.",
+ "tests": [
+  {
+   "args": [
+    "hello"
+   ],
+   "stdout": "h 1\ne 1\nl 2\no 1\n"
+  },
+  {
+   "args": [
+    "aaa"
+   ],
+   "stdout": "a 3\n"
+  },
+  {
+   "args": [
+    ""
+   ],
+   "stdout": ""
+  },
+  {
+   "args": [
+    "abba"
+   ],
+   "stdout": "a 2\nb 2\n"
+  }
+ ]
+}

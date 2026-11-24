@@ -21,6 +21,13 @@ STR_METHODS = {
     "find": ((STR,), ("opt", INT), "tok_s_find", False),
     "to_int": ((), ("opt", INT), "tok_s_to_int", False),
     "to_f64": ((), ("opt", F64), "tok_s_to_f64", False),
+    "chars": ((), ("list", STR), "tok_s_chars", False),
+    "words": ((), ("list", STR), "tok_s_words", False),
+    "reverse": ((), STR, "tok_s_reverse", False),
+    "repeat": ((INT,), STR, "tok_s_repeat", True),
+    "first": ((INT,), STR, "tok_s_first", False),
+    "last": ((INT,), STR, "tok_s_last", False),
+    "drop": ((INT,), STR, "tok_s_drop", False),
 }
 
 
@@ -144,9 +151,11 @@ class Methods:
     def m_list_join(self, n, bc, bt, want):
         self.margs(n, 1)
         if bt[1] != STR:
-            raise Diag("E0109", f"'join' works on [str], found {self.type_str(bt)}; map the elements to strings first, "
-                                f"for example xs.map(x -> \"\\{{x\\}}\")".replace("\\{{", "{").replace("\\}}", "}"),
-                       n["line"], n["name_col"], n["end"])
+            if not (is_num(bt[1]) or bt[1] == BOOL):
+                raise Diag("E0109", f"'join' works on lists of strs, numbers or bools, found {self.type_str(bt)}; map the "
+                                    f"elements to strings first, for example xs.map(x -> \"\\{{x\\}}\")".replace("\\{{", "{").replace("\\}}", "}"),
+                           n["line"], n["name_col"], n["end"])
+            bc = self.joinable(bc, bt)
         code, ty = self.val(n["args"][0], STR)
         code = self.coerce(code, ty, STR, n["args"][0], f"'join' needs a str separator, found {self.type_str(ty)}")
         return self.hoist(f"tok_s_join({bc}, {code})", STR), STR

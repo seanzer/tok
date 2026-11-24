@@ -79,6 +79,26 @@ TOK_UNUSED static int64_t tok_neg_int(int64_t a, const char* loc) {
   if (a == INT64_MIN) tok_panic(loc, "integer overflow: -(%lld) does not fit in int", (long long)a);
   return -a;
 }
+// a ** b on `int`: stops on overflow and on a negative exponent
+TOK_UNUSED static int64_t tok_pow_int(int64_t a, int64_t e, const char* loc) {
+  if (e < 0) tok_panic(loc, "negative exponent %lld: an integer power needs an exponent of 0 or more", (long long)e);
+  int64_t r = 1;
+  while (e) {
+    if (e & 1) r = tok_mul_int(r, a, loc);
+    e >>= 1;
+    if (e) a = tok_mul_int(a, a, loc);
+  }
+  return r;
+}
+TOK_UNUSED static uint64_t tok_pow_wrap(uint64_t a, uint64_t e) {
+  uint64_t r = 1;
+  while (e) {
+    if (e & 1) r *= a;
+    e >>= 1;
+    a *= a;
+  }
+  return r;
+}
 TOK_UNUSED static void* tok_alloc(size_t n) {
   void* p = malloc(n ? n : 1);
   if (!p) { fputs("tok: out of memory\n", stderr); exit(70); }
@@ -127,7 +147,7 @@ TOK_UNUSED static const char* tok_quote(const char* s) { return tok_fmt("\"%s\""
 TOK_UNUSED static const char* tok_concat(const char* a, const char* b) { return tok_fmt("%s%s", a, b); }
 '''
 
-# Needs tok_T_Lstr, tok_T_Oint, tok_T_Of64, tok_T_Estr and tok_T_Evoid to be defined.
+# Needs tok_T_Lstr, tok_T_Lint, tok_T_Oint, tok_T_Of64, tok_T_Ostr, tok_T_Estr and tok_T_Evoid to be defined.
 PART2 = r'''
 TOK_UNUSED static int64_t tok_s_len(const char* s) { return (int64_t)strlen(s); }
 TOK_UNUSED static bool tok_s_contains(const char* s, const char* sub) { return strstr(s, sub) != NULL; }
@@ -259,6 +279,125 @@ TOK_UNUSED static tok_T_Evoid tok_fs_write_text(const char* path, const char* te
   if (!f) { r.err = tok_fmt("cannot write '%s': %s", path, strerror(errno)); return r; }
   size_t n = strlen(text);
   if (fwrite(text, 1, n, f) != n || fclose(f) != 0) r.err = tok_fmt("cannot write '%s': %s", path, strerror(errno));
+  return r;
+}
+// ---- strings as bytes: indexing, pieces, characters
+TOK_UNUSED static const char* tok_s_at(const char* s, int64_t i, const char* loc) {
+  tok_bounds(i, (int64_t)strlen(s), loc);
+  return tok_s_sub(s + i, 1);
+}
+TOK_UNUSED static tok_T_Ostr tok_s_at_opt(const char* s, int64_t i) {
+  tok_T_Ostr r = { false, "" };
+  if (i >= 0 && i < (int64_t)strlen(s)) { r.has = true; r.v = tok_s_sub(s + i, 1); }
+  return r;
+}
+TOK_UNUSED static const char* tok_s_slice(const char* s, int64_t a, int64_t b) {
+  int64_t n = (int64_t)strlen(s);
+  if (a < 0) a = 0;
+  if (b > n) b = n;
+  if (b < a) b = a;
+  return tok_s_sub(s + a, (size_t)(b - a));
+}
+TOK_UNUSED static const char* tok_s_first(const char* s, int64_t n) { return tok_s_slice(s, 0, n < 0 ? 0 : n); }
+TOK_UNUSED static const char* tok_s_drop(const char* s, int64_t n) {
+  int64_t len = (int64_t)strlen(s);
+  return tok_s_slice(s, n < 0 ? 0 : (n > len ? len : n), len);
+}
+TOK_UNUSED static const char* tok_s_last(const char* s, int64_t n) {
+  int64_t len = (int64_t)strlen(s);
+  return tok_s_slice(s, n < 0 ? len : (n > len ? 0 : len - n), len);
+}
+TOK_UNUSED static const char* tok_s_reverse(const char* s) {
+  size_t n = strlen(s);
+  char* r = (char*)tok_alloc(n + 1);
+  for (size_t i = 0; i < n; i++) r[i] = s[n - 1 - i];
+  r[n] = 0;
+  return r;
+}
+TOK_UNUSED static const char* tok_s_repeat(const char* s, int64_t count, const char* loc) {
+  size_t n = strlen(s);
+  if (count <= 0 || n == 0) return "";
+  if ((uint64_t)count > (SIZE_MAX - 1) / n) tok_panic(loc, "repeat(%lld) is too large", (long long)count);
+  char* r = (char*)tok_alloc(n * (size_t)count + 1);
+  for (int64_t i = 0; i < count; i++) memcpy(r + (size_t)i * n, s, n);
+  r[n * (size_t)count] = 0;
+  return r;
+}
+TOK_UNUSED static tok_T_Lstr tok_s_chars(const char* s) {
+  size_t n = strlen(s);
+  tok_T_Lstr r = tok_new_Lstr((int64_t)n);
+  for (size_t i = 0; i < n; i++) tok_push_Lstr(&r, tok_s_sub(s + i, 1));
+  return r;
+}
+TOK_UNUSED static bool tok_is_space(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' || c == '\f'; }
+TOK_UNUSED static tok_T_Lstr tok_s_words(const char* s) {
+  tok_T_Lstr r = tok_new_Lstr(8);
+  for (;;) {
+    while (*s && tok_is_space(*s)) s++;
+    if (!*s) break;
+    const char* e = s;
+    while (*e && !tok_is_space(*e)) e++;
+    tok_push_Lstr(&r, tok_s_sub(s, (size_t)(e - s)));
+    s = e;
+  }
+  return r;
+}
+// ---- numbers as text
+TOK_UNUSED static const char* tok_u_to_str(uint64_t v, bool neg, int64_t base, const char* loc) {
+  if (base < 2 || base > 36) tok_panic(loc, "to_str needs a base from 2 to 36, found %lld", (long long)base);
+  char b[66];
+  int i = 65;
+  b[i] = 0;
+  do { b[--i] = "0123456789abcdefghijklmnopqrstuvwxyz"[v % (uint64_t)base]; v /= (uint64_t)base; } while (v);
+  if (neg) b[--i] = '-';
+  return tok_fmt("%s", b + i);
+}
+TOK_UNUSED static const char* tok_i_to_str(int64_t v, int64_t base, const char* loc) {
+  return tok_u_to_str(v < 0 ? 0 - (uint64_t)v : (uint64_t)v, v < 0, base, loc);
+}
+TOK_UNUSED static const char* tok_f_fixed(double x, int64_t digits, const char* loc) {
+  if (digits < 0 || digits > 100) tok_panic(loc, "fixed needs 0 to 100 digits, found %lld", (long long)digits);
+  if (x != x) return "nan";
+  if (isinf(x)) return x > 0 ? "inf" : "-inf";
+  return tok_fmt("%.*f", (int)digits, x);
+}
+// ---- standard input
+TOK_UNUSED static const char* tok_io_read_all(void) {
+  size_t cap = 4096, n = 0;
+  char* buf = (char*)tok_alloc(cap + 1);
+  for (;;) {
+    size_t got = fread(buf + n, 1, cap - n, stdin);
+    n += got;
+    if (got == 0) break;
+    if (n == cap) {
+      char* nb = (char*)tok_alloc(cap * 2 + 1);
+      memcpy(nb, buf, n);
+      buf = nb;
+      cap *= 2;
+    }
+  }
+  buf[n] = 0;
+  return buf;
+}
+TOK_UNUSED static tok_T_Ostr tok_io_read_line(void) {
+  tok_T_Ostr r = { false, "" };
+  size_t cap = 128, n = 0;
+  char* buf = (char*)tok_alloc(cap + 1);
+  int c;
+  while ((c = getc(stdin)) != EOF) {
+    r.has = true;
+    if (c == '\n') break;
+    if (n == cap) {
+      char* nb = (char*)tok_alloc(cap * 2 + 1);
+      memcpy(nb, buf, n);
+      buf = nb;
+      cap *= 2;
+    }
+    buf[n++] = (char)c;
+  }
+  if (n > 0 && buf[n - 1] == '\r') n--;
+  buf[n] = 0;
+  r.v = buf;
   return r;
 }
 TOK_UNUSED static tok_T_Lstr tok_args(int argc, char** argv) {

@@ -45,9 +45,9 @@ def fmt(src):
     return {"ok": True, "source": new, "changed": new != src}
 
 
-def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536):
+def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536, stdin=""):
     """Compile and run. `files` maps extra file names (modules, data) to their text; they are written next to
-    the program, and the program runs in that folder."""
+    the program, and the program runs in that folder. `stdin` is the text on its standard input."""
     with tempfile.TemporaryDirectory(prefix="tokrun") as d:
         for name, text in (files or {}).items():
             if os.path.basename(name) != name or name in ("main.tok", "main", "main.c"):
@@ -73,7 +73,7 @@ def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536
                     "stderr": cc.stderr[:4000]}
         try:
             r = subprocess.run(["main.tok"] + [str(a) for a in args], executable=exe, cwd=d, capture_output=True,
-                               text=True, errors="replace", timeout=timeout, stdin=subprocess.DEVNULL)
+                               text=True, errors="replace", timeout=timeout, input=stdin or "")
         except subprocess.TimeoutExpired:
             return {"ok": False, "stage": "run", "errors": [], "timed_out": True, "message": f"timed out after {timeout}s"}
         return {"ok": r.returncode == 0, "stage": "run", "errors": [], "exit_code": r.returncode,

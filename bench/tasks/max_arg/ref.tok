@@ -1,12 +1,2 @@
-fn nums(args: [str]) -> [int]
-  var out: [int] = []
-  for i in 1..args.len() - 1
-    out.push(args[i].to_int() or 0)
-  out
-
 fn main(args: [str]) ! io
-  best = max(nums(args))
-  if best
-    print(best)
-  else
-    print("none")
+  print(args.drop(1).map(a -> a.to_int() or 0).max())

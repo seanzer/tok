@@ -1,0 +1,27 @@
+{
+ "id": "stdin_word_freq",
+ "group": "added",
+ "prompt": "Standard input is text; words are separated by whitespace. Print the most frequent word and how many times it occurs, separated by a space. If several words are equally frequent, print the one that appears first. With no words print nothing.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "the cat and the hat\n",
+   "stdout": "the 2\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": ""
+  },
+  {
+   "args": [],
+   "stdin": "b a\na b\n",
+   "stdout": "b 2\n"
+  },
+  {
+   "args": [],
+   "stdin": "x y z z y z\n",
+   "stdout": "z 3\n"
+  }
+ ]
+}

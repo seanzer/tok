@@ -1,0 +1,34 @@
+{
+ "id": "acronym",
+ "group": "added",
+ "prompt": "The arguments are words. Print the acronym made of their first letters, in upper case.",
+ "tests": [
+  {
+   "args": [
+    "portable",
+    "network",
+    "graphics"
+   ],
+   "stdout": "PNG\n"
+  },
+  {
+   "args": [],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "a"
+   ],
+   "stdout": "A\n"
+  },
+  {
+   "args": [
+    "National",
+    "aeronautics",
+    "space",
+    "Administration"
+   ],
+   "stdout": "NASA\n"
+  }
+ ]
+}

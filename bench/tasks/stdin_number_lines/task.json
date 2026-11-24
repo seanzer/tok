@@ -1,0 +1,27 @@
+{
+ "id": "stdin_number_lines",
+ "group": "added",
+ "prompt": "Print each line of standard input with its line number in front, counting from 1, in the form 1: text.",
+ "tests": [
+  {
+   "args": [],
+   "stdin": "alpha\nbeta\n",
+   "stdout": "1: alpha\n2: beta\n"
+  },
+  {
+   "args": [],
+   "stdin": "",
+   "stdout": ""
+  },
+  {
+   "args": [],
+   "stdin": "x\n\nz",
+   "stdout": "1: x\n2: \n3: z\n"
+  },
+  {
+   "args": [],
+   "stdin": "only\n",
+   "stdout": "1: only\n"
+  }
+ ]
+}

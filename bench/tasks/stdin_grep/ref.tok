@@ -1,0 +1,3 @@
+fn main(args: [str]) ! io
+  for line in io.read_all().lines() where line.contains(args[1])
+    print(line)

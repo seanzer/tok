@@ -1,10 +1,8 @@
 fn main(args: [str]) ! io
-  old = args[1] or ""
-  new = args[2] or ""
   var out: [str] = []
-  for i in 3..args.len() - 1
-    if args[i] == old
-      out.push(new)
+  for w in args.drop(3)
+    if w == args[1]
+      out.push(args[2])
     else
-      out.push(args[i])
+      out.push(w)
   print(out.join(" "))

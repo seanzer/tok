@@ -18,7 +18,7 @@ no braces). Types and explicit errors are like Go. A program is one or more `fn`
 
 SAME = """## Same as Python
 - Indentation makes blocks. `if` / `else if` / `else`. `and`, `or`, `not`. `true`, `false`. `//` starts a comment.
-- `for x in xs`. `"text {expr}"` is an f-string without the `f`. `+ - * / %`, comparisons, `==` on any value.
+- `for x in xs`. `"text {expr}"` is an f-string without the `f`. `+ - * / % **`, comparisons, `==` on any value.
 - Lists are `[1, 2, 3]`, indexed from 0 with `xs[i]`, length `xs.len()`.
 
 ## Same as Go
@@ -38,22 +38,32 @@ DIFF = """## Different from both
 - Records: `type P = { x: int, y: int }`, built with `P { x: 1, y: 2 }`, read with `p.x`. Records and lists are
   values: a copy is independent, and `==` compares contents.
 - Lists: `var xs: [int] = []` (an empty list needs its type), `xs.push(v)`, `xs[i] = v`. Methods: `len`, `push`,
-  `map`, `where`, `any`, `all`, `first(n)`, `contains`, `join(sep)` (on `[str]`), `sum`.
-  Lambdas are `x -> expr`, one parameter, one expression, only as an argument of `map`, `where`, `any`, `all`.
+  `map`, `where`, `any`, `all`, `contains`, `index_of(v)` (gives `int?`), `sum`, `join(sep)` (strs or numbers),
+  `first(n)`, `last(n)`, `drop(n)`, `reverse`, `unique`, `sort()`, `sort(x -> key)`, and `min()`, `max()`,
+  `max(x -> key)`, which give an optional (`none` for an empty list). Only `push` changes the list; the others
+  give a new one. For descending order: `xs.sort().reverse()`.
+  Lambdas are `x -> expr`, one parameter, one expression, only as an argument of a list method.
 - Strings: `+`, `len`, `contains`, `starts_with`, `ends_with`, `trim`, `upper`, `lower`, `lines`, `split(sep)`,
-  `replace(a, b)`, `find(s)` (gives `int?`), `to_int()` and `to_f64()` (give `int?` / `f64?`). There is no
-  indexing or slicing of a string and no character type.
-- Built-ins: `print(v)` (one value, adds a newline), `sqrt`, `abs`, `min(a, b)`, `max(a, b)`, and on a list
-  `min(xs)`, `max(xs)`, `mean(xs)`, which give an optional (`none` for an empty list).
+  `words()` (split on whitespace), `chars()`, `replace(a, b)`, `reverse`, `repeat(n)`, `first(n)`, `last(n)`,
+  `drop(n)`, `find(s)` (gives `int?`), `to_int()` and `to_f64()` (give `int?` / `f64?`). `s[i]` is a one-character
+  `str`; there is no character type. To loop over characters: `for c in s.chars()`.
+- Numbers as text: `"{n}"`, `n.to_str(2)` (an integer in base 2 to 36), `x.fixed(2)` (an `f64` with 2 decimals).
+- Built-ins: `print(v)` (one value, adds a newline), `sqrt`, `abs`, `min(a, b)`, `max(a, b)`, `mean(xs)` (optional).
 - Optionals: `T?` holds a value or `none`. `v or default` unwraps. After `if v` or `if v != none`, or after
-  `if v == none` followed by `return`, `v` is the plain value. `xs[i] or d` gives `d` when `i` is out of range.
+  `if v == none` followed by `return`, `v` is the plain value. A method called on an optional gives an optional:
+  `s.find("x").to_str(10)` is a `str?`.
+- `xs[i] or d` gives `d` when `i` is out of range, and so does a whole chain: `args[1].to_int() or 0` is `0` when
+  the argument is missing or not a number. Without `or`, a bad index stops the program.
 - `int` overflow, a bad index and division by zero stop the program. Printing an `f64` always shows a decimal
   point: `3.0`.
-- Program arguments: `fn main(args: [str])`. `args[0]` is the program name; the first argument is `args[1]`.
+- Program arguments: `fn main(args: [str])`. `args[0]` is the program name; the first argument is `args[1]`, and
+  `args.drop(1)` is all of them.
+- Standard input: `io.read_all()` gives it all as a `str`; `io.read_line()` gives the next line as a `str?`
+  (`none` at the end). Both need `io`.
 """
 
 RULES = """## Effects and errors (the compiler checks both)
-- A function lists what it does after `!`: `io` (print), `fs` (files), `err` (can fail).
+- A function lists what it does after `!`: `io` (print, standard input), `fs` (files), `err` (can fail).
   `fn save(path: str, n: int) ! fs, err`. A caller must list every effect of the functions it calls.
   `main` lists `io` / `fs` as needed and never needs `err`.
 - Fail with `fail("message")`. Each call to a function with `err` must be handled, one of:
@@ -65,7 +75,7 @@ RULES = """## Effects and errors (the compiler checks both)
 - Files: `fs.read_text(path)` gives `str`, `fs.write_text(path, text)`; both need `fs` and can fail.
 """
 
-# (title, source, expected stdout, program arguments)
+# (title, source, expected stdout, program arguments), and a fifth item when the program reads standard input
 EXAMPLES = [
     ("Functions, a range loop, a filter, list methods",
      '''fn square(n: int) -> int
@@ -118,6 +128,13 @@ fn main(args: [str]) ! io
       fail(e)
   print(a * b)
 ''', '42\n', ["6", "7"]),
+    ("Standard input, arguments with a default, sorting",
+     '''fn main(args: [str]) ! io
+  nums = io.read_all().words().map(w -> w.to_int() or 0)
+  top = args[1].to_int() or 3
+  print(nums.sort().reverse().first(top).join(" "))
+  print("{nums.len()} numbers, largest {nums.max() or 0}, squares {nums.first(2).map(n -> n ** 2)}")
+''', '9 7 4\n5 numbers, largest 9, squares [16, 81]\n', [], "4 9\n1 7 2\n"),
     ("Reading a file, no loop needed",
      '''fn main(args: [str]) ! io, fs
   text = fs.read_text(args[1] or "missing.txt") or e -> ""
@@ -159,8 +176,8 @@ MISTAKES = [
 
 TAIL = """## Checklist before you answer
 1. Every function that prints has `! io`; every caller of it too. 2. Anything reassigned is `var`.
-3. Calls to `err` functions end in `?` or have `or`. 4. No `while`, `break`, `import`, `null`, dicts or string
-indexing. 5. Numbers of different types are converted explicitly. 6. Print exactly what the task asks for.
+3. Calls to `err` functions end in `?` or have `or`. 4. No `while`, `break`, `import`, `null` or dicts.
+5. Numbers of different types are converted explicitly. 6. Print exactly what the task asks for.
 """
 
 
@@ -169,9 +186,11 @@ def fence(src):
 
 
 def example_text(ex):
-    title, src, out, args = ex
+    title, src, out, args = ex[:4]
     shown = out.rstrip("\n").replace("\n", " | ")
     with_args = f" (run with arguments: {' '.join(args)})" if args else ""
+    if len(ex) > 4:
+        with_args = f" (standard input: {ex[4].rstrip(chr(10)).replace(chr(10), ' | ')})"
     return f"### {title}\n{fence(src)}Prints{with_args}: `{shown}`\n"
 
 

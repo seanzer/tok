@@ -1,4 +1,4 @@
 fn main(args: [str]) ! io
-  n = (args[1] or "0").to_int() or 0
+  n = args[1].to_int() or 0
   for i in 1..10
     print("{n} x {i} = {n * i}")

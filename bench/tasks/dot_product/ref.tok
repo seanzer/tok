@@ -1,11 +1,5 @@
-fn nums(args: [str]) -> [int]
-  var out: [int] = []
-  for i in 1..args.len() - 1
-    out.push(args[i].to_int() or 0)
-  out
-
 fn main(args: [str]) ! io
-  xs = nums(args)
+  xs = args.drop(1).map(a -> a.to_int() or 0)
   half = xs.len() / 2
   var total = 0
   for i in 0..half - 1

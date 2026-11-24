@@ -23,7 +23,7 @@ from .lexer import KEYWORDS, lex, lex_fragment
 from .types import ALIASES
 
 VALUE_WORDS = {"true", "false", "none"}
-BINARY = {"+", "-", "*", "/", "%", "==", "!=", "<=", ">=", "<", ">", "=", "+=", "-=", "*=", "/=", "%=", "->", "!"}
+BINARY = {"+", "-", "*", "/", "%", "**", "==", "!=", "<=", ">=", "<", ">", "=", "+=", "-=", "*=", "/=", "%=", "->", "!"}
 CLOSERS = {")", "]", "}"}
 
 

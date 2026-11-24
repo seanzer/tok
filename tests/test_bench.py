@@ -19,13 +19,19 @@ BY_ID = {t["id"]: t for t in TASKS}
 
 class SuiteTests(TokCase):
     def test_suite_shape(self):
-        self.assertEqual(len(TASKS), 40)
+        self.assertEqual(len(TASKS), 64)
+        self.assertEqual(len(harness.load_tasks(group="original")), 40)
+        added = harness.load_tasks(group="added")
+        self.assertEqual(len(added), 24)
+        self.assertEqual(sum(1 for t in added if any("stdin" in c for c in t["tests"])), 12)
+        with open(os.path.join(ROOT, "bench", "baseline.json")) as fh:
+            self.assertEqual(sorted(json.load(fh)["tasks"]), sorted(t["id"] for t in TASKS if t["group"] == "original"))
         for t in TASKS:
             with self.subTest(task=t["id"]):
                 self.assertEqual(t["id"], os.path.basename(t["dir"]))
                 self.assertGreaterEqual(len(t["tests"]), 3)
                 self.assertTrue(t["prompt"].strip())
-                self.assertEqual(len({json.dumps(c["args"]) + json.dumps(c.get("files", {})) for c in t["tests"]}), len(t["tests"]))
+                self.assertEqual(len({json.dumps([c["args"], c.get("files", {}), c.get("stdin")]) for c in t["tests"]}), len(t["tests"]))
 
     def test_reference_solutions_pass_in_every_language(self):
         for t in TASKS:
@@ -52,7 +58,8 @@ class LoopTests(unittest.TestCase):
         t = BY_ID["sum_args"]
         good = harness.reference(t, "tok")
         no_effect = good.replace(" ! io", "")
-        wrong = good.replace("print(total)", "print(total + 1)")
+        wrong = good.replace(".sum())", ".sum() + 1)")
+        self.assertNotIn(good, (no_effect, wrong))
         a = self.script([f"```tok\n{no_effect}```", f"Here it is:\n```\n{wrong}```\nDone.", f"```\n{good}```"])
         log = []
         rec = harness.solve(a, "tok", t, cap=3, log=log)
@@ -97,6 +104,21 @@ class LoopTests(unittest.TestCase):
         self.assertNotIn("expected_stdout", harness.feedback("python", r))
         self.assertIn("expected_stdout", harness.feedback("python", r, show_expected=True))
 
+    def test_standard_input_reaches_both_languages_and_the_prompt(self):
+        t = BY_ID["stdin_grep"]
+        prompt = harness.task_prompt(t)
+        self.assertIn('with the standard input "an error here\\nall fine\\nerror again\\n" and the arguments "error"', prompt)
+        self.assertIn("with the standard input", harness.task_prompt(BY_ID["stdin_sum"]))
+        self.assertNotIn("and the arguments", harness.task_prompt(BY_ID["stdin_sum"]))
+        self.assertIn("with the arguments", harness.task_prompt(BY_ID["gcd"]))
+        for lang, src in (("python", "print(1)\n"), ("tok", "fn main() ! io\n  print(1)\n")):
+            r = harness.evaluate(lang, src, t)
+            self.assertFalse(r["green"])
+            self.assertEqual(r["failure"]["stdin"], t["tests"][0]["stdin"])
+            self.assertIn('"stdin": "an error here', harness.feedback(lang, r))
+        r = harness.evaluate("python", "print(3)\n", BY_ID["gcd"])
+        self.assertNotIn('"stdin"', harness.feedback("python", r))
+
     def test_extract_code(self):
         self.assertEqual(harness.extract_code("text\n```tok\nA\n```\nmore\n```\nB\n```\n"), "B\n")
         self.assertEqual(harness.extract_code("fn main()"), "fn main()\n")
@@ -115,6 +137,33 @@ class LoopTests(unittest.TestCase):
                             "--limit", "2"], capture_output=True, text=True)
         self.assertEqual(r.returncode, 2)
         self.assertIn("up to 6 paid calls", r.stderr)
+
+
+class CountTests(unittest.TestCase):
+    def test_gap_source_transformations(self):
+        import count_tokens as ct
+        src = ('fn gcd(a: int, b: int) -> int ! err\n  a\n\nfn main(args: [str]) ! io, fs\n  var xs: [int] = []\n'
+               '  n = args[1].to_int() or 0\n  s = (args[2] or "").len()\n  if n > 0 or s > 0\n    print(gcd(n, s) or 1)\n')
+        self.assertEqual(ct.strip_effects(src).split("\n")[0], "fn gcd(a: int, b: int) -> int")
+        self.assertIn("fn main(args: [str])\n", ct.strip_effects(src))
+        self.assertEqual(ct.strip_main(src), 'fn gcd(a: int, b: int) -> int ! err\n  a\n\nvar xs: [int] = []\n'
+                         'n = args[1].to_int() or 0\ns = (args[2] or "").len()\nif n > 0 or s > 0\n  print(gcd(n, s) or 1)\n')
+        d = ct.strip_defaults(src)
+        self.assertIn("n = args[1].to_int()\n", d)
+        self.assertIn("s = args[2].len()\n", d)
+        self.assertIn("if n > 0 or s > 0\n", d)  # a logical `or` is kept
+        self.assertIn("print(gcd(n, s))\n", d)
+        t = ct.strip_types(src)
+        self.assertIn("fn gcd(a, b) ! err\n", t)
+        self.assertIn("  var xs = []\n", t)
+        self.assertIn("fn main(args: [str]) ! io, fs\n", t)
+        self.assertEqual(ct.strip_import("import sys\nfrom x import y\n\nprint(1)\n"), "print(1)\n")
+
+    def test_results_file_matches_the_suite(self):
+        with open(os.path.join(ROOT, "bench", "results.json")) as fh:
+            r = json.load(fh)
+        self.assertEqual(r["tasks"], {"original": 40, "added": 24, "all": 64})
+        self.assertEqual(sorted(r["per_task"]["tiktoken o200k_base"]), sorted(BY_ID))
 
 
 class FakeTransport:

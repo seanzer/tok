@@ -5,5 +5,4 @@ try:
         lines = f.read().splitlines()
 except OSError:
     lines = []
-words = sum(len(line.split(" ")) - line.split(" ").count("") for line in lines)
-print(f"{len(lines)} lines, {words} words")
+print(f"{len(lines)} lines, {sum(len(line.split()) for line in lines)} words")

@@ -11,8 +11,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOKC = [sys.executable, os.path.join(ROOT, "compiler", "tokc.py")]
 
 
-def tokc(*args, env=None, cwd=ROOT):
-    return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env)
+def tokc(*args, env=None, cwd=ROOT, stdin=None):
+    """Run the compiler. `stdin` is the text the program reads; without it standard input is empty."""
+    if stdin is None:
+        return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env, stdin=subprocess.DEVNULL)
+    return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env, input=stdin)
 
 
 class TokCase(unittest.TestCase):
@@ -42,14 +45,14 @@ class TokCase(unittest.TestCase):
                             capture_output=True, text=True)
         self.assertEqual(cc.returncode, 0, cc.stderr)
 
-    def run_path(self, path, *args, code=0):
+    def run_path(self, path, *args, code=0, stdin=None):
         self.assert_clean_c(path)
-        r = tokc("run", path, *args, env=self.env)
+        r = tokc("run", path, *args, env=self.env, stdin=stdin)
         self.assertEqual(r.returncode, code, r.stderr)
         return r.stdout
 
-    def run_src(self, src, *args, name="t.tok"):
-        return self.run_path(self.write(name, src), *args)
+    def run_src(self, src, *args, name="t.tok", stdin=None):
+        return self.run_path(self.write(name, src), *args, stdin=stdin)
 
     def run_fail(self, src, code):
         """Run a program that is expected to exit with `code`; returns (stdout, stderr)."""

@@ -1,0 +1,4 @@
+fn main() ! io
+  lines = io.read_all().lines()
+  for i in 0..lines.len() - 1
+    print("{i + 1}: {lines[i]}")

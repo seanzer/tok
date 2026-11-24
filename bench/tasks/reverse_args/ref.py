@@ -1,3 +1,3 @@
 import sys
 
-print(" ".join(reversed(sys.argv[1:])))
+print(*reversed(sys.argv[1:]))

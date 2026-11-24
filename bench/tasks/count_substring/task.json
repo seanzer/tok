@@ -1,0 +1,35 @@
+{
+ "id": "count_substring",
+ "group": "added",
+ "prompt": "The first argument is a text and the second is a non-empty piece of text. Print how many times the piece occurs in the text, counting from the left without overlaps.",
+ "tests": [
+  {
+   "args": [
+    "banana",
+    "an"
+   ],
+   "stdout": "2\n"
+  },
+  {
+   "args": [
+    "abc",
+    "x"
+   ],
+   "stdout": "0\n"
+  },
+  {
+   "args": [
+    "aaaa",
+    "aa"
+   ],
+   "stdout": "2\n"
+  },
+  {
+   "args": [
+    "a,b,,c",
+    ","
+   ],
+   "stdout": "3\n"
+  }
+ ]
+}

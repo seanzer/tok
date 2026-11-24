@@ -1,6 +1,2 @@
 fn main(args: [str]) ! io
-  var seen: [str] = []
-  for i in 1..args.len() - 1
-    if not seen.contains(args[i])
-      seen.push(args[i])
-  print(seen.join(" "))
+  print(args.drop(1).unique().join(" "))

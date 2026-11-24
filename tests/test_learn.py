@@ -12,10 +12,11 @@ from tok import learn  # noqa: E402
 
 class LearnTests(TokCase):
     def test_examples_run_and_print_what_the_guide_says(self):
-        for i, (title, src, out, args) in enumerate(learn.EXAMPLES):
+        for i, ex in enumerate(learn.EXAMPLES):
+            title, src, out, args = ex[:4]
             with self.subTest(example=title):
                 path = self.write(f"learn_ex{i}.tok", src)
-                self.assertEqual(self.run_path(path, "--", *args), out)
+                self.assertEqual(self.run_path(path, "--", *args, stdin=ex[4] if len(ex) > 4 else None), out)
                 self.assertEqual(tokc("fmt", path, "--check").returncode, 0, "the sample is not in canonical format")
 
     def test_mistakes_fail_with_the_stated_code_and_fixes_run(self):
@@ -25,7 +26,7 @@ class LearnTests(TokCase):
                 self.assertEqual(self.run_src(good, name=f"learn_fix{i}.tok"), out)
 
     def test_every_fenced_block_in_the_guide_is_a_tested_sample(self):
-        known = {s.rstrip("\n") for _, s, _, _ in learn.EXAMPLES}
+        known = {ex[1].rstrip("\n") for ex in learn.EXAMPLES}
         known |= {m[1].rstrip("\n") for m in learn.MISTAKES} | {m[3].rstrip("\n") for m in learn.MISTAKES}
         blocks = re.findall(r"```\n(.*?)\n```", learn.render(), re.S)
         self.assertEqual(len(blocks), len(learn.EXAMPLES) + 2 * len(learn.MISTAKES))
@@ -35,9 +36,9 @@ class LearnTests(TokCase):
     def test_command_and_budget(self):
         full = tokc("learn")
         self.assertEqual((full.returncode, full.stdout), (0, learn.render()))
-        small = tokc("learn", "--budget", "1500")
+        small = tokc("learn", "--budget", "2000")
         self.assertEqual(small.returncode, 0)
-        self.assertLessEqual(learn.approx_tokens(small.stdout), 1500)
+        self.assertLessEqual(learn.approx_tokens(small.stdout), 2000)
         self.assertLess(len(small.stdout), len(full.stdout))
         for must in ("## Effects and errors", "## Different from both"):
             self.assertIn(must, small.stdout)

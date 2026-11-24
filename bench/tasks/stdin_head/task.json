@@ -1,0 +1,35 @@
+{
+ "id": "stdin_head",
+ "group": "added",
+ "prompt": "The argument is a non-negative integer n. Print the first n lines of standard input, or all of them if there are fewer.",
+ "tests": [
+  {
+   "args": [
+    "2"
+   ],
+   "stdin": "a\nb\nc\n",
+   "stdout": "a\nb\n"
+  },
+  {
+   "args": [
+    "0"
+   ],
+   "stdin": "a\nb\n",
+   "stdout": ""
+  },
+  {
+   "args": [
+    "5"
+   ],
+   "stdin": "a\nb\n",
+   "stdout": "a\nb\n"
+  },
+  {
+   "args": [
+    "3"
+   ],
+   "stdin": "",
+   "stdout": ""
+  }
+ ]
+}

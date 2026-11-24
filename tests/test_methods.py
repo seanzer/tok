@@ -71,7 +71,7 @@ class ListMethodTests(TokCase):
             'fn main()\n  xs = [1]\n  ys = xs.where(x -> x + 1)\n': ["E0103"],
             'fn main()\n  x = 1\n  ys = [1].map(x -> x)\n': ["E0102"],
             'fn main()\n  ys = [1].frob()\n': ["E0109"],
-            'fn main()\n  ys = [1].join(",")\n': ["E0109"],
+            'fn main()\n  ys = [[1]].join(",")\n': ["E0109"],
             'fn main()\n  ys = ["a"].sum()\n': ["E0109"],
             'fn main()\n  ys = [1].first("a")\n': ["E0103"],
             'fn main()\n  ys = [1].contains("a")\n': ["E0103"],

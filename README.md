@@ -61,7 +61,12 @@ Requirements: Python 3.9+ and a C compiler on `PATH` as `cc` (or set `CC`).
 **Lists**
 - `[T]`, literals, indexing (out of range stops the program with the source line), element assignment and `push`
   on a `var`, `==`, printing
-- Methods: `len`, `push`, `map`, `where`, `any`, `all`, `first(n)`, `contains`, `join` (on `[str]`), `sum`
+- Methods: `len`, `push`, `map`, `where`, `any`, `all`, `contains`, `index_of(v)` (an `int?`), `sum`,
+  `join(sep)` (on lists of strs, numbers or bools), `first(n)`, `last(n)`, `drop(n)`, `reverse`, `unique`
+- Order: `sort()` on numbers and strs, `sort(x -> key)` by a number or str key (stable); `min()`, `max()`,
+  `min(x -> key)`, `max(x -> key)` give an optional, `none` for an empty list, and the first of equal elements.
+  Descending order is `xs.sort().reverse()`.
+- Only `push` changes a list. Every other method gives a new list, so none of them needs a `var`.
 
 **Value semantics**
 - Records and lists are values. Copying one and changing the copy never changes the original, including through
@@ -75,6 +80,11 @@ Requirements: Python 3.9+ and a C compiler on `PATH` as `cc` (or set `CC`).
   `if m == none` + `return`. It applies to a variable or a chain of fields. A `var` is narrowed only where nothing
   in that region assigns to it. Giving a default to a value that is known to be present is error `E0205`.
 - `xs[i] or default` gives the default when `i` is out of range (this is how `args[1] or "app.log"` works)
+- **Checked chains.** Under `or`, every lookup in the chain on its left is checked, so
+  `args[1].to_int() or 0` and `row.split(",")[2].trim() or ""` give the default when an element is missing,
+  instead of stopping the program. Without `or`, a bad index still stops the program.
+- **Methods on optionals.** A method called on a `T?` runs when there is a value and gives `none` otherwise, so the
+  result is optional: `u.email.trim().lower()` is a `str?`. It still has to be unwrapped before use as a plain value.
 - A function that can fail lists `err` after `!`: `fn half(n: int) -> int ! err`. `main` is exempt.
   A call to it must be handled: `half(n)?` (pass the error up), `half(n) or 0` (default), or a handler (below).
 - `main` may use `?`: an error that reaches `main` is printed as `error: <message>` on stderr and the exit code is 1
@@ -109,13 +119,21 @@ fn name(id: int) -> str ! err
 
 **Strings**
 - `+`, comparisons, and the methods `len` (bytes), `contains`, `starts_with`, `ends_with`, `trim`, `upper`, `lower`
-  (ASCII), `lines`, `split`, `replace`, `find`, `to_int`, `to_f64`
+  (ASCII), `lines`, `split`, `words` (split on runs of whitespace), `chars`, `replace`, `reverse`, `repeat(n)`,
+  `first(n)`, `last(n)`, `drop(n)`, `find`, `to_int`, `to_f64`
+- `s[i]` is a one-character `str` (there is no character type). Out of range stops the program; `s[i] or d` does not.
+  Strings are bytes, so these all count bytes. A string cannot be changed in place.
+- Numbers as text: `"{n}"`; `n.to_str(base)` for an integer in base 2 to 36 (`5.to_str(2)` is `"101"`);
+  `x.fixed(digits)` for a float with exactly that many decimals (`3.14159.fixed(2)` is `"3.14"`)
 
 **Modules and the standard library**
 - No import block. `geometry.dist(a, b)` or `geometry.Point { ... }` loads `geometry.tok` from the folder of the
   file being compiled. Everything in a module is public. Errors inside a module name its file.
 - `fs.read_text(path)` and `fs.write_text(path, text)`: need effect `fs`, and can fail
-- `fn main(args: [str])`: `args[0]` is the program, the rest come after `--` on the `tokc run` line
+- `io.read_all()` gives the rest of standard input as a `str`; `io.read_line()` gives the next line without its
+  newline as a `str?`, `none` at the end. Both need effect `io`.
+- `fn main(args: [str])`: `args[0]` is the program, the rest come after `--` on the `tokc run` line;
+  `args.drop(1)` is the list of arguments
 - Math: `sqrt`, `mean`, `min`, `max` (two numbers, or one list), `abs`. `mean`, `min` and `max` of a list give an
   optional, `none` for an empty list: `mean(xs) or 0.0`
 
@@ -131,7 +149,10 @@ fn name(id: int) -> str ! err
   fraction and also checks the range. Integer to float rounds to the nearest value.
 - A number literal takes the type its context expects (`x: u8 = 200`, `p.r + 1`, `f32(p.r) * 0.5`), and otherwise
   is `int` or `f64`. A literal that does not fit is compile error `E0107`.
-- `int` arithmetic (`+ - *`, negation, `abs`, `sum`) stops the program on overflow, naming the source line. The
+- `a ** b` is power. It binds tighter than a unary minus on its left and groups to the right, as in Python:
+  `-2 ** 2` is `-4`, `2 ** 3 ** 2` is `512`. Both sides have the same type. On `int` a negative exponent stops
+  the program; floats use C `pow`.
+- `int` arithmetic (`+ - * **`, negation, `abs`, `sum`) stops the program on overflow, naming the source line. The
   sized integer types wrap around at their width. Integer division by zero stops the program.
 
 **Effects and diagnostics**
@@ -184,7 +205,9 @@ $ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"check","
 
 **Tokens-to-green benchmark** (`bench/`)
 - `bench/tasks/<id>/`: `task.json` (prompt and tests; the first test is shown to the model, the rest are hidden),
-  `ref.tok`, `ref.py`. 40 tasks. The tests check that every reference passes.
+  `ref.tok`, `ref.py`. 64 tasks: the 40 original ones (arguments and files) and 24 added ones (`"group": "added"`;
+  12 read standard input through a test's `stdin` text, 12 work on strings). The tests check that every reference
+  passes. `bench/baseline.json` holds the token counts of the 40 originals before the built-ins, for comparison.
 - `bench/harness.py`: generate, check and run the tests, send back structured feedback (compiler diagnostics as
   JSON, or the first failing run), retry up to a cap. It records attempts, first-try passes, and input, output and
   thinking tokens as reported by the provider.
@@ -196,7 +219,9 @@ $ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"check","
   `python3 -m venv .venv && .venv/bin/pip install tiktoken tokenizers`.
 
 No model run has been made yet, so there are no tokens-to-green numbers. The static counts are in
-`bench/RESULTS.md`.
+`bench/RESULTS.md`: the reference solutions in Tok are still larger than Python's, by about 1.5x over the 64 tasks
+on the OpenAI tokenizers (down from 2.0x on the original 40 before the built-ins). The file breaks down what is left;
+the largest single item is the `fn main(args: [str]) ! io` line that every program carries.
 
 ## Decisions
 
@@ -217,13 +242,25 @@ No model run has been made yet, so there are no tokens-to-green numbers. The sta
 
 **Open** (the least surprising option was built so the rest could proceed)
 
+- **Script form.** Whether a file may hold statements at the top level, standing for the body of `main` with `args`
+  in scope and the effects it uses. Measured in `bench/RESULTS.md`: the `fn main` line is the largest remaining
+  token cost against Python. Not built: it changes how effects are declared for the entry point.
+- **Conditional expression**, multiple assignment, `while`, dicts, character codes, ranges as values: each is a
+  measured cost in the reference solutions and none is built.
 - **Formatter indent width.** `tokc fmt` uses 2 spaces. The measurements are in `bench/RESULTS.md`; the default
   has not been changed.
 - **Typed error spelling**, and whether a signature should list which kinds it can fail with.
 - **Record literals are written `Name { field: value }`.** The doc shows record types but no literal.
 - **No user generics.** The doc lists the generics syntax as an open decision.
-- **`xs[i] or d`** is a checked lookup only when the index is written directly under `or`. Plain `xs[i]` stops the
-  program when out of range.
+- **`or` checks the lookups in the chain on its left** (`xs[i] or d`, `xs[i].m() or d`, `xs[i][j] or d`). Plain
+  `xs[i]` stops the program when out of range. A chain that ends in a `bool` is not checked, because there `or` is
+  the logical operator. The alternative was an explicit marker such as `xs.get(i)` or `?.`; the implicit rule was
+  built because it makes the obvious spelling the safe one.
+- **A method on an optional gives an optional** without a `?.` marker. Field access on an optional record is still
+  an error (narrow it first).
+- **No free `sum(xs)`**: `sum` is too common a variable name to reserve. `xs.sum()`, `xs.min()`, `xs.max()` are
+  the method spellings; `min(a, b)` / `max(a, b)` and the older `min(xs)` / `max(xs)` remain.
+- **`sort` returns a new list** (like Python's `sorted`); there is no in-place sort.
 - **Numeric literals and conversions** follow the rules under "Sized numbers". Narrowing conversions stop the
   program when the value does not fit, rather than wrapping or giving an optional.
 - **Built-in names are reserved**: `print`, `fail`, `sqrt`, `mean`, `min`, `max`, `abs`, the numeric type names,
@@ -239,11 +276,12 @@ No model run has been made yet, so there are no tokens-to-green numbers. The sta
 - User-defined generics; first-class functions and closures; methods on user types
 - Errors that carry data beyond a kind and a message; listing error kinds in a signature
 - `while`-style loops, `break` / `continue`, pattern matching, enums / sum types, maps and sets, tuples, constants
+- A conditional expression (`a if c else b`), ranges as values (`(a..b).sum()`), `zip`, string padding
 - `mut` parameters, and the `simd for` / vector parts of the doc's compute examples (so `normalize_fast` from
   Example B is not covered; `normalize` is)
 - Concurrency: `par for`, channels, tasks
 - Effects other than as checked labels: `net`, `time`, `rand`, `py` have no library behind them
-- `http`, `json`, and the rest of the standard library; stdin; directories
+- `http`, `json`, and the rest of the standard library; directories
 - C header import and the Python bridge
 - Explicit imports, module search paths, packages, visibility (private functions)
 - Unicode-aware string operations (strings are bytes; `len` counts bytes, `upper`/`lower` are ASCII)
@@ -259,7 +297,7 @@ compiler/tok/lexer.py     tokens, indentation
 compiler/tok/parser.py    AST
 compiler/tok/check.py     core: types, effects, statements, C emission
 compiler/tok/f_*.py       one mixin per feature: lists, optionals + errors, methods + lambdas, modules + fs + math,
-                          sized numbers, narrowing
+                          sized numbers, narrowing, built-ins (sort, pieces, numbers as text, stdin)
 compiler/tok/types.py     type table and the generated C helpers per type
 compiler/tok/runtime.py   the C runtime that is prepended to every program
 compiler/tok/fmt.py       the formatter

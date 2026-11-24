@@ -1,13 +1,2 @@
-type Person = { name: str, age: int }
-
-fn parse(text: str) -> Person
-  parts = text.split(":")
-  Person { name: parts[0] or "", age: (parts[1] or "0").to_int() or 0 }
-
 fn main(args: [str]) ! io
-  var best = parse(args[1] or "")
-  for i in 2..args.len() - 1
-    p = parse(args[i])
-    if p.age > best.age
-      best = p
-  print(best.name)
+  print(args.drop(1).max(a -> a.split(":")[1].to_int() or 0).split(":")[0] or "")

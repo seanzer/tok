@@ -19,6 +19,33 @@ class OptRes:
 
     def logic(self, n, want):
         l = n["l"]
+        if n["op"] == "or":
+            # `xs[i] or d`, and a chain of lookups and method calls, `rows[i].split(",")[1].to_int() or d`:
+            # under `or` every lookup in the chain is checked, so a missing element gives the default.
+            spine, at = [], l
+            while at["k"] == "index" or (at["k"] == "mcall" and not self.is_module_call(at)):
+                if at["k"] == "index":
+                    spine.append(at)
+                at = at["base"]
+            bt = self.dry_type(l["base"]) if l["k"] == "index" and len(spine) == 1 else None
+            direct = bt is not None and bt[0] == "list"
+            if spine and not direct and self.dry_type(l) != BOOL:  # a bool chain keeps the logical `or`
+                checked = False
+                for ix in spine:
+                    ix["checked"] = True
+                try:
+                    lt = self.dry_type(l)
+                    checked = lt is not None and lt[0] == "opt"
+                    if checked:
+                        lc, lt = self.expr(l, want)
+                finally:
+                    for ix in spine:
+                        ix["checked"] = False
+                if checked:
+                    if lt == ERR:
+                        self.expr(n["r"])
+                        return "0", ERR
+                    return self.or_default(n, lc, lt, want)
         if n["op"] == "or" and l["k"] == "index":
             bc, bt = self.val(l["base"])
             if bt != ERR and bt[0] == "list" and bt[1] != BOOL:
@@ -28,6 +55,43 @@ class OptRes:
                 self.expr(n["r"])
                 return "0", ERR
         return super().logic(n, want)
+
+    def is_module_call(self, n):
+        return n["base"]["k"] == "name" and self.lookup(n["base"]["name"]) is None
+
+    def dry_type(self, n):
+        """The type an expression would have, without emitting code or reporting errors. None if it has an error."""
+        tmp, nerr, scopes, narrowed, sinks = self.tmp, len(self.errors), len(self.scopes), len(self.narrowed), len(self.sinks)
+        try:
+            with self.capture():
+                return self.expr(n)[1]
+        except Diag:
+            return None
+        finally:
+            self.tmp = tmp
+            del self.errors[nerr:], self.scopes[scopes:], self.narrowed[narrowed:], self.sinks[sinks:]
+
+    def opt_call(self, n, bc, bt, want):
+        """A method called on an optional runs when there is a value and gives none otherwise: the result is optional."""
+        inner = bt[1]
+        h = self.methods[(inner[0], n["name"])]
+        if n["name"] == "push":
+            self.err("E0103", f"cannot push onto {self.type_str(bt)}: it may be none; test it first", n["base"])
+        src = self.hoist(bc, bt)
+        with self.capture(1) as pre:
+            code, ty = h(n, f"{src}.v", inner, want[1] if want is not None and want[0] == "opt" else want)
+        if ty == ERR:
+            return "0", ERR
+        if ty in (VOID, NEVER):
+            self.err("E0103", f"'{n['name']}' returns nothing, so it cannot be called on {self.type_str(bt)}; test it first", n)
+        out_ty = ty if ty[0] == "opt" else ("opt", ty)
+        t = self.new_tmp()
+        self.emit(f"{self.c(out_ty)} {t} TOK_UNUSED = (({self.c(out_ty)}){{0}});")
+        self.emit(f"if ({src}.has) {{")
+        self.buf.extend(pre)
+        self.emit(f"  {t} = {code if ty[0] == 'opt' else f'(({self.c(out_ty)}){{.has = true, .v = {code}}})'};")
+        self.emit("}")
+        return t, out_ty
 
     def index_or(self, n, bc, bt, want):
         """xs[i] or default: the default is used when i is out of range."""

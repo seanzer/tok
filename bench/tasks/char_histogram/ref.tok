@@ -1,0 +1,4 @@
+fn main(args: [str]) ! io
+  cs = (args[1] or "").chars()
+  for c in cs.unique()
+    print("{c} {cs.where(x -> x == c).len()}")

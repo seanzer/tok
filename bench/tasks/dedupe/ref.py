@@ -1,7 +1,3 @@
 import sys
 
-seen = []
-for a in sys.argv[1:]:
-    if a not in seen:
-        seen.append(a)
-print(" ".join(seen))
+print(" ".join(dict.fromkeys(sys.argv[1:])))

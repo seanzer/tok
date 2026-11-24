@@ -1,7 +1,2 @@
 fn main(args: [str]) ! io
-  a = (args[1] or "0").to_int() or 0
-  b = (args[2] or "0").to_int() or 0
-  var r = 1
-  for i in 1..b
-    r *= a
-  print(r)
+  print((args[1].to_int() or 0) ** (args[2].to_int() or 0))

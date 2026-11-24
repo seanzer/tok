@@ -1,0 +1,32 @@
+{
+ "id": "capitalize_words",
+ "group": "added",
+ "prompt": "The arguments are lower-case words. Print them on one line separated by single spaces, each with its first letter in upper case.",
+ "tests": [
+  {
+   "args": [
+    "hello",
+    "big",
+    "world"
+   ],
+   "stdout": "Hello Big World\n"
+  },
+  {
+   "args": [],
+   "stdout": "\n"
+  },
+  {
+   "args": [
+    "a"
+   ],
+   "stdout": "A\n"
+  },
+  {
+   "args": [
+    "ab",
+    "cd"
+   ],
+   "stdout": "Ab Cd\n"
+  }
+ ]
+}

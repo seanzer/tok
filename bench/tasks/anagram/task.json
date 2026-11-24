@@ -1,0 +1,42 @@
+{
+ "id": "anagram",
+ "group": "added",
+ "prompt": "The two arguments are words. Print yes if one is a rearrangement of the letters of the other, otherwise print no.",
+ "tests": [
+  {
+   "args": [
+    "listen",
+    "silent"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "abc",
+    "abd"
+   ],
+   "stdout": "no\n"
+  },
+  {
+   "args": [
+    "aab",
+    "abb"
+   ],
+   "stdout": "no\n"
+  },
+  {
+   "args": [
+    "a",
+    "a"
+   ],
+   "stdout": "yes\n"
+  },
+  {
+   "args": [
+    "ab",
+    "abc"
+   ],
+   "stdout": "no\n"
+  }
+ ]
+}
