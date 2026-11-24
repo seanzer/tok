@@ -1,0 +1,11 @@
+// Design doc Example A without networking and 'par for': the record type and
+// the filtered loop are as written; the users come from local data.
+type User = { id: int, name: str, email: str? }
+
+fn load_users() -> [User]
+  [User { id: 1, name: "Ann", email: "ann@example.com" }, User { id: 2, name: "Bob" }, User { id: 3, name: "Cy", email: "cy@example.com" }]
+
+fn main() ! io
+  users = load_users()
+  for u in users where u.email
+    print("{u.name}: {u.email}")

@@ -1,47 +1,18 @@
 #!/usr/bin/env python3
 """End-to-end tests: compile real programs, run the binaries, check output and diagnostics."""
-import json
+import glob
 import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import unittest
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TOKC = [sys.executable, os.path.join(ROOT, "compiler", "tokc.py")]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from helpers import ROOT, TokCase, tokc  # noqa: E402
 
 
-def tokc(*args, env=None):
-    return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=ROOT, env=env)
-
-
-class TokTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.tmp = tempfile.mkdtemp(prefix="toktest")
-        cls.env = dict(os.environ, XDG_CACHE_HOME=os.path.join(cls.tmp, "cache"))
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.tmp)
-
-    def write(self, name, src):
-        path = os.path.join(self.tmp, name)
-        with open(path, "w") as fh:
-            fh.write(src)
-        return path
-
-    def run_src(self, src):
-        r = tokc("run", self.write("t.tok", src), env=self.env)
-        self.assertEqual(r.returncode, 0, r.stderr)
-        return r.stdout
-
-    def check_err(self, src):
-        r = tokc("check", self.write("e.tok", src), "--json")
-        self.assertEqual(r.returncode, 1)
-        return json.loads(r.stdout)["errors"][0]
-
+class TokTests(TokCase):
     def test_hello_run(self):
         r = tokc("run", "examples/hello.tok", env=self.env)
         self.assertEqual((r.returncode, r.stdout), (0, "hello, world\n"))
@@ -76,9 +47,9 @@ class TokTests(unittest.TestCase):
         self.assertEqual(self.run_src(src), "yes\n")
 
     def test_division_by_zero_panics(self):
-        r = tokc("run", self.write("z.tok", 'fn main() ! io\n  z = 0\n  print(1 / z)\n'), env=self.env)
-        self.assertEqual(r.returncode, 70)
-        self.assertIn("division by zero", r.stderr)
+        _, err = self.run_fail('fn main() ! io\n  z = 0\n  print(1 / z)\n', 70)
+        self.assertIn("division by zero", err)
+        self.assertIn("f.tok:3", err)
 
     def test_missing_effect_has_fix(self):
         with open(os.path.join(ROOT, "tests/bad/missing_effect.tok")) as fh:
@@ -117,6 +88,14 @@ class TokTests(unittest.TestCase):
     def test_error_span_points_at_problem(self):
         e = self.check_err('fn main() ! io\n  print(nope)\n')
         self.assertEqual((e["line"], e["col"], e["end_col"]), (2, 9, 13))
+
+
+def load_tests(loader, tests, pattern):
+    """Also run every tests/test_*.py file."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for path in sorted(glob.glob(os.path.join(here, "test_*.py"))):
+        tests.addTests(loader.loadTestsFromName(os.path.splitext(os.path.basename(path))[0]))
+    return tests
 
 
 if __name__ == "__main__":

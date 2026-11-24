@@ -1,0 +1,10 @@
+// Design doc Example B: the normalize kernel, as written, plus a main to run it.
+fn normalize(xs: [f64]) -> [f64]
+  m = mean(xs)
+  s = sqrt(mean(xs.map(x -> (x - m) * (x - m))))
+  xs.map(x -> (x - m) / s)
+
+fn main() ! io
+  xs = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0]
+  print("mean {mean(xs)}, max {max(xs)}")
+  print(normalize(xs))

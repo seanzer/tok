@@ -1,0 +1,31 @@
+
+
+//top comment
+type   User={id:int,name :str , email:str ?}
+type Empty = {  }
+fn  half( n:int )->int!err
+      //about the if
+      if n%2!=0   // trailing
+            fail( "{n} is odd" )
+
+      n/2
+fn main( args:[ str ] )!io,fs
+
+
+  var xs:[int]=[ 1,2 , -3 ]
+  u=User{id:1,name:"A b"}
+  e = Empty{}
+  for i in 0 .. xs . len( )-1
+    xs[ i ]+=1
+    print( xs [i] )
+
+
+
+  ys=xs.map( x->x* -2 ).where( (x)->not (x>0) and - x>=0 )
+  print( "{ys} {half( 4 )?} {u . email or "none"} {-xs[0]} {e}" )
+  if xs.len( )>2 and not ( ys[0]==1 )
+    print(  -  1 )
+  else
+    print( [ [1] , [ ] ] )
+  // trailing comment in block
+//end

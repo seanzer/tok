@@ -1,0 +1,9 @@
+type Point = { x: f64, y: f64 }
+
+fn dist(a: Point, b: Point) -> f64
+  dx = a.x - b.x
+  dy = a.y - b.y
+  sqrt(dx * dx + dy * dy)
+
+fn describe(p: Point) -> str
+  "point at ({p.x}, {p.y})"

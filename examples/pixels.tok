@@ -1,0 +1,20 @@
+// Sized numeric types: u8 channels, f32 math, explicit conversions.
+type Pixel = { r: u8, g: u8, b: u8 }
+
+fn luma(p: Pixel) -> f32
+  0.299 * f32(p.r) + 0.587 * f32(p.g) + 0.114 * f32(p.b)
+
+fn gray(p: Pixel) -> Pixel
+  // f32 -> u8 truncates toward zero and stops the program if the value does not fit
+  y = u8(luma(p))
+  Pixel { r: y, g: y, b: y }
+
+fn main() ! io
+  image = [Pixel { r: 255, g: 128, b: 0 }, Pixel { r: 10, g: 200, b: 30 }]
+  for p in image
+    print("{p} -> luma {luma(p)} -> {gray(p)}")
+  total = image.map(p -> u32(p.r) + u32(p.g) + u32(p.b)).sum()
+  print("channel total {total}")
+  var counter: u8 = 250
+  counter += 10
+  print("u8 arithmetic wraps: 250 + 10 = {counter}")

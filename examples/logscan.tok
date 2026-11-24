@@ -1,0 +1,9 @@
+// Design doc Example C, as written.
+// tokc run examples/logscan.tok -- examples/data/server.log
+fn main(args: [str]) ! io, fs
+  path = args[1] or "app.log"
+  lines = fs.read_text(path)?.lines()
+  errors = lines.where(l -> l.contains("ERROR"))
+  print("{errors.len()} errors in {lines.len()} lines")
+  for e in errors.first(10)
+    print(e)

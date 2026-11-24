@@ -1,0 +1,6 @@
+// Modules are found by qualified use: 'geometry.dist' loads geometry.tok from this folder.
+fn main() ! io
+  a = geometry.Point { x: 0.0, y: 0.0 }
+  b = geometry.Point { x: 3.0, y: 4.0 }
+  print("distance {geometry.dist(a, b)}")
+  print(geometry.describe(b))

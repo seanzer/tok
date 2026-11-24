@@ -1,0 +1,7 @@
+2026-11-24 09:00:01 INFO  server started on :8080
+2026-11-24 09:00:07 ERROR db: connection refused (attempt 1)
+2026-11-24 09:00:09 WARN  retrying in 2s
+2026-11-24 09:00:11 ERROR db: connection refused (attempt 2)
+2026-11-24 09:00:13 INFO  db: connected
+2026-11-24 09:02:40 ERROR GET /users/17: timeout after 30s
+2026-11-24 09:03:02 INFO  GET /health 200
