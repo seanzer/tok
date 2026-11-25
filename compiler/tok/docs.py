@@ -46,6 +46,15 @@ CODES = {
     "E0403": "The file has both top-level statements and `fn main`. Use one: statements at the top level, or `fn main`.",
     "E0404": "A module (a file used by another) has statements at the top level. Only the program file may.",
     "E0501": "Unknown name or module: no variable, built-in module, or `<name>.tok` file next to the program.",
+    "E0601": "A `par for` body writes outer state in a way that could race. Allowed: `xs[i] = v` at the loop index of a "
+             "range, a reduction on an outer number (`t += e`, `-=`, `*=`, `v = min(v, e)`, `v = max(v, e)`), and "
+             "method calls on an atomic. To collect results use `ys = par for x in xs -> expr`.",
+    "E0602": "A `par for` body writes a list whose elements are not numbers, bools or records of them, or combines a "
+             "value that is not a number. Use the expression form `ys = par for x in xs -> expr`.",
+    "E0603": "`return`, `break`, `?` and `fail` cannot leave a `par for` body. Handle the error inside the body with "
+             "`or`, or use a plain `for`.",
+    "E0604": "`spawn` takes a call to a function of the program: `t = spawn work(x)`.",
+    "E0605": "Only a channel is made with `name[T](...)`: `chan[int](8)`. An atomic is `atomic(0)`, a task comes from `spawn`.",
     "E0900": "The feature is not supported by this compiler.",
 }
 
@@ -64,6 +73,10 @@ BUILTINS = {
     "f64": "float methods: fixed(digits) -> str, exactly that many digits after the point.",
     "fs.read_text": "fs.read_text(path: str) -> str ! fs, err",
     "fs.write_text": "fs.write_text(path: str, text: str) ! fs, err",
+    "net.get": "net.get(url: str) -> str ! net, err: the body of an HTTP GET. http:// only, no redirects; a status of 300 "
+               "or more is an error. Errors have kind NetError.",
+    "net.request": "net.request(host: str, port: int, data: str) -> str ! net, err: connect over TCP, send data, read "
+                   "until the peer closes. Errors have kind NetError.",
     "str": "str methods: len, contains(s), starts_with(s), ends_with(s), trim, upper, lower, lines, split(sep), words, "
            "chars, replace(a, b), reverse, repeat(n), first(n), last(n), drop(n), find(s) -> int?, to_int() -> int?, "
            "to_f64() -> f64?. s[i] is a one-character str (bytes; out of range stops the program, `s[i] or d` does not).",

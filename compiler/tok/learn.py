@@ -77,6 +77,18 @@ RULES = """## Effects and errors (the compiler checks both)
   handler block on `e.kind`; `e.msg` is the text; `fail(e)` passes it on. Plain `fail("message")` has kind
   `Failed`; file errors have kind `FsError`.
 - Files: `fs.read_text(path)` gives `str`, `fs.write_text(path, text)`; both need `fs` and can fail.
+- Network: `net.get(url)` gives the body of an `http://` GET, `net.request(host, port, data)` the TCP answer; both
+  need `net` and can fail (kind `NetError`).
+"""
+
+CONC = """## Concurrency (optional; the compiler rejects data races)
+- `par for i in a..b` / `par for x in xs` runs iterations on several threads. The body may read anything, but write
+  outer state only as `out[i] = v` (the loop index of a range) or a reduction on an outer number: `t += e`, `-=`,
+  `*=`, `v = min(v, e)`, `v = max(v, e)`. No `return`, `break`, `?`. `ys = par for x in xs -> f(x)` is a parallel map.
+- `t = spawn f(x)` starts a task, `t.wait()` gives its value once (`t.wait()?` if `f` can fail). `ch = chan[int](8)`:
+  `ch.send(v)`, `ch.recv()` (`none` when closed and empty), `ch.close()`, `for v in ch`. Types: `task[int]`, `chan[int]`.
+- `a = atomic(0)` (int or bool) is the one value threads share: `a.load()`, `a.store(v)`, `a.add(n)` (new value),
+  `a.swap(v)` (old value), `a.compare_swap(expected, new)` (bool). Type: `atomic[int]`.
 """
 
 # (title, source, expected stdout, program arguments), and a fifth item when the program reads standard input
@@ -151,6 +163,25 @@ print(if b > 2 then "many words" else "few words")
 words = text.lines().where(l -> l.trim() != "")
 print("{words.len()} non-empty lines")
 ''', '0 non-empty lines\n', []),
+    ("A parallel loop, a task, a channel, an atomic",
+     '''fn squares(ch: chan[int], n: int)
+  for i in 1..n
+    ch.send(i * i)
+  ch.close()
+
+xs = par for i in 1..100 -> i * 2
+var total = 0
+hits = atomic(0)
+par for x in xs
+  total += x
+  hits.add(1)
+ch = chan[int](4)
+t = spawn squares(ch, 3)
+for v in ch
+  print(v)
+t.wait()
+print("{total} {hits.load()}")
+''', '1\n4\n9\n10100 100\n', []),
 ]
 
 # (what went wrong, wrong source, error code the compiler gives, corrected source, stdout of the corrected one)
@@ -208,7 +239,8 @@ def mistake_text(m):
 def sections():
     """(key, title, text, priority). Lower priority numbers are kept longer under a budget."""
     out = [("intro", "Overview", HEAD, 0), ("same", "Same as Python and Go", SAME, 0),
-           ("different", "Different from both", DIFF, 0), ("effects", "Effects and errors", RULES, 0)]
+           ("different", "Different from both", DIFF, 0), ("effects", "Effects and errors", RULES, 0),
+           ("concurrency", "Concurrency", CONC, 2)]
     for i, m in enumerate(MISTAKES):
         out.append((f"mistake{i + 1}", m[0], mistake_text(m), 2))
     for i, ex in enumerate(EXAMPLES):

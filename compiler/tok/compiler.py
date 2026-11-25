@@ -8,8 +8,9 @@ from .f_modules import Modules
 from .f_narrow import Narrow
 from .f_numeric import Numeric
 from .f_optres import OptRes
+from .f_par import Par
 
-MIXINS = [Narrow, Builtins, Numeric, Modules, Methods, OptRes, Dicts, Lists]
+MIXINS = [Par, Narrow, Builtins, Numeric, Modules, Methods, OptRes, Dicts, Lists]
 
 
 def make_compiler():

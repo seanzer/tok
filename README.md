@@ -10,6 +10,8 @@ Phase 1 of the plan (the core language) is in, with the design decisions from th
 Phase 2 tooling (learn pack, tool server, benchmark harness) is built. No model benchmark has been run yet.
 Phase 3 so far: the memory model (reference counts, copy-on-write, nothing leaks) and a performance suite against
 C and Python; see "Memory" and "Performance".
+Phase 4: concurrency (`par for`, tasks, channels, atomics) on a thread pool, with data races rejected at compile
+time; see "Concurrency". A first `net` module (a blocking TCP client and HTTP GET over plain sockets) sits on top.
 The whole pipeline runs end to end:
 
 ```
@@ -60,6 +62,7 @@ Requirements: Python 3.9+ and a C compiler on `PATH` as `cc` (or set `CC`).
 | `tokc run <file> [-- args]` | Compile at `-O0`, cache the binary, run it with the given arguments |
 | `tokc build <file> [-o out]` | Compile at `-O2` to a native binary |
 | `tokc run <file> --sanitize [-- args]`, `tokc build <file> --sanitize` | The same under AddressSanitizer, LeakSanitizer and UndefinedBehaviorSanitizer (`-O1 -g`) |
+| `tokc run <file> --tsan [-- args]`, `tokc build <file> --tsan` | The same under ThreadSanitizer (it cannot be combined with `--sanitize`) |
 | `tokc check <file> [--json]` | Type and effect check only; reports every independent error in one run |
 | `tokc fix <file>` | Apply the compiler's suggested fixes until the file checks |
 | `tokc fmt <file> [--check]` | Rewrite the file in the canonical layout (`--check` only reports) |
@@ -136,7 +139,7 @@ Requirements: Python 3.9+ and a C compiler on `PATH` as `cc` (or set `CC`).
 **Typed errors** (syntax provisional)
 - An error has a kind and a message. Kinds are declared at the top level: `error NotFound, Timeout`.
 - `fail(NotFound, "no user {id}")` fails with that kind. `fail(NotFound)` uses the kind's name as the message.
-  `fail("message")` still works and has the built-in kind `Failed`. `fs` failures have the built-in kind `FsError`.
+  `fail("message")` still works and has the built-in kind `Failed`. `fs` failures have the built-in kind `FsError`, `net` failures `NetError`.
 - A handler binds the error: `load(id) or e -> "fallback: {e.msg}"`. `e` is an `Error` with `e.kind` and `e.msg`.
 - To branch on what went wrong, end the line at `->` and write a block. Each path ends in the value to use,
   or leaves with `return` or `fail`; `fail(e)` passes the same error on.
@@ -174,6 +177,13 @@ fn name(id: int) -> str ! err
 - No import block. `geometry.dist(a, b)` or `geometry.Point { ... }` loads `geometry.tok` from the folder of the
   file being compiled. Everything in a module is public. Errors inside a module name its file.
 - `fs.read_text(path)` and `fs.write_text(path, text)`: need effect `fs`, and can fail
+- `net.get(url)` gives the body of an HTTP GET as a `str`; `net.request(host, port, data)` opens a TCP connection,
+  sends `data`, closes its sending side and gives everything the peer answers. Both need effect `net`, can fail
+  (kind `NetError`), and block the thread they are on. Provisional and deliberately small: `http://` only (no
+  TLS), HTTP/1.0, no redirects (a 3xx is an error, as is a status of 400 or more), no request headers or other
+  methods, no servers, no connection that stays open; each send and receive gives up after 30 seconds. The socket
+  code is only in programs that call `net`. In a program with threads a request parks its OS thread like a
+  blocked channel does.
 - `io.read_all()` gives the rest of standard input as a `str`; `io.read_line()` gives the next line without its
   newline as a `str?`, `none` at the end. Both need effect `io`.
 - `args` (or the parameter of `fn main(args: [str])`) is the list of program arguments, without the program name:
@@ -255,8 +265,8 @@ copied on write like a list buffer. Underneath:
   is always finished and owned before the place it goes into is made unique. A list can therefore never come to
   contain itself: `n.kids.push(n)` and `n.kids[0] = n` store a snapshot of `n` (tests/mem/self_store.tok). With no
   cycles, a count that reaches zero is the only way memory is freed, and it always is.
-- **Counts are not atomic.** There is no concurrency yet. When there is, values that cross a task boundary will
-  need atomic counts or a copy.
+- **Counts are not atomic**, also with threads: see "Concurrency" for the three rules that make that safe. Only the
+  cells of channels, tasks and atomics are counted atomically.
 - **A panic exits without freeing** (exit code 70): bounds, overflow, division by zero. An error that reaches
   `main` frees everything and exits with 1.
 
@@ -281,6 +291,105 @@ copied on write like a list buffer. Underneath:
 - String slices that share the parent's buffer (`split`, `lines`, `trim` copy today); small-string storage; arenas.
 - First-class lambdas and closures (see "Decisions"): still second-class.
 
+## Concurrency
+
+All of the syntax in this section is provisional.
+
+```
+fn squares(ch: chan[int], n: int)
+  for i in 1..n
+    ch.send(i * i)
+  ch.close()
+
+xs = par for i in 1..100 -> i * 2      // parallel map: the results in order
+var total = 0
+hits = atomic(0)
+par for x in xs                        // iterations run at the same time
+  total += x                           // a reduction
+  hits.add(1)                          // an atomic is shared on purpose
+ch = chan[int](4)
+t = spawn squares(ch, 3)               // a task
+for v in ch
+  print(v)
+t.wait()
+```
+
+**`par for`.** `par for i in a..b` and `par for x in xs`, with an optional `where`. The iterations are cut into at
+most 64 chunks; the pool's threads and the calling thread take chunks until none are left. A `par for` inside a
+`par for` runs its iterations on the thread it is on. The body may read anything. It may change outer state in
+three ways only, and everything else is error E0601 with a fix that removes `par `:
+
+- `out[i] = v` (also `out[i].field = v`, `out[i] += v`) where `i` is the loop variable of a range and `out` is a list
+  of numbers, bools or records of them. The body may then use `out` only as `out[i]`.
+- a reduction on an outer number: `t += e`, `t -= e`, `t *= e`, `v = min(v, e)`, `v = max(v, e)`. The body may not
+  read the variable anywhere else. Each chunk has its own partial result and they are combined in chunk order. The
+  cut depends only on the number of iterations, so **a float reduction gives the same bits for every thread
+  count**, but not always the same bits as the plain `for`, which adds in one long chain. Integer reductions are
+  exact and still stop the program on overflow.
+- a method call on an atomic.
+
+`return`, `break`, `?` and `fail` cannot leave the body (E0603); `continue` works. Handle errors inside the body
+with `or`. `ys = par for x in xs -> expr` gives the list of results in order (no `where`).
+
+**Tasks.** `t = spawn f(args)` runs a call to a function of the program on the pool and gives a `task[T]`
+(`task[T, err]` if `f` can fail). `t.wait()` gives the value, once; a second `wait()` on the same task is a panic.
+If `f` can fail, so can `wait()`, and the error goes through the usual `?` / `or`. `t.done()` says whether it has
+finished. If the task has not started when `wait()` is called, the waiter runs it itself. A task nobody waits for
+still runs to its end before the program exits, and its result is freed.
+
+**Channels.** `ch = chan[T](capacity)`, capacity at least 1. `ch.send(v)` waits while the channel is full and is a
+panic on a closed channel; `ch.recv()` gives a `T?`, `none` once the channel is closed and empty; `ch.close()`;
+`for v in ch` receives until then. Any number of senders and receivers.
+
+**Atomics.** `atomic(0)` is an `atomic[int]`, `atomic(false)` an `atomic[bool]`. `load()`, `store(v)`, `add(n)`
+(int only; gives the new value and wraps on overflow like the sized integers), `swap(v)` (gives the old value),
+`compare_swap(expected, new)` (gives a bool; no spurious failures). They are C11 `<stdatomic.h>` operations with
+sequentially consistent ordering; there are no ordering options. An atomic is a handle: assigning it, passing it
+or putting it in a record or list shares the one cell.
+
+**Effects.** Concurrency adds no effect and does not color functions: `spawn`, `wait`, channels and atomics need
+nothing in a signature. A `par for` body and a spawned call need what they do, as always: spawning a function with
+`! io` needs `io` in the caller.
+
+**What blocks.** There are no green threads. A `send` on a full channel, a `recv` on an empty one, and a `wait` on a
+running task each park the OS thread they are on. So that parked threads do not starve the pool, a thread that is
+about to park starts a replacement worker when jobs are queued and no worker is idle, up to 256 threads; beyond
+that, programs with more than 256 tasks all blocked on each other stop making progress. A program in which every
+thread waits on something that never comes hangs: there is no deadlock detector.
+
+**Threads.** `TOK_THREADS=n` sets the number of threads that run a `par for`, the calling thread included (1 to
+256; anything else falls back to the default, the number of cores the system reports). Workers are started when
+first needed. Each worker has its own queue: it takes from the back of its own and steals from the front of the
+others. A program that uses none of this is single-threaded C with no pthread dependency; one that does is
+compiled and linked with `-pthread`.
+
+**A panic on any thread** prints the usual message and exits the whole program with code 70.
+
+### Memory with threads
+
+Reference counts stay non-atomic. That is safe because no counted buffer is ever changed, or has its count
+changed, by two threads:
+
+1. **What a `par for` body reads is pinned for the loop.** Before the loop the calling thread marks every list,
+   dict and string the body can reach through its captures (the count becomes a large negative number); after the
+   loop it puts the counts back. A retain or release of a pinned value does nothing, on any thread, so the count
+   is never written while the workers run, and copy-on-write sees "not mine alone" and copies. The caller holds its
+   own reference for the whole loop, so nothing pinned can be freed. Pinning walks the captured values once
+   (one write per buffer, not per element of a list of numbers); it costs nothing when the loop runs on one thread.
+2. **A value that leaves its thread is isolated.** Arguments of a spawned call, values sent on a channel, and
+   the results of `par for ... ->` are moved if the buffer has a single owner and deep-copied if it is shared (or
+   pinned). After that the receiving thread is the only owner of everything it can reach.
+3. **The checker rejects every other write** from a `par for` body to outer state (above).
+
+Channels, tasks and atomics are the exception by design: their cells are counted with atomic operations and are
+shared between threads.
+
+How it is checked: `tests/mem/par_for.tok`, `tasks_channels.tok` and `atomics.tok` run under ASan/LSan/UBSan with
+the rest of the corpus and under ThreadSanitizer with 2, 4 and 8 threads (`tests/test_memory.py`), next to a C
+program with a real data race that ThreadSanitizer must report. `TOK_SANITIZE=thread python3 tests/test_par.py`
+puts every concurrency test under ThreadSanitizer. On this machine ThreadSanitizer binaries only start with address
+randomization off, so `tokc run --tsan` and the tests run them through `setarch -R`.
+
 ## Performance
 
 `bench/perf/` holds 11 small kernels, each written in Tok, hand-written C (`cc -O2`) and Python, and a runner that
@@ -290,8 +399,12 @@ still slower than C and why.
 
 ```
 python3 bench/perf/run.py --save current     # measure
+python3 bench/perf/run.py --parallel         # the four par_* kernels against C + OpenMP with 1, 2 and 4 threads
 python3 bench/perf/run.py --report           # rewrite bench/perf/RESULTS.md
 ```
+
+The parallel tables come with a caveat that is spelled out in RESULTS.md: the machine they were measured on has a
+CPU allowance of 1.5 cores, so they show correctness, low overhead and a two-thread gain, not scaling.
 
 ## Phase 2: measure early
 
@@ -299,6 +412,9 @@ python3 bench/perf/run.py --report           # rewrite bench/perf/RESULTS.md
 differs, the effect and error rules, common mistakes with their fixes, and complete programs. Every code sample in
 it is compiled and run by `tests/test_learn.py`. `--budget N` drops the lowest-priority pieces; the compiler has no
 tokenizer, so N is counted as characters / 3. Real sizes are in `bench/RESULTS.md`.
+With the concurrency section, its sample and the `net` line, the full guide is 10,862 characters, 3,638 tokens on
+tiktoken o200k_base (it was 3,159). `--budget 2000` gives 1,910 tokens and leaves the concurrency section out;
+`--budget 3000` keeps it (2,982 tokens). The table in `bench/RESULTS.md` is from before this round.
 
 **Compiler as a tool.** `tokc serve` reads one JSON-RPC 2.0 message per line on stdin and answers on stdout, using
 the Model Context Protocol method names (`initialize`, `tools/list`, `tools/call`, `ping`). Tools: `check`
@@ -387,7 +503,7 @@ lookup or a parse (`args[0].to_int() or 0`).
 - **Numeric literals and conversions** follow the rules under "Sized numbers". Narrowing conversions stop the
   program when the value does not fit, rather than wrapping or giving an optional.
 - **Built-in names are reserved**: `print`, `fail`, `sqrt`, `mean`, `min`, `max`, `abs`, the numeric type names,
-  `Error`, `ErrorKind`, and the kinds `Failed` and `FsError` cannot be redefined.
+  `Error`, `ErrorKind`, and the kinds `Failed`, `FsError` and `NetError` cannot be redefined.
 - **A local variable wins over a module** of the same name. No variable shadowing inside a function.
 - **A statement is one line**, except for a handler block after `or e ->`. There is no line continuation.
 - **`tokc fmt` does not reformat the code inside string interpolations** and does not wrap long lines.
@@ -402,9 +518,13 @@ lookup or a parse (`args[0].to_int() or 0`).
 - Ranges as values (`(a..b).sum()`), `zip`, string padding
 - `mut` parameters, and the `simd for` / vector parts of the doc's compute examples (so `normalize_fast` from
   Example B is not covered; `normalize` is)
-- Concurrency: `par for`, channels, tasks
-- Effects other than as checked labels: `net`, `time`, `rand`, `py` have no library behind them
-- `http`, `json`, and the rest of the standard library; directories
+- Green threads (a blocked task holds an OS thread), a `scope` block for structured concurrency, `select` over
+  channels, timeouts and cancellation, unbounded or zero-capacity channels, ordering options for atomics, atomics
+  of other types, locks, parallel `sort`, closures as tasks (`spawn` takes a call to a named function)
+- Effects other than as checked labels: `time`, `rand`, `py` have no library behind them
+- Networking beyond `net.get` and `net.request`: TLS, redirects, headers, POST, servers, open connections,
+  non-blocking I/O
+- `json`, and the rest of the standard library; directories
 - C header import and the Python bridge
 - Explicit imports, module search paths, packages, visibility (private functions)
 - Unicode-aware string operations (strings are bytes; `len` counts bytes, `upper`/`lower` are ASCII)
@@ -423,6 +543,10 @@ compiler/tok/f_*.py       one mixin per feature: lists, optionals + errors, meth
                           sized numbers, narrowing, built-ins (sort, pieces, numbers as text, stdin)
 compiler/tok/types.py     type table and the generated C helpers per type
 compiler/tok/runtime.py   the C runtime that is prepended to every program
+compiler/tok/runtime_mt.py  the threads runtime, only in programs that use concurrency: pool, par for, tasks,
+                          channels, atomics
+compiler/tok/runtime_net.py  the socket code, only in programs that call the net module
+compiler/tok/f_par.py     concurrency: the race checker and the code for par for, spawn, channels, atomics
 compiler/tok/fmt.py       the formatter
 compiler/tok/diag.py      diagnostics and fixes
 compiler/tok/learn.py     the language guide for models (tokc learn)

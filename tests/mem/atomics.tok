@@ -1,0 +1,55 @@
+// atomics: the one value shared by reference between threads
+// exit 0
+type Job = { id: int, text: str }
+
+fn worker(jobs: chan[Job], done: chan[str], hits: atomic[int])
+  for j in jobs
+    hits.add(1)
+    done.send("{j.id}:{j.text.upper()}")
+
+fn feed(jobs: chan[Job], lo: int, hi: int)
+  for i in lo..hi
+    jobs.send(Job { id: i, text: "job{i}" })
+
+fn bump(c: atomic[int], n: int)
+  par for i in 1..n
+    var old = c.load()
+    while not c.compare_swap(old, old + 2)
+      old = c.load()
+
+jobs = chan[Job](3)
+done = chan[str](2)
+hits = atomic(0)
+ws = par for i in 1..4 -> spawn worker(jobs, done, hits)
+f1 = spawn feed(jobs, 1, 50)
+f2 = spawn feed(jobs, 51, 100)
+var n = 0
+var total = 0
+while n < 100
+  m = done.recv() or ""
+  total += m.len()
+  n += 1
+f1.wait()
+f2.wait()
+jobs.close()
+for w in ws
+  w.wait()
+done.close()
+print(done.recv() == none)
+print("{n} {total} {hits.load()}")
+c = atomic(0)
+bs = par for i in 1..6 -> spawn bump(c, 500)
+for b in bs
+  b.wait()
+print(c.load())
+flag = atomic(false)
+print(flag.swap(true))
+print(flag.compare_swap(false, true))
+print(flag.load())
+print(c.swap(7))
+print(c.add(-10))
+count = atomic(0)
+par for i in 1..1000
+  count.add(1)
+print(count.load())
+print(count)

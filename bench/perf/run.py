@@ -9,6 +9,10 @@ prints a checksum, and the three must agree before a time is recorded.
   python3 bench/perf/run.py --only sort,fib      a subset
   python3 bench/perf/run.py --langs tok,c        skip Python
   python3 bench/perf/run.py --report             write bench/perf/RESULTS.md from baseline.json and current.json
+  python3 bench/perf/run.py --parallel           the par_* kernels with 1, 2 and 4 threads; writes parallel.json
+
+The parallel kernels have a C reference that uses OpenMP (cc -O2 -fopenmp). The thread count is set with TOK_THREADS
+for Tok and OMP_NUM_THREADS for C.
 
 Wall time is the median of --runs runs (default 5), measured around the whole process by bench/perf/timeit.c.
 Peak memory is the largest resident set size the kernel reported for the process (ru_maxrss), the maximum over the runs.
@@ -44,13 +48,24 @@ ABOUT = {
 }
 
 
-def measure_rss(launcher, cmd, runs, timeout):
+PAR_ORDER = ["par_normalize", "par_records", "par_sum", "par_mandel"]
+PAR_ABOUT = {
+    "par_normalize": "normalize over 1,000,000 f64: two parallel sums and a parallel map, 8 rounds",
+    "par_records": "parallel map over 400,000 records, 40 steps",
+    "par_sum": "parallel integer sum over 30,000,000 values, 4 rounds",
+    "par_mandel": "Mandelbrot 600 x 600, limit 300, one row per iteration",
+}
+THREADS = [1, 2, 4]
+
+
+def measure_rss(launcher, cmd, runs, timeout, env=None):
     """Returns (median seconds, best seconds, peak RSS in KiB, stdout). Time and memory come from bench/perf/timeit.c."""
     times, peak, out = [], 0, None
     stats = launcher + ".stats"
     for _ in range(runs):
         try:
-            r = subprocess.run([launcher, stats] + cmd, capture_output=True, stdin=subprocess.DEVNULL, timeout=timeout)
+            r = subprocess.run([launcher, stats] + cmd, capture_output=True, stdin=subprocess.DEVNULL, timeout=timeout,
+                               env=dict(os.environ, **env) if env else None)
         except subprocess.TimeoutExpired:
             raise RuntimeError(f"timed out after {timeout}s")
         if r.returncode != 0:
@@ -132,6 +147,109 @@ def run_suite(args):
     return 0 if all(r["agree"] and all("error" not in v for v in r.values() if isinstance(v, dict)) for r in results.values()) else 1
 
 
+def cpu_share():
+    """The CPU time this container may use, in cores, from the cgroup; None if there is no limit to read."""
+    try:
+        with open("/sys/fs/cgroup/cpu.max") as fh:
+            quota, period = fh.read().split()
+        return None if quota == "max" else round(int(quota) / int(period), 2)
+    except (OSError, ValueError):
+        return None
+
+
+def run_parallel(args):
+    names = [k for k in PAR_ORDER if not args.only or k in args.only.split(",")]
+    build = tempfile.mkdtemp(prefix="tokperf")
+    results = {}
+    try:
+        launcher = os.path.join(build, "timeit")
+        subprocess.run([os.environ.get("CC", "cc"), "-std=c11", "-O2", "-o", launcher, os.path.join(HERE, "timeit.c")], check=True)
+        for name in names:
+            tok_exe, c_exe = os.path.join(build, name + "_tok"), os.path.join(build, name + "_c")
+            subprocess.run(TOKC + ["build", os.path.join(KERNELS, name + ".tok"), "-o", tok_exe], check=True, capture_output=True)
+            subprocess.run([os.environ.get("CC", "cc"), "-std=c11", "-O2", "-fopenmp", "-o", c_exe,
+                            os.path.join(KERNELS, name + ".c"), "-lm"], check=True)
+            row, outs = {}, set()
+            for t in THREADS:
+                for lang, exe, var in (("tok", tok_exe, "TOK_THREADS"), ("c", c_exe, "OMP_NUM_THREADS")):
+                    med, best, rss, out = measure_rss(launcher, [exe], args.runs, args.timeout, {var: str(t)})
+                    row[f"{lang}_{t}"] = {"seconds": round(med, 4), "best": round(best, 4), "peak_kib": rss}
+                    outs.add(out.strip())
+            row["agree"] = len(outs) == 1
+            results[name] = row
+            print(f"{name:14} " + "  ".join(f"{k} {v['seconds']:.3f}s" for k, v in row.items() if isinstance(v, dict))
+                  + ("" if row["agree"] else "   OUTPUTS DIFFER"), flush=True)
+    finally:
+        shutil.rmtree(build, ignore_errors=True)
+    doc = {"machine": machine(), "cpu_share": args.cpu_share or cpu_share(), "cpu_share_source":
+           "given with --cpu-share" if args.cpu_share else "cgroup cpu.max", "runs": args.runs, "threads": THREADS,
+           "tok_flags": "tokc build (cc -std=c11 -O2 -pthread)", "c_flags": "cc -std=c11 -O2 -fopenmp", "results": results}
+    with open(os.path.join(HERE, "parallel.json"), "w") as fh:
+        json.dump(doc, fh, indent=1, sort_keys=True)
+        fh.write("\n")
+    print("wrote bench/perf/parallel.json")
+    return 0 if all(r["agree"] for r in results.values()) else 1
+
+
+def parallel_report(w):
+    path = os.path.join(HERE, "parallel.json")
+    if not os.path.exists(path):
+        return
+    with open(path) as fh:
+        doc = json.load(fh)
+    m, share, ts = doc["machine"], doc.get("cpu_share"), doc["threads"]
+    w("## Parallel kernels")
+    w("")
+    w("Written from `parallel.json` (`python3 bench/perf/run.py --parallel`). Tok: `" + doc["tok_flags"] + "`, threads set "
+      "with `TOK_THREADS`. C: `" + doc["c_flags"] + "`, threads set with `OMP_NUM_THREADS`. Median of "
+      f"{doc['runs']} runs of the whole process; every run of a kernel, in both languages and at every thread count, printed the same checksum.")
+    w("")
+    if share is not None:
+        w(f"**Read this first.** The machine shows {m['cores']} cores, but it is a shared VM whose CPU allowance is "
+          f"{share} cores ({doc.get('cpu_share_source')}). Over any long stretch a program here gets at most about {share} "
+          "cores of CPU time, however many threads it starts; short runs like these can briefly get more, and other "
+          "tenants can take time away, so the ratios move from run to run. With more threads than the allowance the "
+          "threads take turns, which is why 4 threads are sometimes no faster, or slower, than 2.")
+        w("")
+        w("What these tables can show: the parallel programs give the same answers as the serial ones, the cost of the "
+          "parallel machinery on one thread is small, Tok is close to C with OpenMP at each thread count, and two threads "
+          f"do help. What they cannot show: how Tok scales to 4 or more real cores. That needs a machine with that many "
+          "unshared cores, and nothing here should be read as a scaling result.")
+    else:
+        w(f"The machine shows {m['cores']} cores and no CPU limit was found for this container.")
+    w("")
+    w("### Wall time, seconds")
+    w("")
+    w("| Kernel | What it does | " + " | ".join(f"Tok {t}T" for t in ts) + " | " + " | ".join(f"C+OpenMP {t}T" for t in ts)
+      + f" | Tok {ts[0]}T / best Tok | Tok {ts[0]}T / C {ts[0]}T |")
+    w("|---|---|" + "---|" * (2 * len(ts) + 2))
+    for k in PAR_ORDER:
+        r = doc["results"].get(k)
+        if not r:
+            continue
+        tok = [r[f"tok_{t}"]["seconds"] for t in ts]
+        c = [r[f"c_{t}"]["seconds"] for t in ts]
+        w(f"| {k} | {PAR_ABOUT[k]} | " + " | ".join(f"{v:.3f}" for v in tok) + " | " + " | ".join(f"{v:.3f}" for v in c)
+          + f" | {tok[0] / min(tok):.2f}x | {tok[0] / c[0]:.2f}x |")
+    w("")
+    w("### Peak memory, MiB")
+    w("")
+    w("| Kernel | " + " | ".join(f"Tok {t}T" for t in ts) + " | " + " | ".join(f"C+OpenMP {t}T" for t in ts) + " |")
+    w("|---|" + "---|" * (2 * len(ts)))
+    for k in PAR_ORDER:
+        r = doc["results"].get(k)
+        if not r:
+            continue
+        w(f"| {k} | " + " | ".join(f"{r[f'tok_{t}']['peak_kib'] / 1024:.1f}" for t in ts) + " | "
+          + " | ".join(f"{r[f'c_{t}']['peak_kib'] / 1024:.1f}" for t in ts) + " |")
+    w("")
+    notes = os.path.join(HERE, "NOTES_PARALLEL.md")
+    if os.path.exists(notes):
+        with open(notes) as fh:
+            w(fh.read().rstrip())
+        w("")
+
+
 def fmt_t(v):
     if v is None or "seconds" not in v:
         return "n/a" if v is None else "failed"
@@ -199,6 +317,7 @@ def report(args):
         with open(notes) as fh:
             w(fh.read().rstrip())
         w("")
+    parallel_report(w)
     with open(os.path.join(HERE, "RESULTS.md"), "w") as fh:
         fh.write("\n".join(out) + "\n")
     print("wrote bench/perf/RESULTS.md")
@@ -214,7 +333,11 @@ def main():
     ap.add_argument("--save", default="")
     ap.add_argument("--timeout", type=float, default=300.0)
     ap.add_argument("--report", action="store_true")
+    ap.add_argument("--parallel", action="store_true")
+    ap.add_argument("--cpu-share", type=float, default=0.0, help="the CPU allowance of this machine in cores, if the cgroup does not say")
     args = ap.parse_args()
+    if args.parallel:
+        return run_parallel(args)
     return report(args) if args.report else run_suite(args)
 
 

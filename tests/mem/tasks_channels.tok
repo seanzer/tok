@@ -1,0 +1,75 @@
+// tasks and channels: arguments and messages move or copy, errors reach the waiter, unwaited results are freed
+// exit 0
+fn fib(n: int) -> int
+  if n < 2
+    return n
+  fib(n - 1) + fib(n - 2)
+
+fn half(n: int) -> int ! err
+  if n % 2 != 0
+    fail("{n} is odd")
+  n / 2
+
+fn produce(ch: chan[str], n: int)
+  for i in 1..n
+    ch.send("msg {i}")
+  ch.close()
+
+fn words(s: str) -> [str]
+  s.words()
+
+fn relay(src: chan[[str]], dst: chan[[str]])
+  for m in src
+    var seen = m
+    seen.push("seen")
+    dst.send(seen)
+  dst.close()
+
+t = spawn fib(20)
+u = spawn half(7)
+w = spawn half(8)
+print(t.wait())
+print(u.wait() or -1)
+print(u.done())
+print(w.wait()?)
+ch = chan[str](4)
+pt = spawn produce(ch, 10)
+var got: [str] = []
+for m in ch
+  got.push(m)
+pt.wait()
+print(got.join(" "))
+big = "a b c d " + args.join("")
+ws = spawn words(big)
+print(big.len())
+print(ws.wait())
+moved = "x y " + args[0]
+mv = spawn words(moved)
+print(mv.wait())
+// never waited for: the result is freed with the task
+spawn words(big)
+lost = spawn half(3)
+ts = par for i in 1..8 -> spawn fib(i)
+var s = 0
+for x in ts
+  s += x.wait()
+print(s)
+a = chan[[str]](1)
+b = chan[[str]](1)
+r = spawn relay(a, b)
+row = ["k", args[1]]
+a.send(row)
+a.send(row.reverse())
+a.close()
+for m in b
+  print(m)
+print(row)
+r.wait()
+// messages left in a channel are freed with it
+left = chan[[str]](3)
+left.send(row)
+left.send(["only", args[2]])
+left.close()
+print(left.recv() or [])
+e = spawn half(5)
+print(e.wait() or err -> err.msg.len())

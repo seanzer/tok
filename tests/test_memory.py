@@ -14,7 +14,7 @@ import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 
-from helpers import ROOT, TokCase, tokc
+from helpers import ROOT, TIMEOUT, TokCase, tokc
 
 sys.path.insert(0, os.path.join(ROOT, "bench"))
 import harness  # noqa: E402
@@ -22,7 +22,8 @@ import harness  # noqa: E402
 KERNELS = os.path.join(ROOT, "bench", "perf", "kernels")
 SMALL = {"intloop": ["20000"], "fib": ["15"], "list_pipeline": ["2000", "3"], "sort": ["3000", "2"], "matmul": ["12", "2"],
          "normalize": ["2000", "3"], "normalize32": ["2000", "3"], "records": ["300", "5"], "str_build": ["200", "3"],
-         "str_split": ["300", "3"], "func_update": ["200"]}
+         "str_split": ["300", "3"], "func_update": ["200"], "par_normalize": ["2000", "3"], "par_records": ["300", "5"],
+         "par_sum": ["5000", "2"], "par_mandel": ["24", "30"]}
 
 
 def has_sanitizers():
@@ -45,7 +46,8 @@ class SanitizerTests(TokCase):
 
     def clean(self, exe, args=(), cwd=None, stdin="", code=0):
         """Run a sanitized binary: any sanitizer report, or a block left allocated, fails the test. Returns stdout."""
-        r = subprocess.run([exe] + list(args), capture_output=True, text=True, errors="replace", cwd=cwd or self.tmp, input=stdin)
+        r = subprocess.run([exe] + list(args), capture_output=True, text=True, errors="replace", cwd=cwd or self.tmp, input=stdin,
+                           timeout=TIMEOUT)
         for word in ("Sanitizer", "runtime error", "leak check"):
             self.assertNotIn(word, r.stderr, f"{exe} {args}")
         self.assertEqual(r.returncode, code, r.stderr)
@@ -114,7 +116,7 @@ class SanitizerTests(TokCase):
                     with open(os.path.join(d, name), "w") as fh:
                         fh.write(text)
                 r = subprocess.run(["main.tok"] + [str(a) for a in case["args"]], executable=exe, cwd=d, capture_output=True,
-                                   text=True, errors="replace", input=case.get("stdin", ""))
+                                   text=True, errors="replace", input=case.get("stdin", ""), timeout=TIMEOUT)
             if (r.stdout, r.returncode) != (case["stdout"], case.get("exit_code", 0)) or "Sanitizer" in r.stderr \
                     or "runtime error" in r.stderr or "leak check" in r.stderr:
                 bad.append(f"{t['id']} case {i}: exit {r.returncode}, stderr: {r.stderr[-800:]}")
@@ -126,6 +128,67 @@ class SanitizerTests(TokCase):
         with ThreadPoolExecutor(max_workers=3) as pool:
             bad = [line for lines in pool.map(self.one_task, tasks) for line in lines]
         self.assertEqual(bad, [])
+
+
+CONCURRENT = ["par_for", "tasks_channels", "atomics"]  # the programs of tests/mem that use threads
+
+
+def tsan_prefix():
+    sys.path.insert(0, os.path.join(ROOT, "compiler"))
+    from tok.tools import tsan_prefix as prefix
+    return prefix("thread")
+
+
+def has_tsan():
+    """ThreadSanitizer must build and its binaries must start (through `setarch -R` where the kernel needs that)."""
+    with tempfile.TemporaryDirectory() as d:
+        src, exe = os.path.join(d, "t.c"), os.path.join(d, "t")
+        with open(src, "w") as fh:
+            fh.write("int main(void) { return 0; }\n")
+        r = subprocess.run([os.environ.get("CC", "cc"), "-fsanitize=thread", "-pthread", "-o", exe, src], capture_output=True)
+        return r.returncode == 0 and subprocess.run(tsan_prefix() + [exe], capture_output=True).returncode == 0
+
+
+@unittest.skipUnless(has_tsan(), "the C compiler has no usable thread sanitizer")
+class ThreadSanitizerTests(TokCase):
+    def tsan(self, path, name, args=(), threads="4"):
+        exe = os.path.join(self.tmp, name)
+        r = tokc("build", path, "--tsan", "-o", exe)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return subprocess.run(tsan_prefix() + [exe] + list(args), capture_output=True, text=True,
+                              env=dict(os.environ, TOK_THREADS=threads), timeout=TIMEOUT)
+
+    def test_the_thread_sanitizer_does_catch_a_race(self):
+        """The check itself: C with a data race must be reported, or a clean run of the corpus means nothing."""
+        src, exe = os.path.join(self.tmp, "race.c"), os.path.join(self.tmp, "race")
+        with open(src, "w") as fh:
+            fh.write("#include <pthread.h>\nlong n;\nvoid* f(void* a) { for (int i = 0; i < 100000; i++) n++; return a; }\n"
+                     "int main(void) { pthread_t t; pthread_create(&t, 0, f, 0); f(0); pthread_join(t, 0); return 0; }\n")
+        subprocess.run([os.environ.get("CC", "cc"), "-fsanitize=thread", "-pthread", "-o", exe, src], check=True)
+        r = subprocess.run(tsan_prefix() + [exe], capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("ThreadSanitizer: data race", r.stderr)
+
+    def test_concurrent_memory_programs(self):
+        for name in CONCURRENT:
+            path = os.path.join(ROOT, "tests", "mem", name + ".tok")
+            with open(path[:-4] + ".out") as fh:
+                want = fh.read()
+            for threads in ("2", "4", "8"):
+                with self.subTest(program=name, threads=threads):
+                    r = self.tsan(path, "tsan_" + name, ["x", "y", "z"], threads)
+                    self.assertNotIn("Sanitizer", r.stderr)
+                    self.assertNotIn("leak check", r.stderr)
+                    self.assertEqual((r.returncode, r.stdout), (0, want), r.stderr)
+
+    def test_parallel_kernels(self):
+        for name in sorted(SMALL):
+            if not name.startswith("par_"):
+                continue
+            with self.subTest(kernel=name):
+                r = self.tsan(os.path.join(KERNELS, name + ".tok"), "tsank_" + name, SMALL[name])
+                self.assertNotIn("Sanitizer", r.stderr)
+                self.assertEqual(r.returncode, 0, r.stderr)
 
 
 class LeakCounterTests(TokCase):

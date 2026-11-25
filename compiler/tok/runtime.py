@@ -122,7 +122,11 @@ TOK_UNUSED static inline int64_t tok_idx(int64_t i, int64_t len, const char* loc
 
 // ---- allocation. Built with -DTOK_LEAK_CHECK, a program counts its live blocks and reports any left at exit.
 #ifdef TOK_LEAK_CHECK
+#ifdef TOK_MT
+static _Atomic int64_t tok_live = 0;
+#else
 static int64_t tok_live = 0;
+#endif
 #define TOK_LIVE(d) (tok_live += (d))
 #else
 #define TOK_LIVE(d) ((void)0)
@@ -140,6 +144,23 @@ TOK_UNUSED static void* tok_realloc(void* old, size_t n) {
   return p;
 }
 TOK_UNUSED static inline void tok_free(void* p) { TOK_LIVE(-1); free(p); }
+
+// Reference counts are plain integers. In a program with threads a count can also be pinned (far below zero) while
+// a par for shares the buffer with its workers: retain and release then leave it alone. See runtime_mt.py.
+#ifdef TOK_MT
+#define TOK_RC_UP(rc) do { if ((rc) > 0) (rc)++; } while (0)
+#define TOK_RC_DOWN(rc) ((rc) > 0 && --(rc) == 0)
+#define TOK_RC_DROP(rc) do { if ((rc) > 0) (rc)--; } while (0)
+#define TOK_PIN ((int64_t)1 << 62)
+#define TOK_OUT_LOCK() flockfile(stdout)
+#define TOK_OUT_UNLOCK() funlockfile(stdout)
+#else
+#define TOK_RC_UP(rc) ((rc)++)
+#define TOK_RC_DOWN(rc) (--(rc) == 0)
+#define TOK_RC_DROP(rc) ((rc)--)
+#define TOK_OUT_LOCK() ((void)0)
+#define TOK_OUT_UNLOCK() ((void)0)
+#endif
 
 // ---- strings. A str points at its bytes, which always end in a 0 byte; this header sits just before them.
 // rc is the number of owners. rc < 0 marks a static string (a literal), which is never counted or freed.
@@ -270,13 +291,17 @@ TOK_UNUSED static const char* tok_sb_str(tok_sb* b) { return b->heap ? tok_sfin(
 TOK_UNUSED static void tok_sb_drop(tok_sb* b) { if (b->heap) tok_free(TOK_SH(b->p)); }
 // write the text and a newline to standard output, and let go of the buffer
 TOK_UNUSED static void tok_sb_print(tok_sb* b) {
+  TOK_OUT_LOCK();
   fwrite(b->p, 1, (size_t)b->len, stdout);
   putc('\n', stdout);
+  TOK_OUT_UNLOCK();
   tok_sb_drop(b);
 }
 TOK_UNUSED static void tok_print(const char* s) {
+  TOK_OUT_LOCK();
   fwrite(s, 1, (size_t)tok_slen(s), stdout);
   putc('\n', stdout);
+  TOK_OUT_UNLOCK();
 }
 TOK_UNUSED static const char* tok_fmt(const char* fmt, ...) {
   va_list a, b;

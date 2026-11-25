@@ -4,6 +4,7 @@ from .lexer import KEYWORDS, Tok, lex_fragment
 
 EFFECTS = {"io", "net", "fs", "time", "rand", "py", "err"}
 ASSIGN_OPS = {"=", "+=", "-=", "*=", "/=", "%="}
+HANDLE_TYPES = {"chan", "task", "atomic"}  # written chan[T], task[T] (task[T, err] if it can fail), atomic[T]
 
 
 def node(k, tok, **kw):
@@ -23,6 +24,7 @@ class Parser:
         self.toks, self.i = toks, 0
         self.errors = []
         self.failed_names = set()
+        self.no_lam = 0  # > 0 while the list or range of a 'par for' is parsed: there 'xs ->' is not a lambda
 
     @property
     def t(self):
@@ -121,7 +123,16 @@ class Parser:
             if name.val in KEYWORDS:
                 raise Diag("E0010", f"expected a type, found keyword '{name.val}'", name.line, name.col, name.end)
             ty = node("tname", name, name=name.val, mod=None)
-            if self.at("OP", ".") and self.peek().kind == "NAME":
+            if name.val in HANDLE_TYPES and self.eat("OP", "["):
+                inner = self.type_expr()
+                fails = False
+                if name.val == "task" and self.eat("OP", ","):
+                    self.expect("NAME", "err", what="'err' (task[T, err] is a task that can fail)")
+                    fails = True
+                close = self.expect("OP", "]", what="']'")
+                ty = {"k": "thandle", "name": name.val, "inner": inner, "fails": fails,
+                      "line": name.line, "col": name.col, "end": close.end}
+            elif self.at("OP", ".") and self.peek().kind == "NAME":
                 self.i += 1
                 inner = self.expect("NAME", what="a type name")
                 ty = {"k": "tname", "name": inner.val, "mod": name.val, "line": name.line, "col": name.col, "end": inner.end}
@@ -235,6 +246,16 @@ class Parser:
             self.i += 1
             self.end_stmt()
             return node(t.val, t)
+        if self.at("NAME", "par") and self.peek().kind == "NAME" and self.peek().val == "for":
+            start = self.i
+            head = self.par_head()
+            if not self.at("OP", "->"):  # with '->' it is the expression form: a parallel map
+                if head["var2"]:
+                    raise Diag("E0010", "'par for' takes one loop variable", head["var2_tok"].line, head["var2_tok"].col,
+                               head["var2_tok"].end)
+                where = self.expr() if self.eat("NAME", "where") else None
+                return node("parfor", t, where=where, body=self.block(), **head)
+            self.i = start
         if self.eat("NAME", "for"):
             v = self.ident("a loop variable")
             v2 = self.ident("a loop variable") if self.eat("OP", ",") else None
@@ -324,6 +345,21 @@ class Parser:
         self.end_stmt()
         return span("expr", e, e, val=e)
 
+    def par_head(self):
+        """par for x in xs / par for i in a..b, up to the end of the range or list."""
+        for_col = self.peek().col
+        self.i += 2
+        v = self.ident("a loop variable")
+        v2 = self.ident("a loop variable") if self.eat("OP", ",") else None
+        self.expect("NAME", "in", what="'in'")
+        self.no_lam += 1
+        try:
+            first = self.expr()
+            hi = self.expr() if self.eat("OP", "..") else None
+        finally:
+            self.no_lam -= 1
+        return {"for_col": for_col, "var": v.val, "var_tok": v, "var2": v2.val if v2 else None, "var2_tok": v2, "iter": first, "hi": hi}
+
     def expr_list(self):
         out = [self.expr()]
         while self.eat("OP", ","):
@@ -383,10 +419,14 @@ class Parser:
 
     def args(self):
         out = []
-        while not self.at("OP", ")"):
-            out.append(self.expr())
-            if not self.eat("OP", ","):
-                break
+        no_lam, self.no_lam = self.no_lam, 0
+        try:
+            while not self.at("OP", ")"):
+                out.append(self.expr())
+                if not self.eat("OP", ","):
+                    break
+        finally:
+            self.no_lam = no_lam
         return out, self.expect("OP", ")", what="')'")
 
     def postfix(self):
@@ -517,10 +557,46 @@ class Parser:
             if t.val == "none":
                 self.i += 1
                 return node("none", t)
+            if t.val == "par" and self.peek().kind == "NAME" and self.peek().val == "for":
+                # par for x in xs -> expr: a list of the results, in order
+                head = self.par_head()
+                if head["var2"]:
+                    v2 = head["var2_tok"]
+                    raise Diag("E0010", "'par for' takes one loop variable", v2.line, v2.col, v2.end)
+                if self.at("NAME", "where"):
+                    cur = self.t
+                    raise Diag("E0010", "'par for ... -> expr' gives one result per element, so it takes no 'where'; "
+                                        "filter the list first, for example xs.where(x -> ...)", cur.line, cur.col, cur.end)
+                self.expect("OP", "->", what="'->' and the expression to compute for each element")
+                body = self.expr()
+                n = node("parmap", t, body=body, **head)
+                n["end"] = body["end"]
+                return n
+            if t.val == "spawn" and self.peek().kind == "NAME" and self.peek().val not in KEYWORDS:
+                self.i += 1
+                call = self.postfix()
+                n = node("spawn", t, call=call)
+                n["end"] = call["end"]
+                return n
+            if t.val == "spawn" and self.peek().kind in ("INT", "FLOAT", "STR") and self.peek().line == t.line:
+                nx = self.peek()
+                raise Diag("E0604", "'spawn' starts a call to a function of the program as a task, for example "
+                                    "'t = spawn work(x)'; wrap anything else in a function", nx.line, nx.col, nx.end)
+            if t.val == "chan" and self.peek().kind == "OP" and self.peek().val == "[":
+                # chan[T](capacity); if it does not parse as that, `chan` is an ordinary name
+                start = self.i
+                try:
+                    ty = self.type_expr()
+                    if ty["k"] == "thandle" and self.eat("OP", "("):
+                        args, close = self.args()
+                        return {"k": "chan_new", "type": ty, "args": args, "line": t.line, "col": t.col, "end": close.end}
+                except Diag:
+                    pass
+                self.i = start
             if t.val in KEYWORDS:
                 raise Diag("E0010", f"expected an expression, found keyword '{t.val}'", t.line, t.col, t.end)
             self.i += 1
-            if self.at("OP", "->"):
+            if self.at("OP", "->") and not self.no_lam:
                 self.i += 1
                 return self.lam(t, t)
             if self.eat("OP", "("):

@@ -5,6 +5,8 @@ Types are tuples:
   ("list", T)  ("dict", K, V)  ("opt", T)  ("res", T)  ("rec", module_index, name)
   ("void",) ("none",) ("never",) ("error",)
   ("errv",) an error value: kind + message      ("ekind",) an error kind
+  ("chan", T) a channel   ("task", T, can_fail) a spawned task   ("atomic", T) an atomic cell
+The last three are handles: a pointer to a cell whose reference count is atomic, so tasks can share them.
 """
 
 INT, F64, BOOL, STR = ("int",), ("f64",), ("bool",), ("str",)
@@ -83,8 +85,21 @@ def _show_num(t):
     return f"tok_sb_add_f{bits}", ""
 
 
+HANDLES = {"chan": "tok_chan", "task": "tok_task", "atomic": "tok_atom"}
+
+
+def is_handle(t):
+    return t[0] in HANDLES
+
+
 def mangle(t):
     k = t[0]
+    if k == "chan":
+        return "C" + mangle(t[1])
+    if k == "task":
+        return "K" + mangle(t[1]) + ("e" if t[2] else "")
+    if k == "atomic":
+        return "A" + mangle(t[1])
     if k == "list":
         return "L" + mangle(t[1])
     if k == "dict":
@@ -105,7 +120,7 @@ def managed(t, fields_of):
 
 def _managed(t, fields_of, seen):
     k = t[0]
-    if k in ("list", "dict", "str", "errv", "res"):
+    if k in ("list", "dict", "str", "errv", "res") or k in HANDLES:
         return True
     if k == "opt":
         return _managed(t[1], fields_of, seen)
@@ -125,12 +140,21 @@ class TypeGen:
         self.used = []
         self.seen = set()
         self._managed = {}
+        self.mt = False  # the program uses threads
+        self.cross = []  # types whose values cross between threads: these get pin, unpin and iso helpers
+        self.chans = []  # element types of the channels the program makes
 
     def need(self, t):
         if t in self.seen or t[0] in ("void", "none", "never", "error"):
             return
         self.seen.add(t)
         k = t[0]
+        if k in HANDLES:
+            self.mt = True
+            self.need(t[1])
+            if k == "chan":
+                self.need(t[1] if t[1][0] == "opt" else ("opt", t[1]))
+            return
         if k in ("list", "opt", "res"):
             self.need(t[1])
             self.used.append(t)
@@ -161,6 +185,9 @@ class TypeGen:
             return "tok_error"
         if k == "ekind":
             return "int32_t"
+        if k in HANDLES:
+            self.need(t)
+            return HANDLES[k] + "*"
         self.need(t)
         return "tok_T_" + mangle(t)
 
@@ -180,6 +207,8 @@ class TypeGen:
             return f"tok_sretain({code});"
         if t == ERRV:
             return f"tok_sretain({code}.msg);"
+        if t[0] in HANDLES:
+            return f"{HANDLES[t[0]]}_retain({code});"
         self.need(t)
         return f"tok_retain_{mangle(t)}({code});"
 
@@ -191,6 +220,8 @@ class TypeGen:
             return f"tok_srelease({code});"
         if t == ERRV:
             return f"tok_srelease({code}.msg);"
+        if t[0] in HANDLES:
+            return f"{HANDLES[t[0]]}_release({code});"
         self.need(t)
         return f"tok_release_{mangle(t)}({code});"
 
@@ -202,6 +233,8 @@ class TypeGen:
             return f"tok_sret({code})"
         if t == ERRV:
             return f"tok_error_ret({code})"
+        if t[0] in HANDLES:
+            return f"{HANDLES[t[0]]}_ret({code})"
         self.need(t)
         return f"tok_ret_{mangle(t)}({code})"
 
@@ -217,6 +250,8 @@ class TypeGen:
             return f"tok_seq({a}, {b})"
         if k in ("error", "none", "void", "never"):
             return "true"
+        if k in HANDLES:
+            return f"({a} == {b})"  # the same channel, task or cell
         self.need(t)
         return f"tok_eq_{mangle(t)}({a}, {b})"
 
@@ -238,12 +273,124 @@ class TypeGen:
             return f"tok_sb_adds({b}, tok_kinds[{code}]);"
         if k == "errv":
             return f"tok_show_error({b}, {code});"
+        if k == "atomic":
+            if t[1] == BOOL:
+                return f"tok_sb_add_bool({b}, atomic_load(&({code})->v) != 0);"
+            return f"tok_sb_add_i64({b}, atomic_load(&({code})->v));"
+        if k in HANDLES:
+            return f"tok_sb_add({b}, \"{k}\", {len(k)});"
         self.need(t)
         return f"tok_show_{mangle(t)}({b}, {code});"
 
     def panic_text(self, t, code):
         """A C string (not a Tok string) with the text of an integer, for a panic message."""
         return f"tok_cstr_u64((uint64_t)({code}))" if NUMS[t[0]][1] == "u" else f"tok_cstr_i64((int64_t)({code}))"
+
+    # ------------------------------------------------------ values that cross between threads
+
+    def crosses(self, t):
+        """Register a type whose values are shared with, or handed to, another thread."""
+        if t in self.cross or not self.managed(t) or t[0] in HANDLES or t[0] in ("str", "errv"):
+            return
+        self.need(t)
+        self.cross.append(t)
+        k = t[0]
+        if k in ("list", "opt"):
+            self.crosses(t[1])
+        elif k == "dict":
+            self.crosses(t[1])
+            self.crosses(t[2])
+        elif k == "rec":
+            for _, ft in self.fields_of(t):
+                self.crosses(ft)
+
+    def _cross_call(self, what, t, code):
+        if not self.managed(t) or t[0] in HANDLES:
+            return ""
+        if t == STR:
+            return f"tok_{what}_str({code});"
+        if t == ERRV:
+            return f"tok_{what}_str({code}.msg);"
+        self.crosses(t)
+        return f"tok_{what}_{mangle(t)}({code});"
+
+    def pin(self, t, code):
+        """A C statement: the buffers reachable from the value stop being counted (for the length of a par for)."""
+        return self._cross_call("pin", t, code)
+
+    def unpin(self, t, code):
+        return self._cross_call("unpin", t, code)
+
+    def iso(self, t, code):
+        """A C expression: the owned value `code`, made independent of everything else. A buffer with a single
+        owner is kept; a shared one is copied. Handles (channels, tasks, atomics) are shared on purpose."""
+        if not self.managed(t) or t[0] in HANDLES:
+            return code
+        if t == STR:
+            return f"tok_iso_str({code})"
+        if t == ERRV:
+            return f"tok_iso_errv({code})"
+        self.crosses(t)
+        return f"tok_iso_{mangle(t)}({code})"
+
+    def chan_drop(self, t):
+        """The C function a channel of `t` uses to release an item still inside it when it is freed, or NULL."""
+        if not self.managed(t):
+            return "NULL"
+        if t not in self.chans:
+            self.chans.append(t)
+        return f"tok_chdrop_{mangle(t)}"
+
+    def emit_cross(self):
+        S = "TOK_UNUSED static"
+        hs, i = [], 0
+        while i < len(self.cross):  # the list can grow while helpers are written
+            t = self.cross[i]
+            i += 1
+            m, k, T = mangle(t), t[0], self.c(t)
+            if k == "list":
+                e, E = t[1], self.c(t[1])
+                me = self.managed(e) and e[0] not in HANDLES
+                each = lambda what: (f"for (int64_t i = 0; i < l.len; i++) {{ {self._cross_call(what, e, 'l.data[i]')} }} " if me else "")
+                hs.append((f"{S} void tok_pin_{m}({T} l)",
+                           f"{{ if (l.data && TOK_LH(l.data)->rc > 0) {{ TOK_LH(l.data)->rc -= TOK_PIN; {each('pin')}}} }}"))
+                hs.append((f"{S} void tok_unpin_{m}({T} l)",
+                           f"{{ if (l.data && TOK_LH(l.data)->rc < -1) {{ TOK_LH(l.data)->rc += TOK_PIN; {each('unpin')}}} }}"))
+                keep = f"for (int64_t i = 0; i < l.len; i++) l.data[i] = {self.iso(e, 'l.data[i]')}; " if me else ""
+                if self.managed(e):
+                    cp = f"for (int64_t i = 0; i < l.len; i++) r.data[i] = {self.iso(e, self.ret(e, 'l.data[i]'))};"
+                else:
+                    cp = f"if (l.len > 0) memcpy(r.data, l.data, (size_t)l.len * sizeof({E}));"
+                hs.append((f"{S} {T} tok_iso_{m}({T} l)",
+                           f"{{ if (!l.data) return l; if (TOK_LH(l.data)->rc == 1) {{ {keep}return l; }} "
+                           f"{T} r = tok_new_{m}(l.len); {cp} r.len = l.len; tok_release_{m}(l); return r; }}"))
+            elif k == "dict":
+                K, V = t[1], t[2]
+                each = lambda what: (f"for (int64_t i = 0; i < d.p->len; i++) {{ {self._cross_call(what, K, 'd.p->keys[i]')} "
+                                     f"{self._cross_call(what, V, 'd.p->vals[i]')} }} ")
+                hs.append((f"{S} void tok_pin_{m}({T} d)", f"{{ if (d.p && d.p->rc > 0) {{ d.p->rc -= TOK_PIN; {each('pin')}}} }}"))
+                hs.append((f"{S} void tok_unpin_{m}({T} d)", f"{{ if (d.p && d.p->rc < -1) {{ d.p->rc += TOK_PIN; {each('unpin')}}} }}"))
+                hs.append((f"{S} {T} tok_iso_{m}({T} d)",
+                           f"{{ if (!d.p) return d; if (d.p->rc == 1) {{ for (int64_t i = 0; i < d.p->len; i++) {{ "
+                           f"d.p->keys[i] = {self.iso(K, 'd.p->keys[i]')}; d.p->vals[i] = {self.iso(V, 'd.p->vals[i]')}; }} return d; }} "
+                           f"{T} r; r.p = NULL; for (int64_t i = 0; i < d.p->len; i++) tok_set_{m}(&r, "
+                           f"{self.iso(K, self.ret(K, 'd.p->keys[i]'))}, {self.iso(V, self.ret(V, 'd.p->vals[i]'))}); "
+                           f"tok_release_{m}(d); return r; }}"))
+            elif k == "opt":
+                e = t[1]
+                hs.append((f"{S} void tok_pin_{m}({T} o)", f"{{ if (o.has) {{ {self._cross_call('pin', e, 'o.v')} }} }}"))
+                hs.append((f"{S} void tok_unpin_{m}({T} o)", f"{{ if (o.has) {{ {self._cross_call('unpin', e, 'o.v')} }} }}"))
+                hs.append((f"{S} {T} tok_iso_{m}({T} o)", f"{{ if (o.has) o.v = {self.iso(e, 'o.v')}; return o; }}"))
+            else:
+                fields = [(fn, ft) for fn, ft in self.fields_of(t) if self.managed(ft)]
+                for what in ("pin", "unpin"):
+                    body = " ".join(self._cross_call(what, ft, f"r.f_{fn}") for fn, ft in fields)
+                    hs.append((f"{S} void tok_{what}_{m}({T} r)", f"{{ (void)r; {body} }}"))
+                body = " ".join(f"r.f_{fn} = {self.iso(ft, f'r.f_{fn}')};" for fn, ft in fields)
+                hs.append((f"{S} {T} tok_iso_{m}({T} r)", f"{{ {body} return r; }}"))
+        for t in self.chans:
+            hs.append((f"{S} void tok_chdrop_{mangle(t)}(void* p)", f"{{ {self.release(t, f'(*({self.c(t)}*)p)')} }}"))
+        return "\n".join([p + ";" for p, _ in hs] + [""] + [p + " " + b for p, b in hs]) + "\n" if hs else ""
 
     # ------------------------------------------------------ emission
 
@@ -252,6 +399,11 @@ class TypeGen:
         # Emitting helpers can register more types (members), so iterate to a fixed point.
         bodies, done, order = [], set(), []
         i = 0
+        while i < len(self.used):
+            t = self.used[i]
+            i += 1
+            bodies.append(self._helpers(t))
+        cross = self.emit_cross()  # can register more types
         while i < len(self.used):
             t = self.used[i]
             i += 1
@@ -266,7 +418,7 @@ class TypeGen:
             for proto, body in ps:
                 protos.append(proto + ";")
                 defs.append(proto + " " + body)
-        return "\n".join(out + [""] + protos + [""] + defs) + "\n"
+        return "\n".join(out + [""] + protos + [""] + defs) + "\n" + cross
 
     def _define(self, t, done, order):
         if t in done or t[0] not in ("list", "dict", "opt", "res", "rec"):
@@ -319,12 +471,12 @@ class TypeGen:
             e = t[1]
             E = self.c(e)
             me = self.managed(e)
-            hs.append((f"{SI} void tok_retain_{m}({T} l)", "{ if (l.data) TOK_LH(l.data)->rc++; }"))
-            hs.append((f"{SI} {T} tok_ret_{m}({T} l)", "{ if (l.data) TOK_LH(l.data)->rc++; return l; }"))
+            hs.append((f"{SI} void tok_retain_{m}({T} l)", "{ if (l.data) TOK_RC_UP(TOK_LH(l.data)->rc); }"))
+            hs.append((f"{SI} {T} tok_ret_{m}({T} l)", "{ if (l.data) TOK_RC_UP(TOK_LH(l.data)->rc); return l; }"))
             drop = f"for (int64_t i = 0; i < l.len; i++) {{ {self.release(e, 'l.data[i]')} }} " if me else ""
             hs.append((f"{S} void tok_free_{m}({T} l)", f"{{ {drop}tok_lfree(l.data); }}"))
             hs.append((f"{SI} void tok_release_{m}({T} l)",
-                       f"{{ if (l.data && --TOK_LH(l.data)->rc == 0) tok_free_{m}(l); }}"))
+                       f"{{ if (l.data && TOK_RC_DOWN(TOK_LH(l.data)->rc)) tok_free_{m}(l); }}"))
             hs.append((f"{SI} {T} tok_new_{m}(int64_t cap)",
                        f"{{ {T} l; l.len = 0; l.cap = cap > 0 ? cap : 0; "
                        f"l.data = cap > 0 ? ({E}*)tok_lalloc(cap, sizeof({E})) : NULL; return l; }}"))
@@ -338,7 +490,7 @@ class TypeGen:
                        f"if (cap < need) {{ cap = cap * 2; if (cap < need) cap = need; if (cap < 4) cap = 4; }} "
                        f"if (!l->data) {{ if (cap > 0) l->data = ({E}*)tok_lalloc(cap, sizeof({E})); }} "
                        f"else if (TOK_LH(l->data)->rc == 1) {{ if (cap != l->cap) l->data = ({E}*)tok_lrealloc(l->data, cap, sizeof({E})); }} "
-                       f"else {{ {E}* d = ({E}*)tok_lalloc(cap > 0 ? cap : 1, sizeof({E})); {cp} TOK_LH(l->data)->rc--; l->data = d; }} "
+                       f"else {{ {E}* d = ({E}*)tok_lalloc(cap > 0 ? cap : 1, sizeof({E})); {cp} TOK_RC_DROP(TOK_LH(l->data)->rc); l->data = d; }} "
                        f"l->cap = cap; }}"))
             hs.append((f"{SI} void tok_push_{m}({T}* l, {E} v)",
                        f"{{ if (TOK_UNLIKELY(l->len == l->cap || TOK_LH(l->data)->rc != 1)) tok_grow_{m}(l, 1); "
@@ -422,12 +574,12 @@ class TypeGen:
         hash_ = "tok_hash_str(k)" if K == STR else "tok_hash_int((uint64_t)k)"
         shown = '"key \\"%s\\" is not in the dict", k' if K == STR else '"key %lld is not in the dict", (long long)k'
         hs = []
-        hs.append((f"{SI} void tok_retain_{m}({T} d)", "{ if (d.p) d.p->rc++; }"))
-        hs.append((f"{SI} {T} tok_ret_{m}({T} d)", "{ if (d.p) d.p->rc++; return d; }"))
+        hs.append((f"{SI} void tok_retain_{m}({T} d)", "{ if (d.p) TOK_RC_UP(d.p->rc); }"))
+        hs.append((f"{SI} {T} tok_ret_{m}({T} d)", "{ if (d.p) TOK_RC_UP(d.p->rc); return d; }"))
         hs.append((f"{S} void tok_free_{m}({T} d)",
                    f"{{ for (int64_t i = 0; i < d.p->len; i++) {{ {self.release(K, 'd.p->keys[i]')} {self.release(V, 'd.p->vals[i]')} }} "
                    f"tok_free(d.p->keys); tok_free(d.p->vals); tok_free(d.p->slots); tok_free(d.p); }}"))
-        hs.append((f"{SI} void tok_release_{m}({T} d)", f"{{ if (d.p && --d.p->rc == 0) tok_free_{m}(d); }}"))
+        hs.append((f"{SI} void tok_release_{m}({T} d)", f"{{ if (d.p && TOK_RC_DOWN(d.p->rc)) tok_free_{m}(d); }}"))
         hs.append((f"{SI} int64_t tok_len_{m}({T} d)", "{ return d.p ? d.p->len : 0; }"))
         hs.append((f"{S} int64_t tok_find_{m}({T} d, {KC} k)",
                    f"{{ if (!d.p || d.p->len == 0) return -1; uint64_t mask = (uint64_t)d.p->nslots - 1, h = {hash_} & mask; "
@@ -450,7 +602,7 @@ class TypeGen:
                    f"{B}* n = ({B}*)tok_alloc(sizeof({B})); n->rc = 1; n->len = len; n->cap = cap; n->keys = ks; n->vals = vs; "
                    f"n->slots = NULL; n->nslots = 0; "
                    f"for (int64_t i = 0; i < len; i++) {{ ks[i] = {self.ret(K, 'b->keys[i]')}; vs[i] = {self.ret(V, 'b->vals[i]')}; }} "
-                   f"tok_index_{m}(n); if (b) b->rc--; d->p = n; }}"))
+                   f"tok_index_{m}(n); if (b) TOK_RC_DROP(b->rc); d->p = n; }}"))
         # insert or update; takes over the caller's ownership of k and v
         hs.append((f"{S} void tok_set_{m}({T}* d, {KC} k, {VC} v)",
                    f"{{ int64_t i = tok_find_{m}(*d, k); if (i >= 0) {{ tok_own_{m}(d, 0); {VC} old TOK_UNUSED = d->p->vals[i]; "

@@ -26,7 +26,9 @@ from .lexer import Tok, lex
 from .parser import Parser
 from .types import (ALIASES, BOOL, EKIND, ERR, ERRV, F64, INT, NEVER, NONE, NUMS, STR, VOID, TypeGen, int_range, is_float, is_int,
                     is_num, lossless, mangle)
-from . import runtime
+from . import runtime, runtime_mt, runtime_net
+
+BUILTIN_KINDS = ("Failed", "FsError", "NetError")  # the kinds of fail("msg"), the fs module, the net module
 
 
 def c_str(s, fmt=False):
@@ -177,8 +179,10 @@ class Core:
         self.lits = {}  # string literal text -> name of its static object
         self.sinks = [None]  # where the last expression of a block goes: None = the function result
         self.loops = []  # enclosing loops, innermost last: what `break` and `continue` must release and where they go
-        self.kinds = ["Failed", "FsError"]  # every error kind in the program; the first two are built in
+        self.kinds = list(BUILTIN_KINDS)  # every error kind in the program; the built-in ones come first
+        self.net = False  # the program calls the net module
         self.script_names = set()  # variables bound by top-level statements (the script form)
+        self.aux = []  # extra C functions: the bodies of par for loops and the entry points of spawned tasks
         self.setup()
         for t in (("list", STR), ("list", INT), ("opt", INT), ("opt", F64), ("opt", STR), ("res", STR), ("res", VOID)):
             self.types.need(t)
@@ -228,7 +232,7 @@ class Core:
             if d["k"] == "error":
                 for t in d["names"]:
                     if t.val in mod.fns or t.val in mod.types or t.val in mod.errors or t.val in self.free_fns \
-                            or t.val in self.kinds[:2] or t.val in RESERVED_TYPES:
+                            or t.val in BUILTIN_KINDS or t.val in RESERVED_TYPES:
                         self.report(Diag("E0102", f"'{t.val}' is already defined", t.line, t.col, t.end), mod)
                         continue
                     mod.errors[t.val] = len(self.kinds)
@@ -237,8 +241,9 @@ class Core:
             t = d["name_tok"]
             table = mod.fns if d["k"] == "fn" else mod.types
             if d["name"] in mod.fns or d["name"] in mod.types or d["name"] in self.free_fns or d["name"] in mod.errors or \
-                    d["name"] in self.kinds[:2] or \
-                    (d["k"] == "type" and (d["name"] in NUMS or d["name"] in ALIASES or d["name"] in RESERVED_TYPES)):
+                    d["name"] in BUILTIN_KINDS or \
+                    (d["k"] == "type" and (d["name"] in NUMS or d["name"] in ALIASES or d["name"] in RESERVED_TYPES
+                                           or d["name"] in ("chan", "task", "atomic"))):
                 self.report(Diag("E0102", f"'{d['name']}' is already defined", t.line, t.col, t.end), mod)
                 continue
             table[d["name"]] = d
@@ -278,6 +283,10 @@ class Core:
 
     def type_str(self, t):
         k = t[0]
+        if k == "task":
+            return f"task[{self.type_str(t[1])}{', err' if t[2] else ''}]"
+        if k in ("chan", "atomic"):
+            return f"{k}[{self.type_str(t[1])}]"
         if k == "list":
             return f"[{self.type_str(t[1])}]"
         if k == "dict":
@@ -293,6 +302,8 @@ class Core:
 
     def resolve_type(self, tn, mod):
         k = tn["k"]
+        if k == "thandle":
+            return self.handle_type(tn, self.resolve_type(tn["inner"], mod))
         if k == "tlist":
             return ("list", self.resolve_type(tn["elem"], mod))
         if k == "tdict":
@@ -321,6 +332,9 @@ class Core:
 
     def get_module(self, name, n):
         self.err("E0900", "modules are not supported by this compiler yet", n)
+
+    def handle_type(self, tn, inner):
+        self.err("E0900", "channels, tasks and atomics are not supported by this compiler yet", tn)
 
     def fields_of(self, t):
         decl = self.modlist[t[1]].types[t[2]]
@@ -544,7 +558,7 @@ class Core:
         mod = mod or self.mod
         if mod is not None and name in mod.errors:
             return mod.errors[name]
-        return self.kinds.index(name) if name in self.kinds[:2] else None
+        return self.kinds.index(name) if name in BUILTIN_KINDS else None
 
     # ---------------------------------------------------------- expressions
 
@@ -1431,6 +1445,20 @@ class Core:
     def s_for(self, s, is_tail):
         if s["hi"] is None:
             return self.for_list(s)
+        tlo, thi, ty = self.range_bounds(s)
+        self.flush()
+        v = f"v_{s['var']}"
+        self.emit(f"for ({self.c(ty)} {v} = {tlo}; {v} <= {thi}; {v}++) {{")
+        # `continue` must still reach the test below (the loop variable may not step past the largest value)
+        label = f"tok_next{self.new_tmp()}"
+        if self.loop_body(s, s["var"], ty, label):
+            self.emit(f"  {label}: ;")
+        self.emit(f"  if ({v} == {thi}) break;")
+        self.emit("}")
+        self.dead = False
+
+    def range_bounds(self, s):
+        """Evaluate the two ends of `a..b`: (C temporary of a, C temporary of b, their integer type)."""
         lo, hi = s["iter"], s["hi"]
         if self.is_literal(lo) and not self.is_literal(hi):
             hc, ht = self.val(hi)
@@ -1448,17 +1476,7 @@ class Core:
         ty = lt if lt != ERR else ht
         if ty == ERR:
             ty = INT
-        tlo, thi = self.hoist(lc, ty), self.hoist(hc, ty)
-        self.flush()
-        v = f"v_{s['var']}"
-        self.emit(f"for ({self.c(ty)} {v} = {tlo}; {v} <= {thi}; {v}++) {{")
-        # `continue` must still reach the test below (the loop variable may not step past the largest value)
-        label = f"tok_next{self.new_tmp()}"
-        if self.loop_body(s, s["var"], ty, label):
-            self.emit(f"  {label}: ;")
-        self.emit(f"  if ({v} == {thi}) break;")
-        self.emit("}")
-        self.dead = False
+        return self.hoist(lc, ty), self.hoist(hc, ty), ty
 
     def s_while(self, s, is_tail):
         self.emit("while (1) {")
@@ -1498,6 +1516,9 @@ class Core:
         if not self.loops:
             self.err("E0017", f"'{word}' is only allowed inside a 'for' or 'while' loop", s)
         loop = self.loops[-1]
+        if word == "break" and loop.get("par"):
+            self.err("E0603", "'break' cannot leave a 'par for': its iterations run at the same time, so there is no "
+                              "'rest of the loop' to skip", s, self.par_fix(loop["par"]))
         for pool in reversed(self.pools[loop["pools"]:]):
             for code, ty in reversed(pool):
                 self.emit(self.types.release(ty, code) if ty is not None else f"@@{code}@@")
@@ -1629,11 +1650,18 @@ class Core:
             bodies.append("}")
             bodies.append("")
         lits = "\n".join(f'TOK_LIT({name}, "{c_str(text)}");' for text, name in self.lits.items())
-        out = [runtime.PART1, self.runtime_errors(), self.runtime_numeric(), self.types.emit(), runtime.PART2, lits, "",
-               "\n".join(protos), "", "\n".join(bodies)]
+        types = self.types.emit()
+        mt = self.types.mt  # the program uses threads: only then is the threads runtime part of it
+        net = self.net  # the program calls the net module: only then is the socket code part of it
+        out = [runtime_mt.PRELUDE if mt else "", runtime_net.PRELUDE if net else "", runtime.PART1,
+               runtime_mt.RUNTIME if mt else "", self.runtime_errors(),
+               self.runtime_numeric(), types, runtime.PART2, runtime_net.RUNTIME if net else "", lits, "", "\n".join(protos), "", "\n".join(self.aux), "",
+               "\n".join(bodies)]
         if main is not None:
             call = (f"  tok_T_Lstr args = tok_args(argc, argv);\n  int rc = {main['c']}(args);\n  tok_release_Lstr(args);\n"
                     if takes_args else f"  int rc = {main['c']}();\n")
+            if mt:
+                call = "  tok_mt_init();\n" + call + "  tok_mt_finish();\n"
             out.append("int main(int argc, char** argv) {\n  (void)argc;\n  (void)argv;\n" + call +
                        "#ifdef TOK_LEAK_CHECK\n  if (tok_live != 0) {\n    fflush(stdout);\n"
                        "    fprintf(stderr, \"tok: leak check: %lld block(s) still allocated at exit\\n\", (long long)tok_live);\n"
@@ -1644,7 +1672,7 @@ class Core:
         lits = "\n".join(f'TOK_LIT(tok_k{i}, "{c_str(k)}");' for i, k in enumerate(self.kinds))
         names = ", ".join(f"tok_k{i}.s" for i in range(len(self.kinds)))
         return (f"{lits}\nstatic const char* const tok_kinds[] = {{ {names} }};\n"
-                "#define TOK_KIND_FS 1\n"
+                "#define TOK_KIND_FS 1\n#define TOK_KIND_NET 2\n"
                 "TOK_UNUSED static void tok_show_error(tok_sb* b, tok_error e) "
                 "{ tok_sb_adds(b, tok_kinds[e.kind]); tok_sb_add(b, \": \", 2); tok_sb_adds(b, e.msg); }\n"
                 "TOK_UNUSED static bool tok_error_eq(tok_error a, tok_error b) "

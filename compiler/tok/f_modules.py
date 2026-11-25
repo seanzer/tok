@@ -2,7 +2,7 @@
 import os
 
 from .diag import Diag
-from .types import ERR, NUMS, STR, VOID, is_float, is_int, is_num
+from .types import ERR, INT, NUMS, STR, VOID, is_float, is_int, is_num
 
 
 class Modules:
@@ -11,6 +11,10 @@ class Modules:
         self.builtin_mods["fs"] = {
             "read_text": ((STR,), ("res", STR), "tok_fs_read_text", "fs"),
             "write_text": ((STR, STR), ("res", VOID), "tok_fs_write_text", "fs"),
+        }
+        self.builtin_mods["net"] = {
+            "get": ((STR,), ("res", STR), "tok_net_get", "net"),
+            "request": ((STR, INT, STR), ("res", STR), "tok_net_request", "net"),
         }
         for name in ("sqrt", "mean", "min", "max", "abs"):
             self.free_fns[name] = getattr(self, "b_" + name)
@@ -70,6 +74,8 @@ class Modules:
         if effect:
             self.need_effect(effect, n, shown)
         self.types.need(ret)
+        if cfn.startswith("tok_net_"):
+            self.net = True
         return self.hoist(f"{cfn}({', '.join(args)})", ret, own=True), ret
 
     # ---------------------------------------------------------- math

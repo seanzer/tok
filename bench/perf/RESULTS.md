@@ -84,3 +84,69 @@ Where Tok is still behind C, bluntly:
 Not measured: anything with more than one thread (there is no concurrency yet), compile time, and programs larger
 than these kernels. Counts are not atomic, so none of this carries over to threads as it stands.
 
+## After the syntax round (script form, conditional expression, while, multiple assignment, dicts)
+
+`tokens_round.json` (`python3 bench/perf/run.py --langs tok,c --save tokens_round`, Tue 2026-11-24) repeats the
+Tok and C runs with the kernels unchanged apart from `args` no longer holding the program name. Against
+`current.json`, every Tok median is within 7% (largest moves: normalize32 0.050 to 0.053 s, matmul 0.076 to 0.072 s,
+sort 0.344 to 0.328 s) and every peak memory within 2%, which is inside the run-to-run spread of this shared VM. No
+regression was found. No kernel uses the new syntax, and dicts have no kernel yet, so their speed is not measured.
+
+## Parallel kernels
+
+Written from `parallel.json` (`python3 bench/perf/run.py --parallel`). Tok: `tokc build (cc -std=c11 -O2 -pthread)`, threads set with `TOK_THREADS`. C: `cc -std=c11 -O2 -fopenmp`, threads set with `OMP_NUM_THREADS`. Median of 7 runs of the whole process; every run of a kernel, in both languages and at every thread count, printed the same checksum.
+
+**Read this first.** The machine shows 4 cores, but it is a shared VM whose CPU allowance is 1.5 cores (given with --cpu-share). Over any long stretch a program here gets at most about 1.5 cores of CPU time, however many threads it starts; short runs like these can briefly get more, and other tenants can take time away, so the ratios move from run to run. With more threads than the allowance the threads take turns, which is why 4 threads are sometimes no faster, or slower, than 2.
+
+What these tables can show: the parallel programs give the same answers as the serial ones, the cost of the parallel machinery on one thread is small, Tok is close to C with OpenMP at each thread count, and two threads do help. What they cannot show: how Tok scales to 4 or more real cores. That needs a machine with that many unshared cores, and nothing here should be read as a scaling result.
+
+### Wall time, seconds
+
+| Kernel | What it does | Tok 1T | Tok 2T | Tok 4T | C+OpenMP 1T | C+OpenMP 2T | C+OpenMP 4T | Tok 1T / best Tok | Tok 1T / C 1T |
+|---|---|---|---|---|---|---|---|---|---|
+| par_normalize | normalize over 1,000,000 f64: two parallel sums and a parallel map, 8 rounds | 0.061 | 0.045 | 0.037 | 0.063 | 0.055 | 0.090 | 1.62x | 0.96x |
+| par_records | parallel map over 400,000 records, 40 steps | 0.073 | 0.051 | 0.068 | 0.063 | 0.054 | 0.104 | 1.42x | 1.16x |
+| par_sum | parallel integer sum over 30,000,000 values, 4 rounds | 0.347 | 0.224 | 0.279 | 0.292 | 0.204 | 0.329 | 1.55x | 1.19x |
+| par_mandel | Mandelbrot 600 x 600, limit 300, one row per iteration | 0.160 | 0.125 | 0.101 | 0.176 | 0.122 | 0.104 | 1.58x | 0.91x |
+
+### Peak memory, MiB
+
+| Kernel | Tok 1T | Tok 2T | Tok 4T | C+OpenMP 1T | C+OpenMP 2T | C+OpenMP 4T |
+|---|---|---|---|---|---|---|
+| par_normalize | 17.3 | 17.3 | 17.2 | 17.5 | 17.5 | 17.5 |
+| par_records | 32.2 | 32.3 | 32.3 | 32.4 | 32.6 | 32.6 |
+| par_sum | 1.6 | 2.0 | 1.9 | 2.0 | 2.1 | 2.1 |
+| par_mandel | 1.8 | 2.0 | 2.0 | 2.0 | 1.9 | 2.1 |
+
+### Notes on the parallel kernels
+
+- `par_normalize`: the two sums are reductions and the last pass is `par for x in xs -> ...`. The C reference cuts its
+  sums into the same 64 chunks so that both print the same checksum; a plain OpenMP `reduction(+:s)` would add in a
+  different order and differ in the last bits.
+- `par_records`: the record has no string field (unlike the serial `records` kernel), so a result is a flat copy.
+  With managed fields each result is isolated first, which costs a copy per shared field.
+- `par_sum`: Tok checks every `int` add and multiply for overflow, C does not; that is the one-thread gap.
+- `par_mandel`: rows take very different times, so this is the kernel where taking chunks on demand matters. The C
+  reference uses `schedule(dynamic, 1)`.
+- Peak memory barely moves with the thread count at these sizes: the data dominates, and a thread adds its stack.
+
+### Single-threaded kernels after this change
+
+Measured with `python3 bench/perf/run.py --save phase4 --langs tok,c` (`phase4.json`), against `current.json` from
+the memory-model round. Programs that do not use concurrency get exactly the C they got before, apart from the
+form of the count macros, so no change is expected, and none beyond run-to-run noise was measured.
+
+| Kernel | Tok before, s | Tok now, s | C now, s | Tok peak before, MiB | Tok peak now, MiB |
+|---|---|---|---|---|---|
+| intloop | 0.240 | 0.243 | 0.221 | 1.3 | 1.4 |
+| fib | 0.074 | 0.073 | 0.024 | 1.3 | 1.3 |
+| list_pipeline | 0.100 | 0.103 | 0.110 | 19.2 | 19.2 |
+| sort | 0.344 | 0.326 | 0.332 | 12.8 | 12.8 |
+| matmul | 0.076 | 0.070 | 0.061 | 4.9 | 4.9 |
+| normalize | 0.075 | 0.067 | 0.062 | 17.0 | 17.0 |
+| normalize32 | 0.050 | 0.055 | 0.056 | 9.3 | 9.3 |
+| records | 0.018 | 0.018 | 0.008 | 7.6 | 7.5 |
+| str_build | 0.001 | 0.001 | 0.002 | 1.4 | 1.3 |
+| str_split | 0.058 | 0.058 | 0.041 | 4.6 | 4.6 |
+| func_update | 0.001 | 0.001 | 0.001 | 1.5 | 1.5 |
+

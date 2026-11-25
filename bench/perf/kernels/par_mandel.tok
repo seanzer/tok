@@ -1,0 +1,23 @@
+// Mandelbrot escape counts, one row per iteration of a par for: CPU-bound, rows take very different times.
+fn row(y: int, size: int, limit: int) -> int
+  ci = 2.0 * f64(y) / f64(size) - 1.0
+  var count = 0
+  for x in 0..size - 1
+    cr = 3.0 * f64(x) / f64(size) - 2.0
+    var zr, zi = 0.0, 0.0
+    var k = 0
+    while k < limit and zr * zr + zi * zi <= 4.0
+      zr, zi = zr * zr - zi * zi + cr, 2.0 * zr * zi + ci
+      k += 1
+    count += k
+  count
+
+fn main(args: [str]) ! io
+  size = args[0].to_int() or 600
+  limit = args[1].to_int() or 300
+  var rows: [int] = []
+  for y in 1..size
+    rows.push(0)
+  par for y in 0..size - 1
+    rows[y] = row(y, size, limit)
+  print(rows.sum())

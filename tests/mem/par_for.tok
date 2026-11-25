@@ -1,0 +1,71 @@
+// par for: pinned captures, results that leave their thread, reductions, writes at the loop index
+// exit 0
+type P = { name: str, tags: [str], n: int }
+
+fn label(p: P, pre: str) -> str
+  "{pre}{p.name}:{p.tags.join(",")}:{p.n}"
+
+fn fib(n: int) -> int
+  if n < 2
+    return n
+  fib(n - 1) + fib(n - 2)
+
+fn half(n: int) -> int ! err
+  if n % 2 != 0
+    fail("{n} is odd")
+  n / 2
+
+fn produce(ch: chan[str], n: int)
+  for i in 1..n
+    ch.send("msg {i}")
+  ch.close()
+
+fn words(s: str) -> [str]
+  s.words()
+
+var ps: [P] = []
+for i in 1..200
+  ps.push(P { name: "p{i}", tags: ["a{i}", "b"], n: i })
+pre = "<" + "{ps.len()}" + ">"
+ls = par for p in ps -> label(p, pre)
+print(ls[0])
+print(ls[199])
+print(ls.len())
+d = {"a": 1, "b": 2}
+ns = par for i in 0..99 -> (d["a"] or 0) + i + ps[i].n
+print(ns.sum())
+var best = 0
+var cnt = 0
+var lo = 1000
+par for p in ps where p.n % 3 == 0
+  cnt += 1
+  best = max(best, p.n)
+  lo = min(p.n, lo)
+print("{cnt} {best} {lo}")
+var out: [f64] = []
+for i in 1..300
+  out.push(0.0)
+keep = out
+par for i in 0..299
+  out[i] = f64(ps[i % 200].n) * 0.5
+print(out.sum())
+print(keep.sum())
+var fsum = 0.0
+par for v in out
+  fsum += v
+print(fsum)
+nested = par for p in ps.first(5) -> p.tags.map(t -> t + pre)
+print(nested[4])
+// a body that keeps what it read: the copies are independent of the pinned originals
+kept = par for p in ps.first(3) -> p
+print(kept[2].tags == ps[2].tags)
+var empty: [int] = []
+none_yet = par for x in empty -> x + 1
+print(none_yet.len())
+par for i in 5..4
+  print("never")
+inner = par for i in 1..4 -> (par for j in 1..i -> j * i).sum()
+print(inner)
+print(args.len())
+lens = par for a in args -> a + "!"
+print(lens)

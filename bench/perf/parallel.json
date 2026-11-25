@@ -1,0 +1,153 @@
+{
+ "c_flags": "cc -std=c11 -O2 -fopenmp",
+ "cpu_share": 1.5,
+ "cpu_share_source": "given with --cpu-share",
+ "machine": {
+  "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "cores": 4,
+  "cpu": "AMD EPYC 9D25 126-Core Processor",
+  "platform": "Linux-7.0.0-44-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "results": {
+  "par_mandel": {
+   "agree": true,
+   "c_1": {
+    "best": 0.141,
+    "peak_kib": 2072,
+    "seconds": 0.1763
+   },
+   "c_2": {
+    "best": 0.1008,
+    "peak_kib": 1980,
+    "seconds": 0.1216
+   },
+   "c_4": {
+    "best": 0.0971,
+    "peak_kib": 2176,
+    "seconds": 0.1039
+   },
+   "tok_1": {
+    "best": 0.1467,
+    "peak_kib": 1792,
+    "seconds": 0.1596
+   },
+   "tok_2": {
+    "best": 0.0981,
+    "peak_kib": 2012,
+    "seconds": 0.1248
+   },
+   "tok_4": {
+    "best": 0.0948,
+    "peak_kib": 2016,
+    "seconds": 0.1008
+   }
+  },
+  "par_normalize": {
+   "agree": true,
+   "c_1": {
+    "best": 0.0598,
+    "peak_kib": 17916,
+    "seconds": 0.0632
+   },
+   "c_2": {
+    "best": 0.0367,
+    "peak_kib": 17952,
+    "seconds": 0.0548
+   },
+   "c_4": {
+    "best": 0.0327,
+    "peak_kib": 17900,
+    "seconds": 0.0904
+   },
+   "tok_1": {
+    "best": 0.0578,
+    "peak_kib": 17676,
+    "seconds": 0.0607
+   },
+   "tok_2": {
+    "best": 0.0395,
+    "peak_kib": 17692,
+    "seconds": 0.0447
+   },
+   "tok_4": {
+    "best": 0.0327,
+    "peak_kib": 17584,
+    "seconds": 0.0375
+   }
+  },
+  "par_records": {
+   "agree": true,
+   "c_1": {
+    "best": 0.0599,
+    "peak_kib": 33168,
+    "seconds": 0.063
+   },
+   "c_2": {
+    "best": 0.039,
+    "peak_kib": 33336,
+    "seconds": 0.0541
+   },
+   "c_4": {
+    "best": 0.0353,
+    "peak_kib": 33344,
+    "seconds": 0.1037
+   },
+   "tok_1": {
+    "best": 0.0696,
+    "peak_kib": 33020,
+    "seconds": 0.073
+   },
+   "tok_2": {
+    "best": 0.0454,
+    "peak_kib": 33096,
+    "seconds": 0.0515
+   },
+   "tok_4": {
+    "best": 0.0314,
+    "peak_kib": 33076,
+    "seconds": 0.0681
+   }
+  },
+  "par_sum": {
+   "agree": true,
+   "c_1": {
+    "best": 0.2902,
+    "peak_kib": 2072,
+    "seconds": 0.2917
+   },
+   "c_2": {
+    "best": 0.1988,
+    "peak_kib": 2156,
+    "seconds": 0.204
+   },
+   "c_4": {
+    "best": 0.2018,
+    "peak_kib": 2108,
+    "seconds": 0.3291
+   },
+   "tok_1": {
+    "best": 0.3397,
+    "peak_kib": 1664,
+    "seconds": 0.3474
+   },
+   "tok_2": {
+    "best": 0.2139,
+    "peak_kib": 2012,
+    "seconds": 0.2244
+   },
+   "tok_4": {
+    "best": 0.2187,
+    "peak_kib": 1956,
+    "seconds": 0.2787
+   }
+  }
+ },
+ "runs": 7,
+ "threads": [
+  1,
+  2,
+  4
+ ],
+ "tok_flags": "tokc build (cc -std=c11 -O2 -pthread)"
+}

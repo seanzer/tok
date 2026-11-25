@@ -49,15 +49,37 @@ SANITIZE = ["-O1", "-g", "-fsanitize=address,undefined", "-fno-sanitize-recover=
             "-DTOK_LEAK_CHECK"]
 
 
-def cc_flags(optimize, sanitize=False):
+TSAN = ["-O1", "-g", "-fsanitize=thread", "-fno-omit-frame-pointer", "-DTOK_LEAK_CHECK"]
+
+
+def cc_flags(optimize, sanitize=False, c_code=""):
     """-O2 for `build`, -O0 for `run`. `sanitize` builds with AddressSanitizer (which includes the leak checker) and
-    UndefinedBehaviorSanitizer. TOK_LEAK_CHECK=1 in the environment makes the program count its own allocations and
-    exit with 71 if any are left at the end. TOK_SANITIZE=1 turns `sanitize` on for every build and run."""
-    sanitize = sanitize or os.environ.get("TOK_SANITIZE") == "1"
-    flags = list(SANITIZE) if sanitize else ["-O2" if optimize else "-O0"]
+    UndefinedBehaviorSanitizer; sanitize="thread" builds with ThreadSanitizer instead (the two cannot be combined).
+    TOK_LEAK_CHECK=1 in the environment makes the program count its own allocations and exit with 71 if any are left
+    at the end. TOK_SANITIZE=1 turns `sanitize` on for every build and run, TOK_SANITIZE=thread the thread sanitizer.
+    A program that uses threads (its C says so) is compiled and linked with -pthread; no other program is."""
+    env = os.environ.get("TOK_SANITIZE")
+    sanitize = sanitize or ("thread" if env == "thread" else env == "1")
+    flags = list(TSAN) if sanitize == "thread" else list(SANITIZE) if sanitize else ["-O2" if optimize else "-O0"]
     if os.environ.get("TOK_LEAK_CHECK") == "1" and not sanitize:
         flags.append("-DTOK_LEAK_CHECK")
+    if uses_threads(c_code):
+        flags.append("-pthread")
     return flags
+
+
+def uses_threads(c_code):
+    return c_code.startswith("#define TOK_MT 1")
+
+
+def tsan_prefix(sanitize=False):
+    """ThreadSanitizer needs a fixed memory layout: on kernels with a lot of address randomization its binaries stop
+    at once with "unexpected memory mapping". Running them through `setarch -R` (no randomization) avoids that."""
+    import shutil
+    if sanitize != "thread" and os.environ.get("TOK_SANITIZE") != "thread":
+        return []
+    setarch = shutil.which("setarch")
+    return [setarch, os.uname().machine, "-R"] if setarch else []
 
 
 def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536, stdin="", sanitize=False):
@@ -81,13 +103,15 @@ def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536
         c_path, exe = os.path.join(d, "main.c"), os.path.join(d, "main")
         with open(c_path, "w") as fh:
             fh.write(c_code)
-        cc = subprocess.run([os.environ.get("CC", "cc"), "-std=c11"] + cc_flags(optimize, sanitize) + ["-o", exe, c_path, "-lm"],
+        cc = subprocess.run([os.environ.get("CC", "cc"), "-std=c11"] + cc_flags(optimize, sanitize, c_code) + ["-o", exe, c_path, "-lm"],
                             capture_output=True, text=True)
         if cc.returncode != 0:
             return {"ok": False, "stage": "cc", "errors": [], "message": "internal error: the generated C did not compile",
                     "stderr": cc.stderr[:4000]}
         try:
-            r = subprocess.run(["main.tok"] + [str(a) for a in args], executable=exe, cwd=d, capture_output=True,
+            pre = tsan_prefix(sanitize)
+            r = subprocess.run((pre + [exe] if pre else ["main.tok"]) + [str(a) for a in args],
+                               executable=pre[0] if pre else exe, cwd=d, capture_output=True,
                                text=True, errors="replace", timeout=timeout, input=stdin or "")
         except subprocess.TimeoutExpired:
             return {"ok": False, "stage": "run", "errors": [], "timed_out": True, "message": f"timed out after {timeout}s"}

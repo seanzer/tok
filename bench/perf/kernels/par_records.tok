@@ -1,0 +1,21 @@
+// A parallel map over a list of records, repeated: each step builds the next list from the last one.
+type Body = { x: f64, y: f64, vx: f64, vy: f64, id: int }
+
+fn step(bs: [Body], dt: f64) -> [Body]
+  par for b in bs -> Body { x: b.x + b.vx * dt, y: b.y + b.vy * dt, vx: b.vx * 0.999, vy: b.vy - 9.8 * dt, id: b.id }
+
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 400000
+  steps = args[1].to_int() or 40
+  var bs: [Body] = []
+  for i in 1..n
+    bs.push(Body { x: 0.0, y: 0.0, vx: f64(i % 17), vy: f64(i % 5), id: i })
+  for s in 1..steps
+    bs = step(bs, 0.01)
+  var sum = 0.0
+  var ids = 0
+  for b in bs
+    sum = sum + b.x + b.y
+    ids = ids + b.id % 7
+  print(int(sum))
+  print(ids)

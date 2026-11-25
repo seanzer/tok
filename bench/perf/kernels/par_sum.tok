@@ -1,0 +1,11 @@
+// A parallel integer sum (a reduction) over a range, with some work per element.
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 30000000
+  rounds = args[1].to_int() or 4
+  var total = 0
+  for r in 1..rounds
+    var s = 0
+    par for i in 1..n
+      s += i * r % 7 + i % 3
+    total = total + s
+  print(total)

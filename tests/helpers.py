@@ -11,11 +11,17 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOKC = [sys.executable, os.path.join(ROOT, "compiler", "tokc.py")]
 
 
-def tokc(*args, env=None, cwd=ROOT, stdin=None):
+# No test program runs for long. A run that passes this limit is a hang (with threads: a deadlock), and it fails
+# the test with TimeoutExpired instead of stopping the suite.
+TIMEOUT = int(os.environ.get("TOK_TEST_TIMEOUT", "300"))
+
+
+def tokc(*args, env=None, cwd=ROOT, stdin=None, timeout=TIMEOUT):
     """Run the compiler. `stdin` is the text the program reads; without it standard input is empty."""
     if stdin is None:
-        return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env, stdin=subprocess.DEVNULL)
-    return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env, input=stdin)
+        return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env,
+                              stdin=subprocess.DEVNULL, timeout=timeout)
+    return subprocess.run(TOKC + list(args), capture_output=True, text=True, cwd=cwd, env=env, input=stdin, timeout=timeout)
 
 
 class TokCase(unittest.TestCase):
