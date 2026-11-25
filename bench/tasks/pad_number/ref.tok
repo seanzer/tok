@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io
-  s = args[1] or ""
-  print("0".repeat(6 - s.len()) + s)
+s = args[0] or ""
+print("0".repeat(6 - s.len()) + s)

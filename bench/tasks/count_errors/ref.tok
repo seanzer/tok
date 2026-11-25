@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io, fs
-  text = fs.read_text(args[1] or "") or ""
-  print(text.lines().where(l -> l.contains("ERROR")).len())
+text = fs.read_text(args[0] or "") or ""
+print(text.lines().where(l -> l.contains("ERROR")).len())

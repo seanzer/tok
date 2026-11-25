@@ -1,7 +1,4 @@
-fn divide(a: int, b: int) -> int ! err
-  if b == 0
-    fail("division by zero")
-  a / b
-
-fn main(args: [str]) ! io
-  print(divide(args[1].to_int() or 0, args[2].to_int() or 0)?)
+a, b = args[0].to_int() or 0, args[1].to_int() or 0
+if b == 0
+  fail("division by zero")
+print(a / b)

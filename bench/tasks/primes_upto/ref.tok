@@ -1,13 +1,10 @@
 fn is_prime(n: int) -> bool
-  for d in 2..n - 1
-    if d * d > n
-      return true
-    if n % d == 0
-      return false
-  true
+  var d = 2
+  while d * d <= n and n % d != 0
+    d += 1
+  d * d > n
 
-fn main(args: [str]) ! io
-  var found: [int] = []
-  for i in 2..args[1].to_int() or 0 where is_prime(i)
-    found.push(i)
-  print(found.join(" "))
+var found: [int] = []
+for i in 2..args[0].to_int() or 0 where is_prime(i)
+  found.push(i)
+print(found.join(" "))

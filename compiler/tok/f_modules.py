@@ -70,8 +70,7 @@ class Modules:
         if effect:
             self.need_effect(effect, n, shown)
         self.types.need(ret)
-        n["fresh"] = True
-        return self.hoist(f"{cfn}({', '.join(args)})", ret), ret
+        return self.hoist(f"{cfn}({', '.join(args)})", ret, own=True), ret
 
     # ---------------------------------------------------------- math
 

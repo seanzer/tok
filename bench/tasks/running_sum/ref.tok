@@ -1,7 +1,6 @@
-fn main(args: [str]) ! io
-  var total = 0
-  var out: [int] = []
-  for a in args.drop(1)
-    total += a.to_int() or 0
-    out.push(total)
-  print(out.join(" "))
+var total = 0
+var out: [int] = []
+for a in args
+  total += a.to_int() or 0
+  out.push(total)
+print(out.join(" "))

@@ -1,0 +1,14 @@
+// Join lines into one text, then split it into lines and fields and parse a number from each.
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 20000
+  rounds = args[1].to_int() or 15
+  var rows: [str] = []
+  for i in 1..n
+    rows.push("id{i},name{i},{i % 97},end")
+  text = rows.join("\n")
+  var total = 0
+  for r in 1..rounds
+    for line in text.lines()
+      fields = line.split(",")
+      total = total + (fields[2].to_int() or 0) + fields[1].len()
+  print(total)

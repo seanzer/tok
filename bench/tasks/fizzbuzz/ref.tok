@@ -1,10 +1,9 @@
-fn main(args: [str]) ! io
-  for i in 1..args[1].to_int() or 0
-    if i % 15 == 0
-      print("FizzBuzz")
-    else if i % 3 == 0
-      print("Fizz")
-    else if i % 5 == 0
-      print("Buzz")
-    else
-      print(i)
+for i in 1..args[0].to_int() or 0
+  if i % 15 == 0
+    print("FizzBuzz")
+  else if i % 3 == 0
+    print("Fizz")
+  else if i % 5 == 0
+    print("Buzz")
+  else
+    print(i)

@@ -1,0 +1,50 @@
+// while, break, continue and the conditional expression, with managed values live at every jump
+// exit 1
+fn label(n: int) -> str
+  if n % 15 == 0 then "fizzbuzz" else if n % 5 == 0 then "buzz" else if n % 3 == 0 then "fizz" else "{n}"
+
+fn pick(xs: [str], n: int) -> [str]
+  if n > 1 then xs.first(n) else []
+
+fn checked(n: int) -> str ! err
+  if n < 4 then "ok {n}" else fail("too big: {n}")
+
+fn collect(limit: int) -> [str]
+  var out: [str] = []
+  var i = 0
+  while true
+    i += 1
+    piece = "p{i}"
+    if i % 2 == 0
+      continue
+    out.push(piece + label(i))
+    if out.len() == limit
+      break
+  out
+
+fn main(args: [str]) ! io
+  print(collect(args.len()))
+  var words: [str] = []
+  for a in args
+    tag = "<{a}>"
+    if a == "y"
+      continue
+    words.push(if tag.len() > 2 then tag + tag else tag)
+  print(words)
+  for i in 1..9
+    s = "v{i}"
+    if i == 2
+      continue
+    t = checked(i) or e ->
+      print(e.msg + s)
+      break
+    print(t)
+  var n = 0
+  var acc = ""
+  while acc.len() < 12
+    n += 1
+    acc = if n % 2 == 0 then acc + label(n) else "{acc}."
+  print(acc)
+  print(pick(args, 2))
+  print(pick(args, 0))
+  print(checked(7)?)

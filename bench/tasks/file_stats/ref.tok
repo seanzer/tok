@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io, fs
-  lines = (fs.read_text(args[1] or "") or "").lines()
-  print("{lines.len()} lines, {lines.map(l -> l.words().len()).sum()} words")
+lines = (fs.read_text(args[0] or "") or "").lines()
+print("{lines.len()} lines, {lines.map(l -> l.words().len()).sum()} words")

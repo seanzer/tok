@@ -1,0 +1,13 @@
+// A list grown through a function that takes a list and returns the longer one.
+// With value semantics and no reuse, every call copies the whole list.
+fn with_item(xs: [int], v: int) -> [int]
+  var ys = xs
+  ys.push(v)
+  ys
+
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 4000
+  var xs: [int] = []
+  for i in 1..n
+    xs = with_item(xs, i * 3)
+  print(xs.sum())

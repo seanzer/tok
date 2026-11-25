@@ -1,6 +1,5 @@
-fn main(args: [str]) ! io
-  least = args[1].to_int() or 0
-  for line in io.read_all().lines()
-    parts = line.split(",")
-    if (parts[1].to_int() or 0) >= least
-      print(parts[0])
+least = args[0].to_int() or 0
+for line in io.read_all().lines()
+  parts = line.split(",")
+  if (parts[1].to_int() or 0) >= least
+    print(parts[0])

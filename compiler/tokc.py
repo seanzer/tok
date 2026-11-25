@@ -18,15 +18,16 @@ from tok.diag import apply_fix  # noqa: E402
 from tok.fmt import cmd_fmt  # noqa: E402
 from tok.learn import cmd_learn  # noqa: E402
 from tok.serve import cmd_serve  # noqa: E402
+from tok.tools import cc_flags  # noqa: E402
 
 
-def cc_build(c_code, out_path, optimize):
+def cc_build(c_code, out_path, optimize, sanitize=False):
     cc = os.environ.get("CC", "cc")
     with tempfile.TemporaryDirectory() as d:
         c_path = os.path.join(d, "out.c")
         with open(c_path, "w") as fh:
             fh.write(c_code)
-        cmd = [cc, "-std=c11", "-O2" if optimize else "-O0", "-o", out_path, c_path, "-lm"]
+        cmd = [cc, "-std=c11"] + cc_flags(optimize, sanitize) + ["-o", out_path, c_path, "-lm"]
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode != 0:
             sys.stderr.write("tokc: internal error: the generated C did not compile. This is a compiler bug.\n")
@@ -49,6 +50,8 @@ def show_errors(comp, as_json):
 USAGE = """usage:
   tokc run <file.tok> [-- args]    compile fast (-O0, cached) and run
   tokc build <file.tok> [-o out]   compile optimized (-O2) to a native binary
+      --sanitize                   right after the file, for run and build: use the address, leak and
+                                   undefined-behavior sanitizers
   tokc check <file.tok> [--json]   type and effect check only; reports every independent error
   tokc fix <file.tok>              apply suggested fixes until the file checks
   tokc fmt <file.tok> [--check]    rewrite the file in the canonical layout (--check: only report)
@@ -115,18 +118,22 @@ def main(argv):
     if cmd == "emit-c":
         sys.stdout.write(c_code)
         return 0
+    sanitize = rest[:1] == ["--sanitize"]  # only directly after the file, so a program can still be given that argument
+    if sanitize:
+        rest = rest[1:]
     if cmd == "build":
         out = rest[rest.index("-o") + 1] if "-o" in rest and rest.index("-o") + 1 < len(rest) else os.path.splitext(os.path.basename(path))[0]
-        cc_build(c_code, out, optimize=True)
+        cc_build(c_code, out, optimize=True, sanitize=sanitize)
         print(f"built {out}")
         return 0
     # run: cache the debug binary by a hash of the generated C
     cache = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "tok")
     os.makedirs(cache, exist_ok=True)
-    exe = os.path.join(cache, hashlib.sha256(c_code.encode()).hexdigest()[:24])
+    key = c_code + "\0" + " ".join(cc_flags(False, sanitize))
+    exe = os.path.join(cache, hashlib.sha256(key.encode()).hexdigest()[:24])
     if not os.path.exists(exe):
         tmp_exe = exe + f".tmp{os.getpid()}"
-        cc_build(c_code, tmp_exe, optimize=False)
+        cc_build(c_code, tmp_exe, optimize=False, sanitize=sanitize)
         os.replace(tmp_exe, exe)
     args = rest[1:] if rest[:1] == ["--"] else rest
     return subprocess.run([path] + args, executable=exe).returncode

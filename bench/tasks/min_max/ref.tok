@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io
-  xs = args.drop(1).map(a -> a.to_int() or 0)
-  print("{xs.min() or 0} {xs.max() or 0}")
+xs = args.map(a -> a.to_int() or 0)
+print("{xs.min() or 0} {xs.max() or 0}")

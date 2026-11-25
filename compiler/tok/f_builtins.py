@@ -38,17 +38,11 @@ class Builtins:
                 self.no_method(n, f"'{n['name']}' without a key works on lists of numbers or strs, found {self.type_str(bt)}; "
                                   f"give a key, for example xs.{n['name']}(x -> x.{what})")
             return bc, bt
-        pre, code, kt, lam = self.lam_body(n, bt)
-        if kt == ERR:
+        keys, klt, lam = self.collect(n, bc, bt)
+        if klt == ERR:
             return "0", ERR
-        if not comparable(kt):
-            self.err("E0103", f"the key of '{n['name']}' must be a number or a str, found {self.type_str(kt)}", lam["body"])
-        klt = ("list", kt)
-        keys = self.hoist(f"tok_new_{mangle(klt)}({bc}.len)", klt)
-        i = self.loop(bc, bt, lam, pre)
-        self.emit(f"  {keys}.data[{i}] = {code};")
-        self.emit("}")
-        self.emit(f"{keys}.len = {bc}.len;")
+        if not comparable(klt[1]):
+            self.err("E0103", f"the key of '{n['name']}' must be a number or a str, found {self.type_str(klt[1])}", lam["body"])
         return keys, klt
 
     def m_list_sort(self, n, bc, bt, want):
@@ -56,13 +50,12 @@ class Builtins:
         if klt == ERR:
             return "0", ERR
         self.types.need(klt)
-        perm = self.hoist(f"tok_order_{mangle(klt)}({keys})", LINT)
-        out = self.hoist(f"tok_new_{mangle(bt)}({bc}.len)", bt)
+        perm = self.hoist(f"tok_order_{mangle(klt)}({keys})", LINT, own=True)
+        out = self.hoist(f"tok_new_{mangle(bt)}({bc}.len)", bt, own=True)
         i = self.new_tmp()
         self.emit(f"for (int64_t {i} = 0; {i} < {bc}.len; {i}++) "
-                  f"{out}.data[{i}] = {self.types.copy(bt[1], f'{bc}.data[{perm}.data[{i}]]')};")
+                  f"{out}.data[{i}] = {self.types.ret(bt[1], f'{bc}.data[{perm}.data[{i}]]')};")
         self.emit(f"{out}.len = {bc}.len;")
-        n["fresh"] = True
         return out, bt
 
     def extreme(self, n, bc, bt, larger):
@@ -71,16 +64,15 @@ class Builtins:
         if klt == ERR:
             return "0", ERR
         out_ty = ("opt", bt[1])
-        out = self.hoist(f"(({self.c(out_ty)}){{0}})", out_ty)
+        out = self.hoist(f"(({self.c(out_ty)}){{0}})", out_ty, own=True)
         best, i = self.new_tmp(), self.new_tmp()
         a, b = (f"{keys}.data[{best}]", f"{keys}.data[{i}]") if larger else (f"{keys}.data[{i}]", f"{keys}.data[{best}]")
         self.emit(f"if ({bc}.len > 0) {{")
         self.emit(f"  int64_t {best} = 0;")
         self.emit(f"  for (int64_t {i} = 1; {i} < {bc}.len; {i}++) if ({less(klt[1], a, b)}) {best} = {i};")
         self.emit(f"  {out}.has = true;")
-        self.emit(f"  {out}.v = {self.types.copy(bt[1], f'{bc}.data[{best}]')};")
+        self.emit(f"  {out}.v = {self.types.ret(bt[1], f'{bc}.data[{best}]')};")
         self.emit("}")
-        n["fresh"] = True
         return out, out_ty
 
     def m_list_min(self, n, bc, bt, want):
@@ -93,25 +85,21 @@ class Builtins:
 
     def m_list_reverse(self, n, bc, bt, want):
         self.margs(n, 0)
-        n["fresh"] = True
-        return self.hoist(f"tok_rev_{mangle(bt)}({bc})", bt), bt
+        return self.hoist(f"tok_rev_{mangle(bt)}({bc})", bt, own=True), bt
 
     def m_list_unique(self, n, bc, bt, want):
         self.margs(n, 0)
-        n["fresh"] = True
-        return self.hoist(f"tok_uniq_{mangle(bt)}({bc})", bt), bt
+        return self.hoist(f"tok_uniq_{mangle(bt)}({bc})", bt, own=True), bt
 
     def m_list_drop(self, n, bc, bt, want):
         self.margs(n, 1)
         k = self.count_arg(n)
-        n["fresh"] = True
-        return self.hoist(f"tok_slice_{mangle(bt)}({bc}, {k}, {bc}.len)", bt), bt
+        return self.hoist(f"tok_slice_{mangle(bt)}({bc}, {k}, {bc}.len)", bt, own=True), bt
 
     def m_list_last(self, n, bc, bt, want):
         self.margs(n, 1)
         k = self.count_arg(n)
-        n["fresh"] = True
-        return self.hoist(f"tok_slice_{mangle(bt)}({bc}, ({k} < 0 || {k} > {bc}.len) ? ({k} < 0 ? {bc}.len : 0) : {bc}.len - {k}, {bc}.len)", bt), bt
+        return self.hoist(f"tok_slice_{mangle(bt)}({bc}, ({k} < 0 || {k} > {bc}.len) ? ({k} < 0 ? {bc}.len : 0) : {bc}.len - {k}, {bc}.len)", bt, own=True), bt
 
     def m_list_index_of(self, n, bc, bt, want):
         self.margs(n, 1)
@@ -125,10 +113,14 @@ class Builtins:
     def joinable(self, bc, bt):
         """[int], [f64], [bool] ... as a [str], for join."""
         lt = ("list", STR)
-        out = self.hoist(f"tok_new_{mangle(lt)}({bc}.len)", lt)
+        out = self.hoist(f"tok_new_{mangle(lt)}({bc}.len)", lt, own=True)
         i = self.new_tmp()
-        self.emit(f"for (int64_t {i} = 0; {i} < {bc}.len; {i}++) {out}.data[{i}] = {self.types.to_str(bt[1], f'{bc}.data[{i}]')};")
-        self.emit(f"{out}.len = {bc}.len;")
+        self.emit(f"for (int64_t {i} = 0; {i} < {bc}.len; {i}++) {{")
+        self.emit(f"  tok_sbuf {i}b; tok_sb {i}s; tok_sb_init(&{i}s, &{i}b);")
+        self.emit("  " + self.types.show(bt[1], f"{bc}.data[{i}]", f"&{i}s"))
+        self.emit(f"  {out}.data[{i}] = tok_sb_str(&{i}s);")
+        self.emit(f"  {out}.len = {i} + 1;")
+        self.emit("}")
         return out
 
     # ---------------------------------------------------------- numbers as text
@@ -138,11 +130,11 @@ class Builtins:
         self.margs(n, 1)
         base = self.count_arg(n)
         if bt == ("u64",):
-            return self.hoist(f"tok_u_to_str({bc}, false, {base}, {self.loc(n)})", STR), STR
-        return self.hoist(f"tok_i_to_str((int64_t)({bc}), {base}, {self.loc(n)})", STR), STR
+            return self.hoist(f"tok_u_to_str({bc}, false, {base}, {self.loc(n)})", STR, own=True), STR
+        return self.hoist(f"tok_i_to_str((int64_t)({bc}), {base}, {self.loc(n)})", STR, own=True), STR
 
     def m_fixed(self, n, bc, bt, want):
         """x.fixed(digits): a float with exactly that many digits after the point."""
         self.margs(n, 1)
         digits = self.count_arg(n)
-        return self.hoist(f"tok_f_fixed((double)({bc}), {digits}, {self.loc(n)})", STR), STR
+        return self.hoist(f"tok_f_fixed((double)({bc}), {digits}, {self.loc(n)})", STR, own=True), STR

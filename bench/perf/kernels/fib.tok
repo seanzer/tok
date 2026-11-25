@@ -1,0 +1,8 @@
+// Function calls: naive recursive Fibonacci.
+fn fib(n: int) -> int
+  if n < 2
+    return n
+  fib(n - 1) + fib(n - 2)
+
+fn main(args: [str]) ! io
+  print(fib(args[0].to_int() or 35))

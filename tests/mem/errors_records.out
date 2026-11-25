@@ -1,0 +1,15 @@
+["even0", "odd1", "even2"]
+["even0", "odd1", "even2"]
+["note0", "no note for odd1", "note2"]
+even0
+?
+nothing
+<odd1>
+nothing
+{items: [{name: "even0", tags: ["e", "n0"], note: note0}, {name: "even2", tags: ["e", "n2", "pushed"], note: note2}], best: {name: "even2", tags: ["e", "n2"], note: note2}}
+["e", "n2"]
+10
+["even0", "even2", "odd1"]
+["e|n0", "", "e|n2"]
+even0
+[{name: "Bad", tags: [], note: none}]

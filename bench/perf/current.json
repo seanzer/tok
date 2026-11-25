@@ -1,0 +1,239 @@
+{
+ "c_flags": "cc -std=c11 -O2",
+ "machine": {
+  "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "cores": 4,
+  "cpu": "AMD EPYC 9D25 126-Core Processor",
+  "platform": "Linux-7.0.0-44-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "results": {
+  "fib": {
+   "agree": true,
+   "c": {
+    "best": 0.024,
+    "output": "9227465",
+    "peak_kib": 1656,
+    "seconds": 0.0244
+   },
+   "python": {
+    "best": 1.5747,
+    "output": "9227465",
+    "peak_kib": 10384,
+    "seconds": 1.6465
+   },
+   "tok": {
+    "best": 0.0723,
+    "output": "9227465",
+    "peak_kib": 1380,
+    "seconds": 0.0741
+   }
+  },
+  "func_update": {
+   "agree": true,
+   "c": {
+    "best": 0.0009,
+    "output": "24006000",
+    "peak_kib": 1784,
+    "seconds": 0.0009
+   },
+   "python": {
+    "best": 0.0438,
+    "output": "24006000",
+    "peak_kib": 10516,
+    "seconds": 0.0447
+   },
+   "tok": {
+    "best": 0.0009,
+    "output": "24006000",
+    "peak_kib": 1528,
+    "seconds": 0.0009
+   }
+  },
+  "intloop": {
+   "agree": true,
+   "c": {
+    "best": 0.2202,
+    "output": "959999908",
+    "peak_kib": 1628,
+    "seconds": 0.226
+   },
+   "python": {
+    "best": 12.6472,
+    "output": "959999908",
+    "peak_kib": 10160,
+    "seconds": 12.7664
+   },
+   "tok": {
+    "best": 0.2387,
+    "output": "959999908",
+    "peak_kib": 1372,
+    "seconds": 0.2405
+   }
+  },
+  "list_pipeline": {
+   "agree": true,
+   "c": {
+    "best": 0.0979,
+    "output": "2666697999992",
+    "peak_kib": 19680,
+    "seconds": 0.1021
+   },
+   "python": {
+    "best": 1.7981,
+    "output": "2666697999992",
+    "peak_kib": 133724,
+    "seconds": 1.8264
+   },
+   "tok": {
+    "best": 0.0974,
+    "output": "2666697999992",
+    "peak_kib": 19676,
+    "seconds": 0.1
+   }
+  },
+  "matmul": {
+   "agree": true,
+   "c": {
+    "best": 0.0591,
+    "output": "40500",
+    "peak_kib": 3372,
+    "seconds": 0.0601
+   },
+   "python": {
+    "best": 2.9796,
+    "output": "40500",
+    "peak_kib": 24524,
+    "seconds": 3.08
+   },
+   "tok": {
+    "best": 0.0693,
+    "output": "40500",
+    "peak_kib": 4972,
+    "seconds": 0.0757
+   }
+  },
+  "normalize": {
+   "agree": true,
+   "c": {
+    "best": 0.0593,
+    "output": "-13662",
+    "peak_kib": 17248,
+    "seconds": 0.0598
+   },
+   "python": {
+    "best": 1.6899,
+    "output": "-13662",
+    "peak_kib": 128060,
+    "seconds": 1.6952
+   },
+   "tok": {
+    "best": 0.0596,
+    "output": "-13662",
+    "peak_kib": 17372,
+    "seconds": 0.0749
+   }
+  },
+  "normalize32": {
+   "agree": true,
+   "c": {
+    "best": 0.0485,
+    "output": "-13624",
+    "peak_kib": 9360,
+    "seconds": 0.0579
+   },
+   "tok": {
+    "best": 0.0491,
+    "output": "-13624",
+    "peak_kib": 9488,
+    "seconds": 0.05
+   }
+  },
+  "records": {
+   "agree": true,
+   "c": {
+    "best": 0.008,
+    "output": "158692\n145000",
+    "peak_kib": 5668,
+    "seconds": 0.0082
+   },
+   "python": {
+    "best": 1.5147,
+    "output": "158692\n145000",
+    "peak_kib": 39680,
+    "seconds": 1.5563
+   },
+   "tok": {
+    "best": 0.0165,
+    "output": "158692\n145000",
+    "peak_kib": 7740,
+    "seconds": 0.0177
+   }
+  },
+  "sort": {
+   "agree": true,
+   "c": {
+    "best": 0.3295,
+    "output": "9661837954",
+    "peak_kib": 9156,
+    "seconds": 0.3369
+   },
+   "python": {
+    "best": 1.1981,
+    "output": "9661837954",
+    "peak_kib": 55336,
+    "seconds": 1.2095
+   },
+   "tok": {
+    "best": 0.3351,
+    "output": "9661837954",
+    "peak_kib": 13100,
+    "seconds": 0.3444
+   }
+  },
+  "str_build": {
+   "agree": true,
+   "c": {
+    "best": 0.0022,
+    "output": "138930",
+    "peak_kib": 1580,
+    "seconds": 0.0024
+   },
+   "python": {
+    "best": 0.0346,
+    "output": "138930",
+    "peak_kib": 10448,
+    "seconds": 0.0352
+   },
+   "tok": {
+    "best": 0.0011,
+    "output": "138930",
+    "peak_kib": 1400,
+    "seconds": 0.0012
+   }
+  },
+  "str_split": {
+   "agree": true,
+   "c": {
+    "best": 0.0411,
+    "output": "16923015",
+    "peak_kib": 2144,
+    "seconds": 0.0424
+   },
+   "python": {
+    "best": 0.1804,
+    "output": "16923015",
+    "peak_kib": 13356,
+    "seconds": 0.1883
+   },
+   "tok": {
+    "best": 0.0569,
+    "output": "16923015",
+    "peak_kib": 4708,
+    "seconds": 0.058
+   }
+  }
+ },
+ "runs": 5,
+ "tok_flags": "tokc build (cc -std=c11 -O2)"
+}

@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io, fs
-  text = fs.read_text(args[1] or "") or e -> fail("cannot read file")
-  print(text.lines().map(l -> l.trim().to_int() or 0).sum())
+text = fs.read_text(args[0] or "") or e -> fail("cannot read file")
+print(text.lines().map(l -> l.trim().to_int() or 0).sum())

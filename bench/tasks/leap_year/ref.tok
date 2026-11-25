@@ -1,6 +1,2 @@
-fn main(args: [str]) ! io
-  y = args[1].to_int() or 0
-  if y % 400 == 0 or (y % 4 == 0 and y % 100 != 0)
-    print("leap")
-  else
-    print("common")
+y = args[0].to_int() or 0
+print(if y % 400 == 0 or (y % 4 == 0 and y % 100 != 0) then "leap" else "common")

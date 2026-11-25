@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print((args[1] or "").split(",").map(f -> f.trim().to_int() or 0).sum())
+print((args[0] or "").split(",").map(f -> f.trim().to_int() or 0).sum())

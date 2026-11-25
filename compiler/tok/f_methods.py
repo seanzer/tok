@@ -49,13 +49,14 @@ class Methods:
         if wants_loc:
             args.append(self.loc(n))
         self.types.need(ret)
-        n["fresh"] = True
-        return self.hoist(f"{cfn}({', '.join(args)})", ret), ret
+        return self.hoist(f"{cfn}({', '.join(args)})", ret, own=True), ret
 
     # ---------------------------------------------------------- lambdas
 
     def lam_body(self, n, bt, as_cond=False):
-        """Compile the lambda argument of a list method. Returns (captured lines, code, type, lambda node)."""
+        """Compile the lambda argument of a list method. Returns (captured lines, code, type, lambda node, can leave).
+        The code is an owned value (or a bool): everything else the body made has been released by the time it is
+        used. `can leave` is true if the body can exit the function early (with `?`, for example)."""
         self.margs(n, 1)
         lam = n["args"][0]
         if lam["k"] != "lam":
@@ -64,9 +65,10 @@ class Methods:
             self.err("E0113", f"'{n['name']}' needs a one-line lambda; a block after '->' is only for 'call() or e ->'", lam)
         pt = lam["param_tok"]
         self.check_new_name(lam["param"], {"line": pt.line, "col": pt.col, "end": pt.end}, "lambda parameter")
-        with self.capture(1) as pre:
+        bails = self.bails
+        with self.region(), self.capture(1) as pre:
             self.scopes.append({})
-            self.define(lam["param"], bt[1], False, None, self.var_rooted(n["base"]))
+            self.define(lam["param"], bt[1], False, None)  # borrowed from the list being walked
             try:
                 if as_cond:
                     code, ty = self.cond(lam["body"]), BOOL
@@ -74,10 +76,13 @@ class Methods:
                     code, ty = self.val(lam["body"])
                     if ty == VOID:
                         self.err("E0103", "the lambda returns nothing, so there is nothing to collect", lam["body"])
-                    code = self.store(code, ty, lam["body"], False)
+                    code = self.take(code, ty)
+                if self.pools[-1]:
+                    code = self.stash(code, ty)
+                    self.flush()
             finally:
                 self.scopes.pop()
-        return pre, code, ty, lam
+        return pre, code, ty, lam, self.bails != bails
 
     def loop(self, bc, bt, lam, pre):
         i = self.new_tmp()
@@ -86,34 +91,48 @@ class Methods:
         self.buf.extend(pre)
         return i
 
-    def m_list_map(self, n, bc, bt, want):
-        pre, code, ty, lam = self.lam_body(n, bt)
+    def collect(self, n, bc, bt):
+        """A new list with the lambda's result for each element. Returns (list code, list type, lambda node).
+        The list is owned by the statement from before the loop, so an early exit inside the lambda frees it."""
+        out = self.new_tmp()
+        slot = [out, None]  # its type is known only once the lambda has been compiled
+        self.pools[-1].append(slot)
+        try:
+            pre, code, ty, lam, leaves = self.lam_body(n, bt)
+        except Diag:
+            self.pools[-1].remove(slot)
+            raise
         if ty == ERR:
-            return "0", ERR
+            self.pools[-1].remove(slot)
+            return "0", ERR, lam
         out_ty = ("list", ty)
-        out = self.hoist(f"tok_new_{mangle(out_ty)}({bc}.len)", out_ty)
+        slot[1] = out_ty
+        release = self.types.release(out_ty, out)
+        pre[:] = [line.replace(f"@@{out}@@", release) for line in pre]
+        self.emit(f"{self.c(out_ty)} {out} TOK_UNUSED = tok_new_{mangle(out_ty)}({bc}.len);")
         i = self.loop(bc, bt, lam, pre)
         self.emit(f"  {out}.data[{i}] = {code};")
+        if leaves and self.managed(ty):
+            self.emit(f"  {out}.len = {i} + 1;")  # an early exit frees exactly the elements built so far
         self.emit("}")
         self.emit(f"{out}.len = {bc}.len;")
-        n["fresh"] = not self.types.is_heapy(ty) or self.fresh(lam["body"])
+        return out, out_ty, lam
+
+    def m_list_map(self, n, bc, bt, want):
+        out, out_ty, _ = self.collect(n, bc, bt)
         return out, out_ty
 
     def m_list_where(self, n, bc, bt, want):
-        pre, code, _, lam = self.lam_body(n, bt, as_cond=True)
-        out = self.hoist(f"tok_new_{mangle(bt)}(0)", bt)
+        out = self.hoist(f"tok_new_{mangle(bt)}(0)", bt, own=True)
+        pre, code, _, lam, _ = self.lam_body(n, bt, as_cond=True)
         self.loop(bc, bt, lam, pre)
-        elem = f"v_{lam['param']}"
-        owned = self.var_rooted(n["base"]) and self.types.is_heapy(bt[1])
-        if owned:
-            elem = self.types.copy(bt[1], elem)
+        elem = self.types.ret(bt[1], f"v_{lam['param']}")
         self.emit(f"  if ({code}) tok_push_{mangle(bt)}(&{out}, {elem});")
         self.emit("}")
-        n["fresh"] = owned or not self.types.is_heapy(bt[1])
         return out, bt
 
     def quantifier(self, n, bc, bt, is_any):
-        pre, code, _, lam = self.lam_body(n, bt, as_cond=True)
+        pre, code, _, lam, _ = self.lam_body(n, bt, as_cond=True)
         out = self.hoist("false" if is_any else "true", BOOL)
         self.loop(bc, bt, lam, pre)
         if is_any:
@@ -135,11 +154,7 @@ class Methods:
         self.margs(n, 1)
         code, ty = self.val(n["args"][0], INT)
         code = self.coerce(code, ty, INT, n["args"][0], f"'first' needs an int count, found {self.type_str(ty)}")
-        out = self.hoist(f"tok_first_{mangle(bt)}({bc}, {code})", bt)
-        n["fresh"] = not self.types.is_heapy(bt[1])
-        if self.var_rooted(n["base"]) and self.types.is_heapy(bt[1]):
-            out, n["fresh"] = self.hoist(self.types.copy(bt, out), bt), True
-        return out, bt
+        return self.hoist(f"tok_first_{mangle(bt)}({bc}, {code})", bt, own=True), bt
 
     def m_list_contains(self, n, bc, bt, want):
         self.margs(n, 1)
@@ -158,7 +173,7 @@ class Methods:
             bc = self.joinable(bc, bt)
         code, ty = self.val(n["args"][0], STR)
         code = self.coerce(code, ty, STR, n["args"][0], f"'join' needs a str separator, found {self.type_str(ty)}")
-        return self.hoist(f"tok_s_join({bc}, {code})", STR), STR
+        return self.hoist(f"tok_s_join({bc}, {code})", STR, own=True), STR
 
     def m_list_sum(self, n, bc, bt, want):
         self.margs(n, 0)

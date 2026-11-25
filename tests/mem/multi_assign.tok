@@ -1,0 +1,33 @@
+// multiple assignment: owned temporaries for every right side, then the stores; swaps of managed values
+// exit 0
+type Pair = { name: str, tags: [str] }
+
+fn rotate(xs: [str], n: int) -> [str]
+  var a, b, c = xs[0] or "", xs[1] or "", xs[2] or ""
+  for i in 1..n
+    a, b, c = b, c, "{a}!"
+  [a, b, c]
+
+fn main(args: [str]) ! io
+  print(rotate(args, 4))
+  let s, t = args.join("+"), args.reverse()
+  var u, v = s + "?", [t.join(""), s]
+  u, v = v.join("-"), [u, u]
+  print(u)
+  print(v)
+  var xs = args
+  xs[0], xs[2] = xs[2] + xs[0], xs[0]
+  print(xs)
+  print(args)
+  var p = Pair { name: "p", tags: t }
+  var q = p
+  p.name, p.tags = p.tags.join(""), [p.name, s]
+  p, q = q, p
+  print(p)
+  print(q)
+  var grid = [args, t]
+  grid[0], grid[1] = grid[1], grid[0]
+  grid[0][0], grid[1][1] = grid[1][1], grid[0][0]
+  print(grid)
+  n, label = xs.len(), "{u}{v.len()}"
+  print("{n} {label}")

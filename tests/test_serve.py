@@ -87,7 +87,7 @@ class ServeTests(unittest.TestCase):
         self.assertEqual([e["code"] for e in res["errors"]], ["E0101"])
 
     def test_run_with_args_files_errors_and_timeout(self):
-        out, _ = self.s.tool("run", source="fn main(args: [str]) ! io, fs\n  print(geo.twice(args[1].to_int() or 0))\n"
+        out, _ = self.s.tool("run", source="fn main(args: [str]) ! io, fs\n  print(geo.twice(args[0].to_int() or 0))\n"
                                             "  print(fs.read_text(\"data.txt\")?.trim())\n",
                              args=["21"], files={"geo.tok": "fn twice(n: int) -> int\n  n * 2\n", "data.txt": "hi\n"})
         self.assertEqual(out["stdout"], "42\nhi\n")

@@ -1,0 +1,179 @@
+{
+ "c_flags": "cc -std=c11 -O2",
+ "machine": {
+  "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "cores": 4,
+  "cpu": "AMD EPYC 9D25 126-Core Processor",
+  "platform": "Linux-7.0.0-44-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "results": {
+  "fib": {
+   "agree": true,
+   "c": {
+    "best": 0.0245,
+    "output": "9227465",
+    "peak_kib": 1508,
+    "seconds": 0.0249
+   },
+   "tok": {
+    "best": 0.0731,
+    "output": "9227465",
+    "peak_kib": 1376,
+    "seconds": 0.0748
+   }
+  },
+  "func_update": {
+   "agree": true,
+   "c": {
+    "best": 0.0009,
+    "output": "24006000",
+    "peak_kib": 1784,
+    "seconds": 0.0009
+   },
+   "tok": {
+    "best": 0.0009,
+    "output": "24006000",
+    "peak_kib": 1528,
+    "seconds": 0.0009
+   }
+  },
+  "intloop": {
+   "agree": true,
+   "c": {
+    "best": 0.2188,
+    "output": "959999908",
+    "peak_kib": 1656,
+    "seconds": 0.2189
+   },
+   "tok": {
+    "best": 0.2368,
+    "output": "959999908",
+    "peak_kib": 1400,
+    "seconds": 0.2401
+   }
+  },
+  "list_pipeline": {
+   "agree": true,
+   "c": {
+    "best": 0.101,
+    "output": "2666697999992",
+    "peak_kib": 19676,
+    "seconds": 0.1072
+   },
+   "tok": {
+    "best": 0.0949,
+    "output": "2666697999992",
+    "peak_kib": 19620,
+    "seconds": 0.1
+   }
+  },
+  "matmul": {
+   "agree": true,
+   "c": {
+    "best": 0.0605,
+    "output": "40500",
+    "peak_kib": 3376,
+    "seconds": 0.0655
+   },
+   "tok": {
+    "best": 0.0695,
+    "output": "40500",
+    "peak_kib": 5040,
+    "seconds": 0.0717
+   }
+  },
+  "normalize": {
+   "agree": true,
+   "c": {
+    "best": 0.0627,
+    "output": "-13662",
+    "peak_kib": 17204,
+    "seconds": 0.0875
+   },
+   "tok": {
+    "best": 0.0627,
+    "output": "-13662",
+    "peak_kib": 17388,
+    "seconds": 0.0728
+   }
+  },
+  "normalize32": {
+   "agree": true,
+   "c": {
+    "best": 0.0501,
+    "output": "-13624",
+    "peak_kib": 9344,
+    "seconds": 0.0525
+   },
+   "tok": {
+    "best": 0.0498,
+    "output": "-13624",
+    "peak_kib": 9472,
+    "seconds": 0.0532
+   }
+  },
+  "records": {
+   "agree": true,
+   "c": {
+    "best": 0.0078,
+    "output": "158692\n145000",
+    "peak_kib": 5552,
+    "seconds": 0.0082
+   },
+   "tok": {
+    "best": 0.0164,
+    "output": "158692\n145000",
+    "peak_kib": 7676,
+    "seconds": 0.0178
+   }
+  },
+  "sort": {
+   "agree": true,
+   "c": {
+    "best": 0.3336,
+    "output": "9661837954",
+    "peak_kib": 9152,
+    "seconds": 0.3365
+   },
+   "tok": {
+    "best": 0.3258,
+    "output": "9661837954",
+    "peak_kib": 13152,
+    "seconds": 0.3276
+   }
+  },
+  "str_build": {
+   "agree": true,
+   "c": {
+    "best": 0.0023,
+    "output": "138930",
+    "peak_kib": 1628,
+    "seconds": 0.0023
+   },
+   "tok": {
+    "best": 0.0013,
+    "output": "138930",
+    "peak_kib": 1368,
+    "seconds": 0.0013
+   }
+  },
+  "str_split": {
+   "agree": true,
+   "c": {
+    "best": 0.0395,
+    "output": "16923015",
+    "peak_kib": 2140,
+    "seconds": 0.0397
+   },
+   "tok": {
+    "best": 0.0556,
+    "output": "16923015",
+    "peak_kib": 4712,
+    "seconds": 0.056
+   }
+  }
+ },
+ "runs": 5,
+ "tok_flags": "tokc build (cc -std=c11 -O2)"
+}

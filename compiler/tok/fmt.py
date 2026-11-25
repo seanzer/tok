@@ -8,15 +8,15 @@ interpolations) and number literals are copied through unchanged.
 Rules:
   - 2 spaces per block level, no tabs, no trailing spaces, one newline at the end
   - one space around binary operators, '=', '->' and the '!' before effects
-  - no space inside ( ) and [ ], one space inside { }, '{}' when empty
+  - no space inside ( ) and [ ]; one space inside the { } of a record, none inside a dict's; '{}' when empty
   - no space before ',' ':' '?' or around '.' and '..'; one space after ',' and ':'
   - no space between a function, method or list and its '(' or '['
   - a unary '-' is attached to its operand
   - comments start with '// ' and a trailing comment is two spaces after the code;
     a comment line is indented like the code after it, or like the block it ends
   - the type name 'i64' is written 'int' (they are the same type)
-  - one blank line before each top-level fn/type/error; never two blank lines in a row;
-    none at the start of the file or of a block
+  - one blank line before each top-level fn/type/error and after the body of a top-level fn; never two blank
+    lines in a row; none at the start of the file or of a block
 """
 from .diag import Diag
 from .lexer import KEYWORDS, lex, lex_fragment
@@ -51,20 +51,38 @@ def is_unary_minus(toks, i):
     return is_op(toks[i], "-") and (i == 0 or not is_word(toks, i - 1))
 
 
-def gap(toks, i):
+def dict_braces(toks):
+    """Indexes of the braces of dict literals and dict types, which are written tight: {"a": 1}, {str: int}.
+    A record's braces follow its type name (or `type T =`) and keep a space inside: P { x: 1 }."""
+    tight, stack = set(), []
+    in_type_decl = bool(toks) and toks[0].kind == "NAME" and toks[0].val == "type"
+    for i, t in enumerate(toks):
+        if is_op(t, "{"):
+            record = i > 0 and ((toks[i - 1].kind == "NAME" and not is_keyword(toks, i - 1))
+                                or (in_type_decl and i == 3 and is_op(toks[i - 1], "=")))
+            stack.append((i, not record))
+        elif is_op(t, "}") and stack:
+            j, is_dict = stack.pop()
+            if is_dict:
+                tight.update((j, i))
+    return tight
+
+
+def gap(toks, i, tight=()):
     """The text between toks[i - 1] and toks[i]: '' or ' '."""
     a, b = toks[i - 1], toks[i]
     if is_op(a, "(", "[", ".", "..") or is_op(b, ")", "]", ",", ":", ".", "..", "?"):
         return ""
     if is_op(a, "{"):
-        return "" if is_op(b, "}") else " "
+        return "" if is_op(b, "}") or i - 1 in tight else " "
     if is_op(b, "}"):
-        return " "
+        return "" if i in tight else " "
     if is_unary_minus(toks, i - 1):
         return ""
     if is_op(b, "(", "["):
         # a call, a method call or an index directly follows a value; a keyword or operator does not
-        callee = (a.kind == "NAME" and not is_keyword(toks, i - 1)) or a.kind == "STR" or is_op(a, ")", "]")
+        callee = (a.kind == "NAME" and not is_keyword(toks, i - 1)) or a.kind == "STR" or is_op(a, ")", "]") \
+            or (is_op(a, "}") and i - 1 in tight)
         return "" if callee else " "
     return " "
 
@@ -81,10 +99,10 @@ def spelling(text, toks, i):
 
 
 def format_code(text, toks):
-    out = []
+    out, tight = [], dict_braces(toks)
     for i, t in enumerate(toks):
         if i:
-            out.append(gap(toks, i))
+            out.append(gap(toks, i, tight))
         out.append(spelling(text, toks, i))
     return "".join(out)
 
@@ -134,14 +152,18 @@ def format_source(src):
         return i < len(rows) and rows[i][0] == "code" and rows[i][1] == 0 and rows[i][3] in ("fn", "type", "error")
 
     out = []
+    in_fn = False  # the last top-level line of code began a function
     for i, row in enumerate(rows):
         if row[0] == "blank":
             continue
         if out and out[-1] != "":
             after_blank = rows[i - 1][0] == "blank"
             opens_block = row[1] > out[-1][1]
-            if starts_decl(i) or (after_blank and not opens_block):
+            ends_fn = in_fn and row[0] == "code" and row[1] == 0 and out[-1][1] > 0
+            if starts_decl(i) or ends_fn or (after_blank and not opens_block):
                 out.append("")
+        if row[0] == "code" and row[1] == 0:
+            in_fn = row[3] == "fn"
         out.append((row[2], row[1]))
     lines = ["" if o == "" else "  " * o[1] + o[0] for o in out]
     return "\n".join(lines) + "\n" if lines else ""

@@ -1,0 +1,62 @@
+// dicts: counted blocks, copy-on-write, managed keys and values, growth, loops over a snapshot, early exits
+// exit 1
+type Acc = { name: str, hits: [str] }
+
+fn count(words: [str]) -> {str: int}
+  var d: {str: int} = {}
+  for w in words
+    d[w] = (d[w] or 0) + 1
+  d
+
+fn tagged(d: {str: [str]}, k: str) -> {str: [str]}
+  var out = d
+  if not out.has(k)
+    out[k] = []
+  out[k].push("{k}!")
+  out
+
+fn pick(d: {str: int}, k: str) -> int ! err
+  n = d[k]
+  if n == none
+    fail("no {k} in {d.keys().join(",")}")
+  n
+
+fn main(args: [str]) ! io
+  d = count(args.reverse())
+  print(d)
+  var e = d
+  e["{args[0]}{args[1]}"] = e.len()
+  e[args[0]] += 5
+  print(e)
+  print(d == e)
+  var g: {str: [str]} = {}
+  for a in args
+    g = tagged(g, a)
+    g = tagged(g, "all")
+  h = tagged(g, "x")
+  print(g)
+  print(h)
+  var accs = {"a": Acc { name: args.join(""), hits: [] }}
+  accs["a"].hits.push(args[2] + "?")
+  accs["a"].name += "!"
+  print(accs)
+  var nested: {int: {str: str}} = {}
+  for i in 1..40
+    nested[i % 5] = {"k{i}": "v{i}"}
+    nested[i % 5]["extra"] = "{i}"
+  print(nested[3])
+  print(nested.len())
+  var grown = d
+  for k, v in grown
+    grown["{k}{v}"] = v + 1
+    if grown.len() > 5
+      break
+  print(grown)
+  for k in e.keys().sort()
+    if k == "y"
+      continue
+    print("{k} {e[k] or 0}")
+  swapped, other = e, d
+  print(if swapped.len() > other.len() then swapped else other)
+  print(pick(d, "x")?)
+  print(pick(d, "nope")?)

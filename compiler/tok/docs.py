@@ -10,11 +10,14 @@ CODES = {
     "E0005": "A '{' in a string interpolation is not closed. Write \\{ for a literal brace.",
     "E0006": "A number literal is malformed.",
     "E0010": "Syntax error: the parser found something it did not expect. Often a construct Tok does not have "
-             "(while, break, import, a colon after if/for/fn).",
+             "(import, a colon after if/for/fn, `a if c else b`).",
     "E0012": "A keyword is used as a name.",
     "E0013": "Unknown effect after '!'. Known effects: io, fs, net, time, rand, py, err.",
     "E0014": "Empty '{}' in a string. Write \\{ for a literal brace.",
     "E0016": "The left side of an assignment is not a variable, a field, or a list element.",
+    "E0017": "`break` or `continue` outside a loop.",
+    "E0018": "A multiple assignment with a different number of names and values. `a, b = x, y` pairs them by "
+             "position; there are no tuples, so one call cannot fill two names.",
     "E0101": "Unknown name: no variable, function, method, or module function with that name.",
     "E0102": "The name is already taken (a function, type, error kind, built-in, or an earlier variable).",
     "E0103": "Type mismatch: the value has a different type from what is needed here. Optionals need `or default` "
@@ -38,8 +41,10 @@ CODES = {
     "E0205": "A test or default on an optional that is already known to have a value here.",
     "E0301": "Assignment to an immutable binding. Declare it with `var`. Parameters and loop variables are read-only.",
     "E0302": "`var` or a type annotation on a name that already exists. Drop it to assign.",
-    "E0401": "The program has no `main` function.",
+    "E0401": "The program has nothing to run: no top-level statements and no `main` function.",
     "E0402": "`main` takes no parameters, or one `[str]` parameter.",
+    "E0403": "The file has both top-level statements and `fn main`. Use one: statements at the top level, or `fn main`.",
+    "E0404": "A module (a file used by another) has statements at the top level. Only the program file may.",
     "E0501": "Unknown name or module: no variable, built-in module, or `<name>.tok` file next to the program.",
     "E0900": "The feature is not supported by this compiler.",
 }
@@ -66,8 +71,12 @@ BUILTINS = {
             "index_of(v) -> int?, sum, join(sep) on strs, numbers and bools, first(n), last(n), drop(n), reverse, unique, "
             "sort() on numbers and strs, sort(x -> key) (stable), min(), max(), min(x -> key), max(x -> key) -> optional. "
             "Only push changes the list. xs[i], and `xs[i] or d` for a checked lookup.",
+    "dict": "dict: `{K: V}` with str or integer keys; literal `{\"a\": 1}`, empty `d: {str: int} = {}`. `d[k]` is a `V?` "
+            "(`d[k] or 0`); on a var: `d[k] = v` inserts or updates, `d[k] += 1` and `d[k].push(v)` change an existing "
+            "entry (a missing key stops the program). Methods: len, has(k), keys, values. `for k in d`, `for k, v in d`, "
+            "in insertion order. A copy is independent; == compares contents.",
     "or": "`v or d`: the value of an optional, or d. `call() or d`: the default when a call fails. Under `or`, every "
-          "lookup in the chain on the left is checked: `args[1].to_int() or 0` gives 0 when the argument is missing. "
+          "lookup in the chain on the left is checked: `args[0].to_int() or 0` gives 0 when the argument is missing. "
           "A method called on an optional gives an optional.",
     "Error": "Error: a caught error. Fields: kind (ErrorKind), msg (str). Bound by `call() or e -> ...`.",
 }

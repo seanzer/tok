@@ -1,3 +1,2 @@
-fn main() ! io
-  for line in io.read_all().lines().reverse()
-    print(line)
+for line in io.read_all().lines().reverse()
+  print(line)

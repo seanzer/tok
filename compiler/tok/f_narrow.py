@@ -45,6 +45,8 @@ def assigned_roots(x, out=None):
             out.add(root_of(x["target"]))
         elif k == "bind":
             out.add(x["name"])
+        elif k == "multi":
+            out.update(root_of(t) for t in x["targets"])
         elif k == "mcall" and x.get("name") == "push":
             out.add(root_of(x["base"]))
         for v in x.values():
@@ -58,11 +60,11 @@ def assigned_roots(x, out=None):
 
 
 def leaves(stmts):
-    """True if the block always ends by leaving the function (return or fail)."""
+    """True if the block always ends by leaving: return or fail (the function), break or continue (the loop body)."""
     if not stmts:
         return False
     last = stmts[-1]
-    if last["k"] == "return":
+    if last["k"] in ("return", "break", "continue"):
         return True
     if last["k"] == "expr" and last["val"]["k"] == "call" and last["val"]["name"] == "fail":
         return True
@@ -88,6 +90,9 @@ class Narrow:
     def setup(self):
         super().setup()
         self.narrowed = []
+
+    def assigned(self, stmt):
+        return assigned_roots(stmt)
 
     def is_narrowed(self, path):
         return path is not None and any(path in s for s in self.narrowed)

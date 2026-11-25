@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print(args.drop(1).reverse().join(" "))
+print(args.reverse().join(" "))

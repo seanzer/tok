@@ -58,11 +58,11 @@ class FsAndArgsTests(TokCase):
     def test_write_then_read(self):
         path = os.path.join(self.tmp, "note.txt")
         src = ('fn main(args: [str]) ! io, fs\n'
-               '  fs.write_text(args[1], "one\\ntwo\\n")?\n'
-               '  text = fs.read_text(args[1])?\n'
-               '  print("{text.lines()} {args.len()} {args[2] or "-"}")\n'
-               '  print(fs.read_text(args[1] + ".missing") or "fallback")\n')
-        self.assertEqual(self.run_src(src, "--", path), '["one", "two"] 2 -\nfallback\n')
+               '  fs.write_text(args[0], "one\\ntwo\\n")?\n'
+               '  text = fs.read_text(args[0])?\n'
+               '  print("{text.lines()} {args.len()} {args[1] or "-"}")\n'
+               '  print(fs.read_text(args[0] + ".missing") or "fallback")\n')
+        self.assertEqual(self.run_src(src, "--", path), '["one", "two"] 1 -\nfallback\n')
         with open(path) as fh:
             self.assertEqual(fh.read(), "one\ntwo\n")
 

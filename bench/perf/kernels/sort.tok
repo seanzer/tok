@@ -1,0 +1,14 @@
+// Sort a large list of pseudo-random integers.
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 500000
+  rounds = args[1].to_int() or 3
+  var total = 0
+  var x = 12345
+  for r in 1..rounds
+    var xs: [int] = []
+    for i in 1..n
+      x = (x * 1103515245 + 12345) % 2147483648
+      xs.push(x)
+    sorted = xs.sort()
+    total = total + sorted[0] + sorted[n / 2] + sorted[n - 1]
+  print(total)

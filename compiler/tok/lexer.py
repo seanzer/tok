@@ -2,7 +2,7 @@
 from .diag import Diag
 
 KEYWORDS = {"fn", "type", "var", "if", "else", "for", "in", "where", "return",
-            "and", "or", "not", "true", "false", "none"}
+            "and", "or", "not", "true", "false", "none", "then", "while", "break", "continue", "let"}
 TWO_CHAR = {"->", "..", "**", "==", "!=", "<=", ">=", "+=", "-=", "*=", "/=", "%="}
 ONE_CHAR = set("()[]{}+-*/%<>=!,:.?")
 

@@ -1,0 +1,21 @@
+// A list of records updated step by step: each step builds the next list from the last one.
+type Body = { x: f64, y: f64, vx: f64, vy: f64, name: str }
+
+fn step(bs: [Body], dt: f64) -> [Body]
+  bs.map(b -> Body { x: b.x + b.vx * dt, y: b.y + b.vy * dt, vx: b.vx * 0.999, vy: b.vy - 9.8 * dt, name: b.name })
+
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 50000
+  steps = args[1].to_int() or 40
+  var bs: [Body] = []
+  for i in 1..n
+    bs.push(Body { x: 0.0, y: 0.0, vx: f64(i % 17), vy: f64(i % 5), name: "b{i % 100}" })
+  for s in 1..steps
+    bs = step(bs, 0.01)
+  var sum = 0.0
+  var chars = 0
+  for b in bs
+    sum = sum + b.x + b.y
+    chars = chars + b.name.len()
+  print(int(sum))
+  print(chars)

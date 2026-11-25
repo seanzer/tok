@@ -1,9 +1,5 @@
-fn main(args: [str]) ! io
-  n = args[1].to_int() or 0
-  var total = 0
-  for d in 1..n - 1 where n % d == 0
-    total += d
-  if total == n and n > 0
-    print("perfect")
-  else
-    print("not perfect")
+n = args[0].to_int() or 0
+var total = 0
+for d in 1..n - 1 where n % d == 0
+  total += d
+print(if total == n and n > 0 then "perfect" else "not perfect")

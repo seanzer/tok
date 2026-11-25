@@ -1,6 +1,1 @@
-fn main(args: [str]) ! io
-  words = args.drop(1)
-  if words == words.reverse()
-    print("yes")
-  else
-    print("no")
+print(if args == args.reverse() then "yes" else "no")

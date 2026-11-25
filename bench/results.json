@@ -13,7 +13,242 @@
  ],
  "unavailable": {},
  "baseline_revision": "144c8d94e6c9",
+ "builtins_revision": "0da44bfef465",
  "groups": {
+  "tiktoken o200k_base": {
+   "original": {
+    "tasks": 40,
+    "tok": 1450,
+    "python": 1448,
+    "tok_over_python_total": 1.0013812154696133,
+    "median_per_task": 1.0,
+    "min_per_task": 0.4375,
+    "max_per_task": 1.68,
+    "tasks_where_tok_is_smaller": 19,
+    "tasks_equal": 3
+   },
+   "added": {
+    "tasks": 24,
+    "tok": 660,
+    "python": 558,
+    "tok_over_python_total": 1.1827956989247312,
+    "median_per_task": 1.1240601503759398,
+    "min_per_task": 0.6363636363636364,
+    "max_per_task": 2.125,
+    "tasks_where_tok_is_smaller": 10,
+    "tasks_equal": 1
+   },
+   "all": {
+    "tasks": 64,
+    "tok": 2110,
+    "python": 2006,
+    "tok_over_python_total": 1.0518444666001994,
+    "median_per_task": 1.0,
+    "min_per_task": 0.4375,
+    "max_per_task": 2.125,
+    "tasks_where_tok_is_smaller": 29,
+    "tasks_equal": 4
+   }
+  },
+  "tiktoken cl100k_base": {
+   "original": {
+    "tasks": 40,
+    "tok": 1448,
+    "python": 1442,
+    "tok_over_python_total": 1.0041608876560333,
+    "median_per_task": 1.0,
+    "min_per_task": 0.4375,
+    "max_per_task": 1.7391304347826086,
+    "tasks_where_tok_is_smaller": 19,
+    "tasks_equal": 3
+   },
+   "added": {
+    "tasks": 24,
+    "tok": 660,
+    "python": 557,
+    "tok_over_python_total": 1.18491921005386,
+    "median_per_task": 1.1240601503759398,
+    "min_per_task": 0.6363636363636364,
+    "max_per_task": 2.125,
+    "tasks_where_tok_is_smaller": 10,
+    "tasks_equal": 1
+   },
+   "all": {
+    "tasks": 64,
+    "tok": 2108,
+    "python": 1999,
+    "tok_over_python_total": 1.054527263631816,
+    "median_per_task": 1.0,
+    "min_per_task": 0.4375,
+    "max_per_task": 2.125,
+    "tasks_where_tok_is_smaller": 29,
+    "tasks_equal": 4
+   }
+  },
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
+   "original": {
+    "tasks": 40,
+    "tok": 1459,
+    "python": 1453,
+    "tok_over_python_total": 1.0041293874741912,
+    "median_per_task": 1.0,
+    "min_per_task": 0.4375,
+    "max_per_task": 1.7391304347826086,
+    "tasks_where_tok_is_smaller": 19,
+    "tasks_equal": 3
+   },
+   "added": {
+    "tasks": 24,
+    "tok": 666,
+    "python": 563,
+    "tok_over_python_total": 1.1829484902309058,
+    "median_per_task": 1.1240601503759398,
+    "min_per_task": 0.6363636363636364,
+    "max_per_task": 2.125,
+    "tasks_where_tok_is_smaller": 10,
+    "tasks_equal": 1
+   },
+   "all": {
+    "tasks": 64,
+    "tok": 2125,
+    "python": 2016,
+    "tok_over_python_total": 1.0540674603174602,
+    "median_per_task": 1.0,
+    "min_per_task": 0.4375,
+    "max_per_task": 2.125,
+    "tasks_where_tok_is_smaller": 29,
+    "tasks_equal": 4
+   }
+  },
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
+   "original": {
+    "tasks": 40,
+    "tok": 1728,
+    "python": 1860,
+    "tok_over_python_total": 0.9290322580645162,
+    "median_per_task": 0.932518115942029,
+    "min_per_task": 0.4782608695652174,
+    "max_per_task": 1.6896551724137931,
+    "tasks_where_tok_is_smaller": 24,
+    "tasks_equal": 2
+   },
+   "added": {
+    "tasks": 24,
+    "tok": 856,
+    "python": 780,
+    "tok_over_python_total": 1.0974358974358975,
+    "median_per_task": 1.0256410256410255,
+    "min_per_task": 0.6842105263157895,
+    "max_per_task": 2.0,
+    "tasks_where_tok_is_smaller": 11,
+    "tasks_equal": 0
+   },
+   "all": {
+    "tasks": 64,
+    "tok": 2584,
+    "python": 2640,
+    "tok_over_python_total": 0.9787878787878788,
+    "median_per_task": 0.9478609625668449,
+    "min_per_task": 0.4782608695652174,
+    "max_per_task": 2.0,
+    "tasks_where_tok_is_smaller": 35,
+    "tasks_equal": 2
+   }
+  },
+  "hf openai-community/gpt2": {
+   "original": {
+    "tasks": 40,
+    "tok": 1632,
+    "python": 1990,
+    "tok_over_python_total": 0.8201005025125628,
+    "median_per_task": 0.8578595317725752,
+    "min_per_task": 0.38636363636363635,
+    "max_per_task": 1.7142857142857142,
+    "tasks_where_tok_is_smaller": 28,
+    "tasks_equal": 2
+   },
+   "added": {
+    "tasks": 24,
+    "tok": 828,
+    "python": 798,
+    "tok_over_python_total": 1.037593984962406,
+    "median_per_task": 0.9287439613526569,
+    "min_per_task": 0.6222222222222222,
+    "max_per_task": 1.92,
+    "tasks_where_tok_is_smaller": 14,
+    "tasks_equal": 0
+   },
+   "all": {
+    "tasks": 64,
+    "tok": 2460,
+    "python": 2788,
+    "tok_over_python_total": 0.8823529411764706,
+    "median_per_task": 0.8920807453416149,
+    "min_per_task": 0.38636363636363635,
+    "max_per_task": 1.92,
+    "tasks_where_tok_is_smaller": 42,
+    "tasks_equal": 2
+   }
+  }
+ },
+ "before": {
+  "tiktoken o200k_base": {
+   "tasks": 40,
+   "tok": 3092,
+   "python": 1552,
+   "tok_over_python_total": 1.9922680412371134,
+   "median_per_task": 2.012802275960171,
+   "min_per_task": 0.810126582278481,
+   "max_per_task": 5.1923076923076925,
+   "tasks_where_tok_is_smaller": 1,
+   "tasks_equal": 1
+  },
+  "tiktoken cl100k_base": {
+   "tasks": 40,
+   "tok": 3089,
+   "python": 1544,
+   "tok_over_python_total": 2.0006476683937824,
+   "median_per_task": 2.0311293436293436,
+   "min_per_task": 0.8311688311688312,
+   "max_per_task": 5.1923076923076925,
+   "tasks_where_tok_is_smaller": 1,
+   "tasks_equal": 0
+  },
+  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
+   "tasks": 40,
+   "tok": 3103,
+   "python": 1555,
+   "tok_over_python_total": 1.9954983922829581,
+   "median_per_task": 2.0311293436293436,
+   "min_per_task": 0.8311688311688312,
+   "max_per_task": 5.1923076923076925,
+   "tasks_where_tok_is_smaller": 1,
+   "tasks_equal": 0
+  },
+  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
+   "tasks": 40,
+   "tok": 3566,
+   "python": 1990,
+   "tok_over_python_total": 1.791959798994975,
+   "median_per_task": 1.6989830508474575,
+   "min_per_task": 0.7450980392156863,
+   "max_per_task": 4.882352941176471,
+   "tasks_where_tok_is_smaller": 2,
+   "tasks_equal": 0
+  },
+  "hf openai-community/gpt2": {
+   "tasks": 40,
+   "tok": 3642,
+   "python": 2153,
+   "tok_over_python_total": 1.6915931258708778,
+   "median_per_task": 1.7362466725820762,
+   "min_per_task": 0.5909090909090909,
+   "max_per_task": 5.176470588235294,
+   "tasks_where_tok_is_smaller": 4,
+   "tasks_equal": 0
+  }
+ },
+ "builtins": {
   "tiktoken o200k_base": {
    "original": {
     "tasks": 40,
@@ -190,1351 +425,1294 @@
    }
   }
  },
- "before": {
-  "tiktoken o200k_base": {
-   "tasks": 40,
-   "tok": 3092,
-   "python": 1552,
-   "tok_over_python_total": 1.9922680412371134,
-   "median_per_task": 2.012802275960171,
-   "min_per_task": 0.810126582278481,
-   "max_per_task": 5.1923076923076925,
-   "tasks_where_tok_is_smaller": 1,
-   "tasks_equal": 1
-  },
-  "tiktoken cl100k_base": {
-   "tasks": 40,
-   "tok": 3089,
-   "python": 1544,
-   "tok_over_python_total": 2.0006476683937824,
-   "median_per_task": 2.0311293436293436,
-   "min_per_task": 0.8311688311688312,
-   "max_per_task": 5.1923076923076925,
-   "tasks_where_tok_is_smaller": 1,
-   "tasks_equal": 0
-  },
-  "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
-   "tasks": 40,
-   "tok": 3103,
-   "python": 1555,
-   "tok_over_python_total": 1.9954983922829581,
-   "median_per_task": 2.0311293436293436,
-   "min_per_task": 0.8311688311688312,
-   "max_per_task": 5.1923076923076925,
-   "tasks_where_tok_is_smaller": 1,
-   "tasks_equal": 0
-  },
-  "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
-   "tasks": 40,
-   "tok": 3566,
-   "python": 1990,
-   "tok_over_python_total": 1.791959798994975,
-   "median_per_task": 1.6989830508474575,
-   "min_per_task": 0.7450980392156863,
-   "max_per_task": 4.882352941176471,
-   "tasks_where_tok_is_smaller": 2,
-   "tasks_equal": 0
-  },
-  "hf openai-community/gpt2": {
-   "tasks": 40,
-   "tok": 3642,
-   "python": 2153,
-   "tok_over_python_total": 1.6915931258708778,
-   "median_per_task": 1.7362466725820762,
-   "min_per_task": 0.5909090909090909,
-   "max_per_task": 5.176470588235294,
-   "tasks_where_tok_is_smaller": 4,
-   "tasks_equal": 0
-  }
- },
  "per_task": {
   "tiktoken o200k_base": {
    "acronym": {
-    "tok": 29,
+    "tok": 14,
     "python": 22
    },
    "adult_average": {
-    "tok": 69,
+    "tok": 49,
     "python": 53
    },
    "anagram": {
-    "tok": 48,
+    "tok": 33,
     "python": 25
    },
    "binary": {
-    "tok": 29,
+    "tok": 18,
     "python": 14
    },
    "c_to_f": {
-    "tok": 39,
+    "tok": 27,
     "python": 25
    },
    "caesar": {
-    "tok": 86,
+    "tok": 65,
     "python": 48
    },
    "capitalize_words": {
-    "tok": 36,
+    "tok": 21,
     "python": 19
    },
    "char_histogram": {
-    "tok": 46,
+    "tok": 34,
     "python": 27
    },
    "circle_area": {
-    "tok": 46,
+    "tok": 34,
     "python": 27
    },
    "collatz": {
-    "tok": 90,
+    "tok": 61,
     "python": 56
    },
    "common_prefix": {
-    "tok": 70,
+    "tok": 35,
     "python": 17
    },
    "count_errors": {
-    "tok": 41,
+    "tok": 27,
     "python": 41
    },
    "count_evens": {
-    "tok": 41,
+    "tok": 26,
     "python": 26
    },
    "count_substring": {
-    "tok": 33,
+    "tok": 22,
     "python": 15
    },
    "count_vowels": {
-    "tok": 35,
+    "tok": 24,
     "python": 21
    },
    "count_word": {
-    "tok": 28,
+    "tok": 17,
     "python": 15
    },
    "csv_sum": {
-    "tok": 37,
+    "tok": 26,
     "python": 40
    },
    "dedupe": {
-    "tok": 22,
+    "tok": 7,
     "python": 16
    },
    "digit_sum": {
-    "tok": 34,
+    "tok": 23,
     "python": 16
    },
    "dot_product": {
-    "tok": 75,
+    "tok": 56,
     "python": 47
    },
    "factorial": {
-    "tok": 44,
+    "tok": 31,
     "python": 33
    },
    "fibonacci": {
-    "tok": 63,
+    "tok": 42,
     "python": 37
    },
    "file_stats": {
-    "tok": 51,
+    "tok": 37,
     "python": 54
    },
    "fizzbuzz": {
-    "tok": 83,
+    "tok": 72,
     "python": 73
    },
    "gcd": {
-    "tok": 68,
+    "tok": 47,
     "python": 36
    },
    "is_palindrome": {
-    "tok": 42,
+    "tok": 26,
     "python": 27
    },
    "is_prime": {
-    "tok": 100,
+    "tok": 60,
     "python": 74
    },
    "leap_year": {
-    "tok": 65,
+    "tok": 49,
     "python": 46
    },
    "longest_word": {
-    "tok": 25,
+    "tok": 10,
     "python": 13
    },
    "make_change": {
-    "tok": 69,
+    "tok": 55,
     "python": 45
    },
    "max_arg": {
-    "tok": 30,
+    "tok": 15,
     "python": 28
    },
    "min_max": {
-    "tok": 47,
+    "tok": 31,
     "python": 25
    },
    "oldest": {
-    "tok": 40,
+    "tok": 25,
     "python": 26
    },
    "pad_number": {
-    "tok": 34,
+    "tok": 22,
     "python": 14
    },
    "palindrome_list": {
-    "tok": 38,
+    "tok": 15,
     "python": 25
    },
    "perfect_number": {
-    "tok": 80,
+    "tok": 61,
     "python": 50
    },
    "power": {
-    "tok": 37,
+    "tok": 26,
     "python": 17
    },
    "primes_upto": {
-    "tok": 102,
+    "tok": 84,
     "python": 50
    },
    "range_sum": {
-    "tok": 68,
+    "tok": 53,
     "python": 36
    },
    "replace_word": {
-    "tok": 57,
+    "tok": 27,
     "python": 37
    },
    "reverse_args": {
-    "tok": 22,
+    "tok": 7,
     "python": 13
    },
    "reverse_string": {
-    "tok": 21,
+    "tok": 10,
     "python": 12
    },
    "running_sum": {
-    "tok": 57,
+    "tok": 40,
     "python": 24
    },
    "safe_divide": {
-    "tok": 71,
+    "tok": 44,
     "python": 49
    },
    "second_largest": {
-    "tok": 62,
+    "tok": 42,
     "python": 37
    },
    "sort_ints": {
-    "tok": 33,
+    "tok": 18,
     "python": 18
    },
    "stdin_average": {
-    "tok": 42,
+    "tok": 34,
     "python": 38
    },
    "stdin_grep": {
-    "tok": 31,
+    "tok": 20,
     "python": 27
    },
    "stdin_head": {
-    "tok": 36,
+    "tok": 25,
     "python": 25
    },
    "stdin_line_count": {
-    "tok": 16,
+    "tok": 9,
     "python": 12
    },
    "stdin_longest_line": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_number_lines": {
-    "tok": 42,
+    "tok": 34,
     "python": 28
    },
    "stdin_passing": {
-    "tok": 64,
+    "tok": 52,
     "python": 42
    },
    "stdin_reverse_lines": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_sort_lines": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_sum": {
-    "tok": 29,
+    "tok": 22,
     "python": 14
    },
    "stdin_unique_words": {
-    "tok": 18,
+    "tok": 11,
     "python": 12
    },
    "stdin_word_freq": {
-    "tok": 78,
+    "tok": 68,
     "python": 32
    },
    "sum_args": {
-    "tok": 30,
+    "tok": 15,
     "python": 17
    },
    "sum_file": {
-    "tok": 53,
+    "tok": 39,
     "python": 79
    },
    "times_table": {
-    "tok": 48,
+    "tok": 36,
     "python": 37
    },
    "triangle": {
-    "tok": 131,
+    "tok": 109,
     "python": 89
    },
    "upper_join": {
-    "tok": 26,
+    "tok": 11,
     "python": 19
    },
    "word_count": {
-    "tok": 23,
+    "tok": 12,
     "python": 12
    }
   },
   "tiktoken cl100k_base": {
    "acronym": {
-    "tok": 29,
+    "tok": 14,
     "python": 22
    },
    "adult_average": {
-    "tok": 69,
+    "tok": 49,
     "python": 55
    },
    "anagram": {
-    "tok": 48,
+    "tok": 33,
     "python": 25
    },
    "binary": {
-    "tok": 29,
+    "tok": 18,
     "python": 14
    },
    "c_to_f": {
-    "tok": 39,
+    "tok": 27,
     "python": 25
    },
    "caesar": {
-    "tok": 86,
+    "tok": 65,
     "python": 48
    },
    "capitalize_words": {
-    "tok": 36,
+    "tok": 21,
     "python": 19
    },
    "char_histogram": {
-    "tok": 46,
+    "tok": 34,
     "python": 27
    },
    "circle_area": {
-    "tok": 46,
+    "tok": 34,
     "python": 27
    },
    "collatz": {
-    "tok": 89,
+    "tok": 60,
     "python": 55
    },
    "common_prefix": {
-    "tok": 71,
+    "tok": 36,
     "python": 17
    },
    "count_errors": {
-    "tok": 41,
+    "tok": 27,
     "python": 40
    },
    "count_evens": {
-    "tok": 41,
+    "tok": 26,
     "python": 26
    },
    "count_substring": {
-    "tok": 33,
+    "tok": 22,
     "python": 15
    },
    "count_vowels": {
-    "tok": 35,
+    "tok": 24,
     "python": 21
    },
    "count_word": {
-    "tok": 28,
+    "tok": 17,
     "python": 15
    },
    "csv_sum": {
-    "tok": 37,
+    "tok": 26,
     "python": 39
    },
    "dedupe": {
-    "tok": 22,
+    "tok": 7,
     "python": 16
    },
    "digit_sum": {
-    "tok": 34,
+    "tok": 23,
     "python": 16
    },
    "dot_product": {
-    "tok": 75,
+    "tok": 56,
     "python": 47
    },
    "factorial": {
-    "tok": 44,
+    "tok": 31,
     "python": 33
    },
    "fibonacci": {
-    "tok": 63,
+    "tok": 42,
     "python": 37
    },
    "file_stats": {
-    "tok": 51,
+    "tok": 37,
     "python": 53
    },
    "fizzbuzz": {
-    "tok": 83,
+    "tok": 72,
     "python": 73
    },
    "gcd": {
-    "tok": 68,
+    "tok": 47,
     "python": 36
    },
    "is_palindrome": {
-    "tok": 42,
+    "tok": 26,
     "python": 27
    },
    "is_prime": {
-    "tok": 100,
+    "tok": 60,
     "python": 74
    },
    "leap_year": {
-    "tok": 65,
+    "tok": 49,
     "python": 46
    },
    "longest_word": {
-    "tok": 25,
+    "tok": 10,
     "python": 13
    },
    "make_change": {
-    "tok": 69,
+    "tok": 55,
     "python": 45
    },
    "max_arg": {
-    "tok": 30,
+    "tok": 15,
     "python": 28
    },
    "min_max": {
-    "tok": 47,
+    "tok": 31,
     "python": 25
    },
    "oldest": {
-    "tok": 40,
+    "tok": 25,
     "python": 26
    },
    "pad_number": {
-    "tok": 34,
+    "tok": 22,
     "python": 14
    },
    "palindrome_list": {
-    "tok": 38,
+    "tok": 15,
     "python": 25
    },
    "perfect_number": {
-    "tok": 80,
+    "tok": 61,
     "python": 50
    },
    "power": {
-    "tok": 37,
+    "tok": 26,
     "python": 17
    },
    "primes_upto": {
-    "tok": 102,
+    "tok": 84,
     "python": 50
    },
    "range_sum": {
-    "tok": 68,
+    "tok": 53,
     "python": 36
    },
    "replace_word": {
-    "tok": 57,
+    "tok": 27,
     "python": 37
    },
    "reverse_args": {
-    "tok": 22,
+    "tok": 7,
     "python": 13
    },
    "reverse_string": {
-    "tok": 21,
+    "tok": 10,
     "python": 12
    },
    "running_sum": {
-    "tok": 57,
+    "tok": 40,
     "python": 23
    },
    "safe_divide": {
-    "tok": 71,
+    "tok": 44,
     "python": 49
    },
    "second_largest": {
-    "tok": 62,
+    "tok": 42,
     "python": 37
    },
    "sort_ints": {
-    "tok": 33,
+    "tok": 18,
     "python": 18
    },
    "stdin_average": {
-    "tok": 42,
+    "tok": 34,
     "python": 38
    },
    "stdin_grep": {
-    "tok": 31,
+    "tok": 20,
     "python": 27
    },
    "stdin_head": {
-    "tok": 36,
+    "tok": 25,
     "python": 25
    },
    "stdin_line_count": {
-    "tok": 16,
+    "tok": 9,
     "python": 12
    },
    "stdin_longest_line": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_number_lines": {
-    "tok": 42,
+    "tok": 34,
     "python": 28
    },
    "stdin_passing": {
-    "tok": 63,
+    "tok": 51,
     "python": 41
    },
    "stdin_reverse_lines": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_sort_lines": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_sum": {
-    "tok": 29,
+    "tok": 22,
     "python": 14
    },
    "stdin_unique_words": {
-    "tok": 18,
+    "tok": 11,
     "python": 12
    },
    "stdin_word_freq": {
-    "tok": 78,
+    "tok": 68,
     "python": 32
    },
    "sum_args": {
-    "tok": 30,
+    "tok": 15,
     "python": 17
    },
    "sum_file": {
-    "tok": 53,
+    "tok": 39,
     "python": 77
    },
    "times_table": {
-    "tok": 48,
+    "tok": 36,
     "python": 37
    },
    "triangle": {
-    "tok": 130,
+    "tok": 108,
     "python": 88
    },
    "upper_join": {
-    "tok": 26,
+    "tok": 11,
     "python": 19
    },
    "word_count": {
-    "tok": 23,
+    "tok": 12,
     "python": 12
    }
   },
   "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
    "acronym": {
-    "tok": 29,
+    "tok": 14,
     "python": 22
    },
    "adult_average": {
-    "tok": 70,
+    "tok": 50,
     "python": 56
    },
    "anagram": {
-    "tok": 48,
+    "tok": 33,
     "python": 25
    },
    "binary": {
-    "tok": 29,
+    "tok": 18,
     "python": 14
    },
    "c_to_f": {
-    "tok": 41,
+    "tok": 29,
     "python": 27
    },
    "caesar": {
-    "tok": 87,
+    "tok": 66,
     "python": 51
    },
    "capitalize_words": {
-    "tok": 36,
+    "tok": 21,
     "python": 19
    },
    "char_histogram": {
-    "tok": 46,
+    "tok": 34,
     "python": 27
    },
    "circle_area": {
-    "tok": 50,
+    "tok": 38,
     "python": 30
    },
    "collatz": {
-    "tok": 89,
+    "tok": 60,
     "python": 55
    },
    "common_prefix": {
-    "tok": 71,
+    "tok": 36,
     "python": 17
    },
    "count_errors": {
-    "tok": 41,
+    "tok": 27,
     "python": 40
    },
    "count_evens": {
-    "tok": 41,
+    "tok": 26,
     "python": 26
    },
    "count_substring": {
-    "tok": 33,
+    "tok": 22,
     "python": 15
    },
    "count_vowels": {
-    "tok": 35,
+    "tok": 24,
     "python": 21
    },
    "count_word": {
-    "tok": 28,
+    "tok": 17,
     "python": 15
    },
    "csv_sum": {
-    "tok": 37,
+    "tok": 26,
     "python": 39
    },
    "dedupe": {
-    "tok": 22,
+    "tok": 7,
     "python": 16
    },
    "digit_sum": {
-    "tok": 34,
+    "tok": 23,
     "python": 16
    },
    "dot_product": {
-    "tok": 75,
+    "tok": 56,
     "python": 47
    },
    "factorial": {
-    "tok": 44,
+    "tok": 31,
     "python": 33
    },
    "fibonacci": {
-    "tok": 63,
+    "tok": 42,
     "python": 37
    },
    "file_stats": {
-    "tok": 51,
+    "tok": 37,
     "python": 53
    },
    "fizzbuzz": {
-    "tok": 84,
+    "tok": 73,
     "python": 74
    },
    "gcd": {
-    "tok": 68,
+    "tok": 47,
     "python": 36
    },
    "is_palindrome": {
-    "tok": 42,
+    "tok": 26,
     "python": 27
    },
    "is_prime": {
-    "tok": 100,
+    "tok": 60,
     "python": 74
    },
    "leap_year": {
-    "tok": 69,
+    "tok": 53,
     "python": 50
    },
    "longest_word": {
-    "tok": 25,
+    "tok": 10,
     "python": 13
    },
    "make_change": {
-    "tok": 71,
+    "tok": 57,
     "python": 47
    },
    "max_arg": {
-    "tok": 30,
+    "tok": 15,
     "python": 28
    },
    "min_max": {
-    "tok": 47,
+    "tok": 31,
     "python": 25
    },
    "oldest": {
-    "tok": 40,
+    "tok": 25,
     "python": 26
    },
    "pad_number": {
-    "tok": 34,
+    "tok": 22,
     "python": 14
    },
    "palindrome_list": {
-    "tok": 38,
+    "tok": 15,
     "python": 25
    },
    "perfect_number": {
-    "tok": 80,
+    "tok": 61,
     "python": 50
    },
    "power": {
-    "tok": 37,
+    "tok": 26,
     "python": 17
    },
    "primes_upto": {
-    "tok": 102,
+    "tok": 84,
     "python": 50
    },
    "range_sum": {
-    "tok": 68,
+    "tok": 53,
     "python": 36
    },
    "replace_word": {
-    "tok": 57,
+    "tok": 27,
     "python": 37
    },
    "reverse_args": {
-    "tok": 22,
+    "tok": 7,
     "python": 13
    },
    "reverse_string": {
-    "tok": 21,
+    "tok": 10,
     "python": 12
    },
    "running_sum": {
-    "tok": 57,
+    "tok": 40,
     "python": 23
    },
    "safe_divide": {
-    "tok": 71,
+    "tok": 44,
     "python": 49
    },
    "second_largest": {
-    "tok": 62,
+    "tok": 42,
     "python": 37
    },
    "sort_ints": {
-    "tok": 33,
+    "tok": 18,
     "python": 18
    },
    "stdin_average": {
-    "tok": 43,
+    "tok": 35,
     "python": 38
    },
    "stdin_grep": {
-    "tok": 31,
+    "tok": 20,
     "python": 27
    },
    "stdin_head": {
-    "tok": 36,
+    "tok": 25,
     "python": 25
    },
    "stdin_line_count": {
-    "tok": 16,
+    "tok": 9,
     "python": 12
    },
    "stdin_longest_line": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_number_lines": {
-    "tok": 42,
+    "tok": 34,
     "python": 28
    },
    "stdin_passing": {
-    "tok": 63,
+    "tok": 51,
     "python": 41
    },
    "stdin_reverse_lines": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_sort_lines": {
-    "tok": 22,
+    "tok": 15,
     "python": 18
    },
    "stdin_sum": {
-    "tok": 29,
+    "tok": 22,
     "python": 14
    },
    "stdin_unique_words": {
-    "tok": 18,
+    "tok": 11,
     "python": 12
    },
    "stdin_word_freq": {
-    "tok": 78,
+    "tok": 68,
     "python": 32
    },
    "sum_args": {
-    "tok": 30,
+    "tok": 15,
     "python": 17
    },
    "sum_file": {
-    "tok": 53,
+    "tok": 39,
     "python": 77
    },
    "times_table": {
-    "tok": 49,
+    "tok": 37,
     "python": 38
    },
    "triangle": {
-    "tok": 130,
+    "tok": 108,
     "python": 88
    },
    "upper_join": {
-    "tok": 26,
+    "tok": 11,
     "python": 19
    },
    "word_count": {
-    "tok": 23,
+    "tok": 12,
     "python": 12
    }
   },
   "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
    "acronym": {
-    "tok": 37,
+    "tok": 21,
     "python": 27
    },
    "adult_average": {
-    "tok": 84,
+    "tok": 64,
     "python": 69
    },
    "anagram": {
-    "tok": 56,
+    "tok": 39,
     "python": 33
    },
    "binary": {
-    "tok": 33,
+    "tok": 21,
     "python": 22
    },
    "c_to_f": {
-    "tok": 43,
+    "tok": 30,
     "python": 32
    },
    "caesar": {
-    "tok": 117,
+    "tok": 93,
     "python": 62
    },
    "capitalize_words": {
-    "tok": 45,
+    "tok": 29,
     "python": 27
    },
    "char_histogram": {
-    "tok": 60,
+    "tok": 46,
     "python": 37
    },
    "circle_area": {
-    "tok": 53,
+    "tok": 40,
     "python": 39
    },
    "collatz": {
-    "tok": 95,
+    "tok": 59,
     "python": 59
    },
    "common_prefix": {
-    "tok": 86,
+    "tok": 50,
     "python": 25
    },
    "count_errors": {
-    "tok": 54,
+    "tok": 39,
     "python": 52
    },
    "count_evens": {
-    "tok": 50,
+    "tok": 34,
     "python": 31
    },
    "count_substring": {
-    "tok": 38,
+    "tok": 26,
     "python": 23
    },
    "count_vowels": {
-    "tok": 43,
+    "tok": 31,
     "python": 28
    },
    "count_word": {
-    "tok": 35,
+    "tok": 23,
     "python": 24
    },
    "csv_sum": {
-    "tok": 45,
+    "tok": 33,
     "python": 51
    },
    "dedupe": {
-    "tok": 27,
+    "tok": 11,
     "python": 23
    },
    "digit_sum": {
-    "tok": 42,
+    "tok": 30,
     "python": 23
    },
    "dot_product": {
-    "tok": 90,
+    "tok": 69,
     "python": 61
    },
    "factorial": {
-    "tok": 48,
+    "tok": 34,
     "python": 39
    },
    "fibonacci": {
-    "tok": 65,
+    "tok": 44,
     "python": 45
    },
    "file_stats": {
-    "tok": 67,
+    "tok": 52,
     "python": 72
    },
    "fizzbuzz": {
-    "tok": 92,
+    "tok": 80,
     "python": 88
    },
    "gcd": {
-    "tok": 80,
+    "tok": 51,
     "python": 48
    },
    "is_palindrome": {
-    "tok": 50,
+    "tok": 32,
     "python": 34
    },
    "is_prime": {
-    "tok": 109,
+    "tok": 60,
     "python": 86
    },
    "leap_year": {
-    "tok": 72,
+    "tok": 54,
     "python": 54
    },
    "longest_word": {
-    "tok": 33,
+    "tok": 17,
     "python": 21
    },
    "make_change": {
-    "tok": 83,
+    "tok": 68,
     "python": 61
    },
    "max_arg": {
-    "tok": 38,
+    "tok": 22,
     "python": 39
    },
    "min_max": {
-    "tok": 60,
+    "tok": 42,
     "python": 37
    },
    "oldest": {
-    "tok": 53,
+    "tok": 37,
     "python": 41
    },
    "pad_number": {
-    "tok": 38,
+    "tok": 25,
     "python": 19
    },
    "palindrome_list": {
-    "tok": 46,
+    "tok": 19,
     "python": 32
    },
    "perfect_number": {
-    "tok": 81,
+    "tok": 61,
     "python": 56
    },
    "power": {
-    "tok": 41,
+    "tok": 29,
     "python": 26
    },
    "primes_upto": {
-    "tok": 118,
+    "tok": 98,
     "python": 58
    },
    "range_sum": {
-    "tok": 76,
+    "tok": 60,
     "python": 50
    },
    "replace_word": {
-    "tok": 72,
+    "tok": 33,
     "python": 47
    },
    "reverse_args": {
-    "tok": 28,
+    "tok": 12,
     "python": 19
    },
    "reverse_string": {
-    "tok": 25,
+    "tok": 13,
     "python": 18
    },
    "running_sum": {
-    "tok": 69,
+    "tok": 49,
     "python": 33
    },
    "safe_divide": {
-    "tok": 80,
+    "tok": 48,
     "python": 66
    },
    "second_largest": {
-    "tok": 74,
+    "tok": 55,
     "python": 47
    },
    "sort_ints": {
-    "tok": 42,
+    "tok": 26,
     "python": 25
    },
    "stdin_average": {
-    "tok": 54,
+    "tok": 45,
     "python": 51
    },
    "stdin_grep": {
-    "tok": 39,
+    "tok": 27,
     "python": 37
    },
    "stdin_head": {
-    "tok": 44,
+    "tok": 32,
     "python": 35
    },
    "stdin_line_count": {
-    "tok": 20,
+    "tok": 13,
     "python": 19
    },
    "stdin_longest_line": {
-    "tok": 30,
+    "tok": 23,
     "python": 27
    },
    "stdin_number_lines": {
-    "tok": 48,
+    "tok": 40,
     "python": 39
    },
    "stdin_passing": {
-    "tok": 75,
+    "tok": 62,
     "python": 58
    },
    "stdin_reverse_lines": {
-    "tok": 28,
+    "tok": 21,
     "python": 28
    },
    "stdin_sort_lines": {
-    "tok": 27,
+    "tok": 20,
     "python": 27
    },
    "stdin_sum": {
-    "tok": 37,
+    "tok": 30,
     "python": 21
    },
    "stdin_unique_words": {
-    "tok": 22,
+    "tok": 15,
     "python": 21
    },
    "stdin_word_freq": {
-    "tok": 89,
+    "tok": 83,
     "python": 45
    },
    "sum_args": {
-    "tok": 38,
+    "tok": 22,
     "python": 24
    },
    "sum_file": {
-    "tok": 67,
+    "tok": 52,
     "python": 102
    },
    "times_table": {
-    "tok": 54,
+    "tok": 41,
     "python": 48
    },
    "triangle": {
-    "tok": 146,
+    "tok": 117,
     "python": 105
    },
    "upper_join": {
-    "tok": 34,
+    "tok": 18,
     "python": 26
    },
    "word_count": {
-    "tok": 26,
+    "tok": 14,
     "python": 18
    }
   },
   "hf openai-community/gpt2": {
    "acronym": {
-    "tok": 37,
+    "tok": 21,
     "python": 27
    },
    "adult_average": {
-    "tok": 83,
+    "tok": 58,
     "python": 64
    },
    "anagram": {
-    "tok": 60,
+    "tok": 39,
     "python": 33
    },
    "binary": {
-    "tok": 32,
+    "tok": 20,
     "python": 23
    },
    "c_to_f": {
-    "tok": 38,
+    "tok": 25,
     "python": 28
    },
    "caesar": {
-    "tok": 128,
+    "tok": 90,
     "python": 57
    },
    "capitalize_words": {
-    "tok": 44,
+    "tok": 28,
     "python": 26
    },
    "char_histogram": {
-    "tok": 59,
+    "tok": 44,
     "python": 36
    },
    "circle_area": {
-    "tok": 47,
+    "tok": 34,
     "python": 36
    },
    "collatz": {
-    "tok": 94,
+    "tok": 54,
     "python": 59
    },
    "common_prefix": {
-    "tok": 85,
+    "tok": 48,
     "python": 25
    },
    "count_errors": {
-    "tok": 54,
+    "tok": 39,
     "python": 63
    },
    "count_evens": {
-    "tok": 46,
+    "tok": 30,
     "python": 30
    },
    "count_substring": {
-    "tok": 37,
+    "tok": 25,
     "python": 24
    },
    "count_vowels": {
-    "tok": 43,
+    "tok": 31,
     "python": 29
    },
    "count_word": {
-    "tok": 33,
+    "tok": 21,
     "python": 25
    },
    "csv_sum": {
-    "tok": 44,
+    "tok": 32,
     "python": 67
    },
    "dedupe": {
-    "tok": 27,
+    "tok": 11,
     "python": 23
    },
    "digit_sum": {
-    "tok": 40,
+    "tok": 28,
     "python": 24
    },
    "dot_product": {
-    "tok": 87,
+    "tok": 64,
     "python": 61
    },
    "factorial": {
-    "tok": 48,
+    "tok": 32,
     "python": 41
    },
    "fibonacci": {
-    "tok": 69,
+    "tok": 41,
     "python": 46
    },
    "file_stats": {
-    "tok": 67,
+    "tok": 52,
     "python": 83
    },
    "fizzbuzz": {
-    "tok": 108,
+    "tok": 80,
     "python": 116
    },
    "gcd": {
-    "tok": 79,
+    "tok": 48,
     "python": 49
    },
    "is_palindrome": {
-    "tok": 53,
+    "tok": 31,
     "python": 34
    },
    "is_prime": {
-    "tok": 123,
+    "tok": 58,
     "python": 121
    },
    "leap_year": {
-    "tok": 67,
+    "tok": 45,
     "python": 46
    },
    "longest_word": {
-    "tok": 32,
+    "tok": 16,
     "python": 21
    },
    "make_change": {
-    "tok": 81,
+    "tok": 62,
     "python": 60
    },
    "max_arg": {
-    "tok": 36,
+    "tok": 20,
     "python": 39
    },
    "min_max": {
-    "tok": 56,
+    "tok": 38,
     "python": 37
    },
    "oldest": {
-    "tok": 49,
+    "tok": 33,
     "python": 39
    },
    "pad_number": {
-    "tok": 38,
+    "tok": 25,
     "python": 19
    },
    "palindrome_list": {
-    "tok": 49,
+    "tok": 18,
     "python": 32
    },
    "perfect_number": {
-    "tok": 84,
+    "tok": 58,
     "python": 56
    },
    "power": {
-    "tok": 39,
+    "tok": 27,
     "python": 27
    },
    "primes_upto": {
-    "tok": 127,
+    "tok": 96,
     "python": 56
    },
    "range_sum": {
-    "tok": 76,
+    "tok": 58,
     "python": 49
    },
    "replace_word": {
-    "tok": 84,
+    "tok": 32,
     "python": 47
    },
    "reverse_args": {
-    "tok": 27,
+    "tok": 11,
     "python": 19
    },
    "reverse_string": {
-    "tok": 24,
+    "tok": 12,
     "python": 18
    },
    "running_sum": {
-    "tok": 72,
+    "tok": 48,
     "python": 33
    },
    "safe_divide": {
-    "tok": 79,
+    "tok": 46,
     "python": 70
    },
    "second_largest": {
-    "tok": 75,
+    "tok": 51,
     "python": 48
    },
    "sort_ints": {
-    "tok": 40,
+    "tok": 24,
     "python": 25
    },
    "stdin_average": {
-    "tok": 51,
+    "tok": 42,
     "python": 51
    },
    "stdin_grep": {
-    "tok": 42,
+    "tok": 28,
     "python": 45
    },
    "stdin_head": {
-    "tok": 45,
+    "tok": 31,
     "python": 38
    },
    "stdin_line_count": {
-    "tok": 20,
+    "tok": 13,
     "python": 20
    },
    "stdin_longest_line": {
-    "tok": 29,
+    "tok": 22,
     "python": 26
    },
    "stdin_number_lines": {
-    "tok": 48,
+    "tok": 38,
     "python": 40
    },
    "stdin_passing": {
-    "tok": 81,
+    "tok": 63,
     "python": 69
    },
    "stdin_reverse_lines": {
-    "tok": 29,
+    "tok": 20,
     "python": 29
    },
    "stdin_sort_lines": {
-    "tok": 29,
+    "tok": 20,
     "python": 29
    },
    "stdin_sum": {
-    "tok": 36,
+    "tok": 29,
     "python": 21
    },
    "stdin_unique_words": {
-    "tok": 22,
+    "tok": 15,
     "python": 21
    },
    "stdin_word_freq": {
-    "tok": 102,
+    "tok": 79,
     "python": 45
    },
    "sum_args": {
-    "tok": 36,
+    "tok": 20,
     "python": 24
    },
    "sum_file": {
-    "tok": 66,
+    "tok": 51,
     "python": 132
    },
    "times_table": {
-    "tok": 53,
+    "tok": 38,
     "python": 48
    },
    "triangle": {
-    "tok": 149,
+    "tok": 115,
     "python": 114
    },
    "upper_join": {
-    "tok": 34,
+    "tok": 18,
     "python": 26
    },
    "word_count": {
-    "tok": 26,
+    "tok": 14,
     "python": 19
    }
   }
@@ -1542,259 +1720,344 @@
  "sources": {
   "tiktoken o200k_base": {
    "original": {
-    "tok": 2128,
+    "tok": 1450,
     "python": 1448,
-    "gap": 680,
-    "tok_effect_lists": 128,
-    "tok_main_line": 488,
+    "gap": 2,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
     "tok_defaults": 166,
-    "tok_type_annotations": 55,
+    "tok_type_annotations": 17,
     "python_imports": 125,
-    "tok_without_main_and_defaults": 1474,
-    "python_without_imports": 1323
+    "tok_without_defaults": 1284,
+    "python_without_imports": 1323,
+    "tasks_larger": 18,
+    "excess_where_larger": 176,
+    "tasks_smaller": 19,
+    "saving_where_smaller": 174
    },
    "added": {
-    "tok": 948,
+    "tok": 660,
     "python": 558,
-    "gap": 390,
-    "tok_effect_lists": 72,
-    "tok_main_line": 248,
-    "tok_defaults": 65,
-    "tok_type_annotations": 0,
+    "gap": 102,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 73,
+    "tok_type_annotations": 6,
     "python_imports": 85,
-    "tok_without_main_and_defaults": 635,
-    "python_without_imports": 473
+    "tok_without_defaults": 587,
+    "python_without_imports": 473,
+    "tasks_larger": 13,
+    "excess_where_larger": 137,
+    "tasks_smaller": 10,
+    "saving_where_smaller": 35
    },
    "all": {
-    "tok": 3076,
+    "tok": 2110,
     "python": 2006,
-    "gap": 1070,
-    "tok_effect_lists": 200,
-    "tok_main_line": 736,
-    "tok_defaults": 231,
-    "tok_type_annotations": 55,
+    "gap": 104,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 239,
+    "tok_type_annotations": 23,
     "python_imports": 210,
-    "tok_without_main_and_defaults": 2109,
-    "python_without_imports": 1796
+    "tok_without_defaults": 1871,
+    "python_without_imports": 1796,
+    "tasks_larger": 31,
+    "excess_where_larger": 313,
+    "tasks_smaller": 29,
+    "saving_where_smaller": 209
    }
   },
   "tiktoken cl100k_base": {
    "original": {
-    "tok": 2126,
+    "tok": 1448,
     "python": 1442,
-    "gap": 684,
-    "tok_effect_lists": 128,
-    "tok_main_line": 488,
+    "gap": 6,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
     "tok_defaults": 166,
-    "tok_type_annotations": 55,
+    "tok_type_annotations": 17,
     "python_imports": 125,
-    "tok_without_main_and_defaults": 1472,
-    "python_without_imports": 1317
+    "tok_without_defaults": 1282,
+    "python_without_imports": 1317,
+    "tasks_larger": 18,
+    "excess_where_larger": 177,
+    "tasks_smaller": 19,
+    "saving_where_smaller": 171
    },
    "added": {
-    "tok": 948,
+    "tok": 660,
     "python": 557,
-    "gap": 391,
-    "tok_effect_lists": 72,
-    "tok_main_line": 248,
-    "tok_defaults": 65,
-    "tok_type_annotations": 0,
+    "gap": 103,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 73,
+    "tok_type_annotations": 6,
     "python_imports": 85,
-    "tok_without_main_and_defaults": 635,
-    "python_without_imports": 472
+    "tok_without_defaults": 587,
+    "python_without_imports": 472,
+    "tasks_larger": 13,
+    "excess_where_larger": 138,
+    "tasks_smaller": 10,
+    "saving_where_smaller": 35
    },
    "all": {
-    "tok": 3074,
+    "tok": 2108,
     "python": 1999,
-    "gap": 1075,
-    "tok_effect_lists": 200,
-    "tok_main_line": 736,
-    "tok_defaults": 231,
-    "tok_type_annotations": 55,
+    "gap": 109,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 239,
+    "tok_type_annotations": 23,
     "python_imports": 210,
-    "tok_without_main_and_defaults": 2107,
-    "python_without_imports": 1789
+    "tok_without_defaults": 1869,
+    "python_without_imports": 1789,
+    "tasks_larger": 31,
+    "excess_where_larger": 315,
+    "tasks_smaller": 29,
+    "saving_where_smaller": 206
    }
   },
   "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
    "original": {
-    "tok": 2137,
+    "tok": 1459,
     "python": 1453,
-    "gap": 684,
-    "tok_effect_lists": 128,
-    "tok_main_line": 488,
+    "gap": 6,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
     "tok_defaults": 166,
-    "tok_type_annotations": 55,
+    "tok_type_annotations": 17,
     "python_imports": 125,
-    "tok_without_main_and_defaults": 1483,
-    "python_without_imports": 1328
+    "tok_without_defaults": 1293,
+    "python_without_imports": 1328,
+    "tasks_larger": 18,
+    "excess_where_larger": 177,
+    "tasks_smaller": 19,
+    "saving_where_smaller": 171
    },
    "added": {
-    "tok": 954,
+    "tok": 666,
     "python": 563,
-    "gap": 391,
-    "tok_effect_lists": 72,
-    "tok_main_line": 248,
-    "tok_defaults": 65,
-    "tok_type_annotations": 0,
+    "gap": 103,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 73,
+    "tok_type_annotations": 6,
     "python_imports": 85,
-    "tok_without_main_and_defaults": 641,
-    "python_without_imports": 478
+    "tok_without_defaults": 593,
+    "python_without_imports": 478,
+    "tasks_larger": 13,
+    "excess_where_larger": 137,
+    "tasks_smaller": 10,
+    "saving_where_smaller": 34
    },
    "all": {
-    "tok": 3091,
+    "tok": 2125,
     "python": 2016,
-    "gap": 1075,
-    "tok_effect_lists": 200,
-    "tok_main_line": 736,
-    "tok_defaults": 231,
-    "tok_type_annotations": 55,
+    "gap": 109,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 239,
+    "tok_type_annotations": 23,
     "python_imports": 210,
-    "tok_without_main_and_defaults": 2124,
-    "python_without_imports": 1806
+    "tok_without_defaults": 1886,
+    "python_without_imports": 1806,
+    "tasks_larger": 31,
+    "excess_where_larger": 314,
+    "tasks_smaller": 29,
+    "saving_where_smaller": 205
    }
   },
   "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
    "original": {
-    "tok": 2490,
+    "tok": 1728,
     "python": 1860,
-    "gap": 630,
-    "tok_effect_lists": 88,
-    "tok_main_line": 529,
-    "tok_defaults": 163,
-    "tok_type_annotations": 56,
+    "gap": -132,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 159,
+    "tok_type_annotations": 17,
     "python_imports": 168,
-    "tok_without_main_and_defaults": 1798,
-    "python_without_imports": 1692
+    "tok_without_defaults": 1569,
+    "python_without_imports": 1692,
+    "tasks_larger": 14,
+    "excess_where_larger": 128,
+    "tasks_smaller": 24,
+    "saving_where_smaller": 260
    },
    "added": {
-    "tok": 1161,
+    "tok": 856,
     "python": 780,
-    "gap": 381,
-    "tok_effect_lists": 48,
-    "tok_main_line": 266,
-    "tok_defaults": 70,
-    "tok_type_annotations": 0,
+    "gap": 76,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 78,
+    "tok_type_annotations": 6,
     "python_imports": 111,
-    "tok_without_main_and_defaults": 825,
-    "python_without_imports": 669
+    "tok_without_defaults": 778,
+    "python_without_imports": 669,
+    "tasks_larger": 13,
+    "excess_where_larger": 138,
+    "tasks_smaller": 11,
+    "saving_where_smaller": 62
    },
    "all": {
-    "tok": 3651,
+    "tok": 2584,
     "python": 2640,
-    "gap": 1011,
-    "tok_effect_lists": 136,
-    "tok_main_line": 795,
-    "tok_defaults": 233,
-    "tok_type_annotations": 56,
+    "gap": -56,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 237,
+    "tok_type_annotations": 23,
     "python_imports": 279,
-    "tok_without_main_and_defaults": 2623,
-    "python_without_imports": 2361
+    "tok_without_defaults": 2347,
+    "python_without_imports": 2361,
+    "tasks_larger": 27,
+    "excess_where_larger": 266,
+    "tasks_smaller": 35,
+    "saving_where_smaller": 322
    }
   },
   "hf openai-community/gpt2": {
    "original": {
-    "tok": 2509,
+    "tok": 1632,
     "python": 1990,
-    "gap": 519,
-    "tok_effect_lists": 88,
-    "tok_main_line": 603,
-    "tok_defaults": 113,
-    "tok_type_annotations": 50,
+    "gap": -358,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 111,
+    "tok_type_annotations": 16,
     "python_imports": 167,
-    "tok_without_main_and_defaults": 1793,
-    "python_without_imports": 1823
+    "tok_without_defaults": 1521,
+    "python_without_imports": 1823,
+    "tasks_larger": 10,
+    "excess_where_larger": 80,
+    "tasks_smaller": 28,
+    "saving_where_smaller": 438
    },
    "added": {
-    "tok": 1189,
+    "tok": 828,
     "python": 798,
-    "gap": 391,
-    "tok_effect_lists": 48,
-    "tok_main_line": 312,
-    "tok_defaults": 61,
-    "tok_type_annotations": 0,
+    "gap": 30,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 67,
+    "tok_type_annotations": 6,
     "python_imports": 109,
-    "tok_without_main_and_defaults": 816,
-    "python_without_imports": 689
+    "tok_without_defaults": 761,
+    "python_without_imports": 689,
+    "tasks_larger": 10,
+    "excess_where_larger": 123,
+    "tasks_smaller": 14,
+    "saving_where_smaller": 93
    },
    "all": {
-    "tok": 3698,
+    "tok": 2460,
     "python": 2788,
-    "gap": 910,
-    "tok_effect_lists": 136,
-    "tok_main_line": 915,
-    "tok_defaults": 174,
-    "tok_type_annotations": 50,
+    "gap": -328,
+    "tok_effect_lists": 0,
+    "tok_main_line": 0,
+    "tok_defaults": 178,
+    "tok_type_annotations": 22,
     "python_imports": 276,
-    "tok_without_main_and_defaults": 2609,
-    "python_without_imports": 2512
+    "tok_without_defaults": 2282,
+    "python_without_imports": 2512,
+    "tasks_larger": 20,
+    "excess_where_larger": 203,
+    "tasks_smaller": 42,
+    "saving_where_smaller": 531
    }
   }
  },
  "indent": {
   "tiktoken o200k_base": {
-   "tok_2_space": 3076,
-   "tok_4_space": 3076,
+   "tok_2_space": 2110,
+   "tok_4_space": 2110,
    "difference": 0,
    "percent": 0.0
   },
   "tiktoken cl100k_base": {
-   "tok_2_space": 3074,
-   "tok_4_space": 3074,
+   "tok_2_space": 2108,
+   "tok_4_space": 2108,
    "difference": 0,
    "percent": 0.0
   },
   "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
-   "tok_2_space": 3091,
-   "tok_4_space": 3091,
+   "tok_2_space": 2125,
+   "tok_4_space": 2125,
    "difference": 0,
    "percent": 0.0
   },
   "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
-   "tok_2_space": 3651,
-   "tok_4_space": 3651,
+   "tok_2_space": 2584,
+   "tok_4_space": 2584,
    "difference": 0,
    "percent": 0.0
   },
   "hf openai-community/gpt2": {
-   "tok_2_space": 3698,
-   "tok_4_space": 4320,
-   "difference": 622,
-   "percent": 16.819902650081126
+   "tok_2_space": 2460,
+   "tok_4_space": 2564,
+   "difference": 104,
+   "percent": 4.227642276422764
   }
  },
  "learn": {
   "tiktoken o200k_base": {
-   "full": 3150,
-   "budget_2000": 1870,
-   "core_only": 1543
+   "full": 3159,
+   "budget_2000": 1861,
+   "core_only": 1714,
+   "builtins": {
+    "budget_2000": 1870,
+    "core_only": 1543,
+    "full": 3150
+   }
   },
   "tiktoken cl100k_base": {
-   "full": 3147,
-   "budget_2000": 1867,
-   "core_only": 1541
+   "full": 3158,
+   "budget_2000": 1858,
+   "core_only": 1711,
+   "builtins": {
+    "budget_2000": 1867,
+    "core_only": 1541,
+    "full": 3147
+   }
   },
   "hf Qwen/Qwen2.5-Coder-7B-Instruct": {
-   "full": 3199,
-   "budget_2000": 1892,
-   "core_only": 1550
+   "full": 3206,
+   "budget_2000": 1881,
+   "core_only": 1720,
+   "builtins": {
+    "budget_2000": 1892,
+    "core_only": 1550,
+    "full": 3199
+   }
   },
   "hf deepseek-ai/deepseek-coder-6.7b-instruct": {
-   "full": 3725,
-   "budget_2000": 2225,
-   "core_only": 1823
+   "full": 3753,
+   "budget_2000": 2197,
+   "core_only": 2010,
+   "builtins": {
+    "budget_2000": 2225,
+    "core_only": 1823,
+    "full": 3725
+   }
   },
   "hf openai-community/gpt2": {
-   "full": 3556,
-   "budget_2000": 2061,
-   "core_only": 1693
+   "full": 3551,
+   "budget_2000": 2031,
+   "core_only": 1869,
+   "builtins": {
+    "budget_2000": 2061,
+    "core_only": 1693,
+    "full": 3556
+   }
   }
  },
  "size": {
   "original": {
    "tok": {
-    "bytes": 5560,
-    "lines": 203
+    "bytes": 3744,
+    "lines": 119
    },
    "python": {
     "bytes": 4357,
@@ -1803,8 +2066,8 @@
   },
   "added": {
    "tok": {
-    "bytes": 2713,
-    "lines": 92
+    "bytes": 1943,
+    "lines": 54
    },
    "python": {
     "bytes": 1943,
@@ -1813,8 +2076,8 @@
   },
   "all": {
    "tok": {
-    "bytes": 8273,
-    "lines": 295
+    "bytes": 5687,
+    "lines": 173
    },
    "python": {
     "bytes": 6300,
@@ -1830,11 +2093,45 @@
     "bytes": 4691,
     "lines": 234
    }
+  },
+  "builtins": {
+   "added": {
+    "python": {
+     "bytes": 1943,
+     "lines": 92
+    },
+    "tok": {
+     "bytes": 2713,
+     "lines": 92
+    }
+   },
+   "all": {
+    "python": {
+     "bytes": 6300,
+     "lines": 308
+    },
+    "tok": {
+     "bytes": 8273,
+     "lines": 295
+    }
+   },
+   "original": {
+    "python": {
+     "bytes": 4357,
+     "lines": 216
+    },
+    "tok": {
+     "bytes": 5560,
+     "lines": 203
+    }
+   }
   }
  },
+ "tok_with_fn_main": 0,
  "learn_chars": {
-  "full": 9331,
-  "approx_tokens_chars_over_3": 3111
+  "full": 9463,
+  "approx_tokens_chars_over_3": 3155,
+  "core_approx_tokens_chars_over_3": 1794
  },
- "tok_indent_chars": 622
+ "tok_indent_chars": 104
 }

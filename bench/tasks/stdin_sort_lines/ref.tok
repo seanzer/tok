@@ -1,3 +1,2 @@
-fn main() ! io
-  for line in io.read_all().lines().sort()
-    print(line)
+for line in io.read_all().lines().sort()
+  print(line)

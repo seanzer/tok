@@ -1,11 +1,7 @@
-fn main(args: [str]) ! io
-  abc = "abcdefghijklmnopqrstuvwxyz"
-  shift = args[2].to_int() or 0
-  var out = ""
-  for c in (args[1] or "").chars()
-    at = abc.find(c)
-    if at != none
-      out += abc[(at + shift) % 26]
-    else
-      out += c
-  print(out)
+abc = "abcdefghijklmnopqrstuvwxyz"
+shift = args[1].to_int() or 0
+var out = ""
+for c in (args[0] or "").chars()
+  at = abc.find(c)
+  out += if at != none then abc[(at + shift) % 26] else c
+print(out)

@@ -1,0 +1,9 @@
+["y!", "z!", "x!!"]
+zyx-x+y+z
+["x+y+z?", "x+y+z?"]
+["zx", "y", "x"]
+["x", "y", "z"]
+{name: "p", tags: ["z", "y", "x"]}
+{name: "zyx", tags: ["p", "x+y+z"]}
+[["y", "y", "x"], ["x", "z", "z"]]
+3 zyx-x+y+z2

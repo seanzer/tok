@@ -1,6 +1,2 @@
-fn main(args: [str]) ! io
-  ages = args.drop(1).map(a -> a.split(":")[1].to_int() or 0).where(a -> a >= 18)
-  if ages.len() == 0
-    print("none")
-  else
-    print(ages.sum() / ages.len())
+ages = args.map(a -> a.split(":")[1].to_int() or 0).where(a -> a >= 18)
+print(if ages.len() > 0 then "{ages.sum() / ages.len()}" else "none")

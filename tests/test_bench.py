@@ -57,7 +57,7 @@ class LoopTests(unittest.TestCase):
     def test_compile_error_then_wrong_output_then_green(self):
         t = BY_ID["sum_args"]
         good = harness.reference(t, "tok")
-        no_effect = good.replace(" ! io", "")
+        no_effect = "fn main(args: [str])\n" + "".join("  " + line + "\n" for line in good.splitlines())  # the older form, effect missing
         wrong = good.replace(".sum())", ".sum() + 1)")
         self.assertNotIn(good, (no_effect, wrong))
         a = self.script([f"```tok\n{no_effect}```", f"Here it is:\n```\n{wrong}```\nDone.", f"```\n{good}```"])
@@ -143,18 +143,19 @@ class CountTests(unittest.TestCase):
     def test_gap_source_transformations(self):
         import count_tokens as ct
         src = ('fn gcd(a: int, b: int) -> int ! err\n  a\n\nfn main(args: [str]) ! io, fs\n  var xs: [int] = []\n'
-               '  n = args[1].to_int() or 0\n  s = (args[2] or "").len()\n  if n > 0 or s > 0\n    print(gcd(n, s) or 1)\n')
+               '  n = args[0].to_int() or 0\n  s = (args[1] or "").len()\n  if n > 0 or s > 0\n    print(gcd(n, s) or 1)\n')
         self.assertEqual(ct.strip_effects(src).split("\n")[0], "fn gcd(a: int, b: int) -> int")
         self.assertIn("fn main(args: [str])\n", ct.strip_effects(src))
         self.assertEqual(ct.strip_main(src), 'fn gcd(a: int, b: int) -> int ! err\n  a\n\nvar xs: [int] = []\n'
-                         'n = args[1].to_int() or 0\ns = (args[2] or "").len()\nif n > 0 or s > 0\n  print(gcd(n, s) or 1)\n')
+                         'n = args[0].to_int() or 0\ns = (args[1] or "").len()\nif n > 0 or s > 0\n  print(gcd(n, s) or 1)\n')
         d = ct.strip_defaults(src)
-        self.assertIn("n = args[1].to_int()\n", d)
-        self.assertIn("s = args[2].len()\n", d)
+        self.assertIn("n = args[0].to_int()\n", d)
+        self.assertIn("s = args[1].len()\n", d)
         self.assertIn("if n > 0 or s > 0\n", d)  # a logical `or` is kept
         self.assertIn("print(gcd(n, s))\n", d)
         t = ct.strip_types(src)
         self.assertIn("fn gcd(a, b) ! err\n", t)
+        self.assertEqual(ct.strip_types("var xs: [int] = []\nd: {str: int} = {}\n"), "var xs = []\nd = {}\n")
         self.assertIn("  var xs = []\n", t)
         self.assertIn("fn main(args: [str]) ! io, fs\n", t)
         self.assertEqual(ct.strip_import("import sys\nfrom x import y\n\nprint(1)\n"), "print(1)\n")
@@ -164,6 +165,27 @@ class CountTests(unittest.TestCase):
             r = json.load(fh)
         self.assertEqual(r["tasks"], {"original": 40, "added": 24, "all": 64})
         self.assertEqual(sorted(r["per_task"]["tiktoken o200k_base"]), sorted(BY_ID))
+        with open(os.path.join(ROOT, "bench", "baseline_builtins.json")) as fh:
+            mid = json.load(fh)
+        self.assertEqual(sorted(mid["tasks"]), sorted(BY_ID))
+        self.assertEqual(r["builtins_revision"], mid["revision"])
+        self.assertEqual(r["tok_with_fn_main"], 0)
+        for name in r["tokenizers"]:  # the stored totals are the sums of the stored per-task counts
+            for lang in ("tok", "python"):
+                self.assertEqual(r["groups"][name]["all"][lang], sum(v[lang] for v in r["per_task"][name].values()))
+                self.assertEqual(r["builtins"][name]["all"][lang], sum(v[lang][name] for v in mid["tasks"].values()))
+
+    def test_results_are_current(self):
+        try:
+            import tiktoken
+        except ImportError:
+            self.skipTest("tiktoken is not installed for this interpreter")
+        enc = tiktoken.get_encoding("o200k_base")
+        with open(os.path.join(ROOT, "bench", "results.json")) as fh:
+            per = json.load(fh)["per_task"]["tiktoken o200k_base"]
+        for t in harness.load_tasks():
+            for lang in harness.LANGS:
+                self.assertEqual(per[t["id"]][lang], len(enc.encode(harness.reference(t, lang))), (t["id"], lang))
 
 
 class FakeTransport:

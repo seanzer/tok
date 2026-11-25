@@ -1,7 +1,6 @@
-fn main(args: [str]) ! io
-  xs = args.drop(1).map(a -> a.to_int() or 0)
-  half = xs.len() / 2
-  var total = 0
-  for i in 0..half - 1
-    total += xs[i] * xs[half + i]
-  print(total)
+xs = args.map(a -> a.to_int() or 0)
+half = xs.len() / 2
+var total = 0
+for i in 0..half - 1
+  total += xs[i] * xs[half + i]
+print(total)

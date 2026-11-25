@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print(args.drop(1).max(a -> a.split(":")[1].to_int() or 0).split(":")[0] or "")
+print(args.max(a -> a.split(":")[1].to_int() or 0).split(":")[0] or "")

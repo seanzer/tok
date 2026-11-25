@@ -1,0 +1,92 @@
+// Copies stay independent: shared lists and strings are copied on write, also when changed while being looped over.
+// exit 1
+type Node = { name: str, kids: [Node], tag: str? }
+
+type Pair = { a: [str], b: [[int]] }
+
+fn label(n: Node) -> str
+  "{n.name}/{n.kids.len()}"
+
+fn grow(xs: [str], v: str) -> [str]
+  var ys = xs
+  ys.push(v)
+  ys
+
+fn pick(xs: [str], i: int) -> str ! err
+  if i >= xs.len()
+    fail("no item {i}")
+  xs[i]
+
+fn first_long(xs: [str]) -> str?
+  for x in xs
+    if x.len() > 3
+      return x
+  none
+
+fn main(args: [str]) ! io
+  xs = ["a", "b{args.len()}"]
+  var ys = xs
+  ys.push("c")
+  print(xs)
+  print(ys)
+  ys[0] = "z{ys[1]}"
+  print(xs)
+  print(ys)
+  var s = "x"
+  s = s + s
+  s = s + "-" + s
+  s += "!"
+  s = "{s}{s.len()}"
+  print(s)
+  var n = Node { name: "root", kids: [] }
+  n.kids.push(n)
+  n.kids.push(Node { name: "leaf{s.len()}", kids: [], tag: "t{1}" })
+  n.kids[0] = n
+  n.kids[0].kids[0].name = "deep{2}"
+  print(label(n))
+  print(n)
+  var grid = [[1, 2], [3, 4]]
+  row = grid[0]
+  grid[0][1] = 9
+  grid[1] = grid[0]
+  grid[1].push(7)
+  print(row)
+  print(grid)
+  var zs = grow(xs, "q{1}")
+  zs = grow(zs, "r")
+  print(zs)
+  for z in zs
+    zs.push("{z}{z}")
+    if z == "a"
+      zs[1] = "changed{z}"
+  print(zs)
+  print(pick(zs, 2)?)
+  print(pick(zs, 99) or "none{1}")
+  got = pick(zs, 99) or e -> "err: {e.msg}"
+  print(got)
+  print(first_long(zs) or "short")
+  w = first_long(zs)
+  if w
+    print(w)
+  var p = Pair { a: zs, b: grid }
+  p.a.push("tail{3}")
+  p.b[0][0] = 100
+  print(p)
+  print(grid)
+  words = "the quick  brown fox".split(" ").where(q -> q != "").map(q -> q.upper())
+  print(words.join("+"))
+  print(words.sort().reverse())
+  var acc: [[str]] = []
+  for i in 0..3
+    acc.push(words.map(q -> "{q}{i}"))
+  acc[1] = acc[2]
+  acc[0] = acc[0].where(q -> q.len() > 4)
+  print(acc)
+  var t = ""
+  for i in 1..5
+    t = t + "{i},"
+    u = t
+    t += u
+  print(t.len())
+  print(pick(xs, 5)?)
+  print("unreachable")

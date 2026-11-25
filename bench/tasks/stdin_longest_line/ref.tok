@@ -1,2 +1,1 @@
-fn main() ! io
-  print(io.read_all().lines().max(l -> l.len()) or "")
+print(io.read_all().lines().max(l -> l.len()) or "")

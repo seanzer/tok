@@ -1,15 +1,5 @@
-fn is_prime(n: int) -> bool
-  if n < 2
-    return false
-  for d in 2..n - 1
-    if d * d > n
-      return true
-    if n % d == 0
-      return false
-  true
-
-fn main(args: [str]) ! io
-  if is_prime(args[1].to_int() or 0)
-    print("prime")
-  else
-    print("not prime")
+n = args[0].to_int() or 0
+var d = 2
+while d * d <= n and n % d != 0
+  d += 1
+print(if n > 1 and d * d > n then "prime" else "not prime")

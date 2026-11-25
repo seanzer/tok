@@ -1,7 +1,6 @@
-fn main(args: [str]) ! io
-  var left = args[1].to_int() or 0
-  var counts: [int] = []
-  for coin in [25, 10, 5, 1]
-    counts.push(left / coin)
-    left %= coin
-  print(counts.join(" "))
+var left = args[0].to_int() or 0
+var counts: [int] = []
+for coin in [25, 10, 5, 1]
+  counts.push(left / coin)
+  left %= coin
+print(counts.join(" "))

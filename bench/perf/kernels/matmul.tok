@@ -1,0 +1,32 @@
+// Nested lists: multiply two n x n matrices stored as [[f64]].
+fn make(n: int, seed: int) -> [[f64]]
+  var m: [[f64]] = []
+  for i in 0..n - 1
+    var row: [f64] = []
+    for j in 0..n - 1
+      row.push(f64((i * seed + j) % 10))
+    m.push(row)
+  m
+
+fn mul(a: [[f64]], b: [[f64]], n: int) -> [[f64]]
+  var c: [[f64]] = []
+  for i in 0..n - 1
+    var row: [f64] = []
+    for j in 0..n - 1
+      var s = 0.0
+      for k in 0..n - 1
+        s = s + a[i][k] * b[k][j]
+      row.push(s)
+    c.push(row)
+  c
+
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 300
+  rounds = args[1].to_int() or 2
+  a = make(n, 3)
+  b = make(n, 7)
+  var total = 0.0
+  for r in 1..rounds
+    c = mul(a, b, n)
+    total = total + c[0][0] + c[n / 2][n / 3] + c[n - 1][n - 1]
+  print(int(total))

@@ -60,32 +60,43 @@ class Parser:
     # ---------------------------------------------------------- declarations
 
     def program(self):
-        """Parse every declaration, recovering at the next top-level 'fn' or 'type'."""
+        """Parse every declaration and top-level statement, recovering at the next line that starts at column 1.
+        Top-level statements (the script form) are collected in self.script, in order."""
         decls = []
+        self.script = []
         while not self.at("EOF"):
             start = self.i
             try:
-                decls.append(self.decl())
+                if self.at_decl():
+                    decls.append(self.decl())
+                else:
+                    self.script.append(self.stmt())
             except Diag as d:
                 self.errors.append(d)
                 # remember the name so later uses do not cascade
-                if self.toks[start].kind == "NAME" and self.toks[start + 1].kind == "NAME":
-                    self.failed_names.add(self.toks[start + 1].val)
+                a, b = self.toks[start], self.toks[min(start + 1, len(self.toks) - 1)]
+                if a.kind == "NAME" and b.kind == "NAME":
+                    self.failed_names.add(b.val)
+                elif a.kind == "NAME" and b.kind == "OP" and b.val in ("=", ":", ","):
+                    self.failed_names.add(a.val)
                 if self.i == start:
                     self.i += 1
-                while not self.at("EOF") and not (self.t.kind == "NAME" and self.t.val in ("fn", "type", "error") and self.t.col == 1):
+                while not self.at("EOF") and not (self.t.col == 1 and self.t.kind not in ("NEWLINE", "INDENT", "DEDENT")
+                                                  and self.toks[self.i - 1].kind in ("NEWLINE", "DEDENT")):
                     self.i += 1
         return decls
+
+    def at_decl(self):
+        if self.at("NAME", "fn") or self.at("NAME", "type"):
+            return True
+        return self.at("NAME", "error") and self.t.col == 1 and self.peek().kind == "NAME"
 
     def decl(self):
         if self.at("NAME", "fn"):
             return self.fn_decl()
         if self.at("NAME", "type"):
             return self.type_decl()
-        if self.at("NAME", "error") and self.t.col == 1:
-            return self.error_decl()
-        t = self.t
-        raise Diag("E0010", f"expected 'fn', 'type' or 'error' at the top level, found {self.found()}", t.line, t.col, max(t.end, t.col + 1))
+        return self.error_decl()
 
     def ident(self, what):
         t = self.expect("NAME", what=what)
@@ -99,6 +110,12 @@ class Parser:
             elem = self.type_expr()
             close = self.expect("OP", "]", what="']'")
             ty = {"k": "tlist", "elem": elem, "line": t.line, "col": t.col, "end": close.end}
+        elif self.eat("OP", "{"):
+            key = self.type_expr()
+            self.expect("OP", ":", what="':' between the key type and the value type of a dict ('{str: int}')")
+            val = self.type_expr()
+            close = self.expect("OP", "}", what="'}'")
+            ty = {"k": "tdict", "key": key, "val": val, "line": t.line, "col": t.col, "end": close.end}
         else:
             name = self.expect("NAME", what="a type")
             if name.val in KEYWORDS:
@@ -191,25 +208,72 @@ class Parser:
         return stmts
 
     def end_stmt(self):
+        if self.at("NAME", "if"):
+            t = self.t
+            raise Diag("E0010", "the condition comes first in a conditional expression: write 'if c then a else b', "
+                                "not 'a if c else b'", t.line, t.col, t.end)
         self.expect("NEWLINE", what="end of line")
 
     def stmt(self):
         t = self.t
-        if self.eat("NAME", "if"):
-            return self.if_rest(t)
+        if t.kind == "NAME" and t.val in ("import", "from") and self.peek().kind == "NAME":
+            raise Diag("E0010", f"Tok has no '{t.val}': the built-in modules io and fs are used directly, for example "
+                                "fs.read_text(path), and another .tok file next to this one as name.function()",
+                       t.line, t.col, t.end)
+        if self.at("NAME", "if"):
+            # `if c` + a block is the statement; `if c then a else b` is an expression (the value of a function, say)
+            start = self.i
+            self.i += 1
+            cond = self.expr()
+            if not self.at("NAME", "then"):
+                return self.if_rest(t, cond)
+            self.i = start
+        if self.eat("NAME", "while"):
+            cond = self.expr()
+            return node("while", t, cond=cond, body=self.block())
+        if t.kind == "NAME" and t.val in ("break", "continue"):
+            self.i += 1
+            self.end_stmt()
+            return node(t.val, t)
         if self.eat("NAME", "for"):
             v = self.ident("a loop variable")
+            v2 = self.ident("a loop variable") if self.eat("OP", ",") else None
             self.expect("NAME", "in", what="'in'")
             first = self.expr()
             hi = None
             if self.eat("OP", ".."):
                 hi = self.expr()
             where = self.expr() if self.eat("NAME", "where") else None
-            return node("for", t, var=v.val, var_tok=v, iter=first, hi=hi, where=where, body=self.block())
+            return node("for", t, var=v.val, var_tok=v, var2=v2.val if v2 else None, var2_tok=v2, iter=first, hi=hi,
+                        where=where, body=self.block())
         if self.eat("NAME", "return"):
             val = None if self.at("NEWLINE") else self.expr()
             self.end_stmt()
             return node("return", t, val=val)
+        if t.kind == "NAME" and t.val in ("var", "let"):
+            self.i += 1
+            name = self.ident("a variable name")
+            if self.at("OP", ","):
+                names = [name]
+                while self.eat("OP", ","):
+                    names.append(self.ident("a variable name"))
+                if self.at("OP", ":"):
+                    cur = self.t
+                    raise Diag("E0010", "a type annotation is not allowed when several names are bound at once",
+                               cur.line, cur.col, cur.end)
+                self.expect("OP", "=", what="'='")
+                vals = self.expr_list()
+                self.end_stmt()
+                targets = [node("name", n, name=n.val) for n in names]
+                return span("multi", targets[0], vals[-1], targets=targets, vals=vals, mode=t.val, var_col=t.col)
+            if t.val == "let":
+                ann = self.type_expr() if self.eat("OP", ":") else None
+                self.expect("OP", "=", what="'='")
+                val = self.expr()
+                self.end_stmt()
+                return node("bind", name, name=name.val, ann=ann, val=val, mutable=False, let=True, var_col=t.col)
+            self.i -= 1
+            self.i -= 1
         if self.eat("NAME", "var"):
             name = self.ident("a variable name")
             ann = self.type_expr() if self.eat("OP", ":") else None
@@ -232,6 +296,22 @@ class Parser:
                 self.end_stmt()
                 return node("bind", t, name=t.val, ann=ann, val=val, mutable=False)
         e = self.expr()
+        if self.at("OP", ","):
+            targets = [e]
+            while self.eat("OP", ","):
+                targets.append(self.expr())
+            for x in targets:
+                if x["k"] not in ("name", "field", "index"):
+                    raise Diag("E0016", "the left side of an assignment must be a variable, a field, or a list element",
+                               x["line"], x["col"], x["end"])
+            if not self.at("OP", "="):
+                cur = self.t
+                raise Diag("E0010", f"expected '=' after the names of a multiple assignment ('a, b = x, y'), found "
+                                    f"{self.found()}", cur.line, cur.col, max(cur.end, cur.col + 1))
+            self.i += 1
+            vals = self.expr_list()
+            self.end_stmt()
+            return span("multi", e, vals[-1], targets=targets, vals=vals, mode=None)
         if self.t.kind == "OP" and self.t.val in ASSIGN_OPS:
             op = self.t
             self.i += 1
@@ -244,8 +324,15 @@ class Parser:
         self.end_stmt()
         return span("expr", e, e, val=e)
 
-    def if_rest(self, t):
-        cond = self.expr()
+    def expr_list(self):
+        out = [self.expr()]
+        while self.eat("OP", ","):
+            out.append(self.expr())
+        return out
+
+    def if_rest(self, t, cond=None):
+        if cond is None:
+            cond = self.expr()
         then = self.block()
         other = None
         if self.eat("NAME", "else"):
@@ -347,6 +434,22 @@ class Parser:
         return {"k": "rec", "tmod": tmod, "tname": tname, "fields": fields, "head_end": head["end"],
                 "line": head["line"], "col": head["col"], "end": close.end}
 
+    def if_expr(self):
+        """if c then a else b. Each branch runs to the end of the expression, so `else if c2 then x else y` chains."""
+        t = self.expect("NAME", "if")
+        cond = self.expr()
+        if not self.eat("NAME", "then"):
+            cur = self.t
+            raise Diag("E0010", f"expected 'then' after the condition of a conditional expression "
+                                f"('if c then a else b'), found {self.found()}", cur.line, cur.col, max(cur.end, cur.col + 1))
+        then = self.expr()
+        if not self.eat("NAME", "else"):
+            cur = self.t
+            raise Diag("E0010", f"a conditional expression needs an 'else' value ('if c then a else b'), found "
+                                f"{self.found()}", cur.line, cur.col, max(cur.end, cur.col + 1))
+        other = self.expr()
+        return {"k": "ifx", "cond": cond, "then": then, "other": other, "line": t.line, "col": t.col, "end": other["end"]}
+
     def string(self, t):
         parts = []
         for p in t.val:
@@ -395,7 +498,19 @@ class Parser:
                     break
             close = self.expect("OP", "]", what="']'")
             return {"k": "list", "items": items, "line": t.line, "col": t.col, "end": close.end}
+        if self.eat("OP", "{"):
+            keys, vals = [], []
+            while not self.at("OP", "}"):
+                keys.append(self.expr())
+                self.expect("OP", ":", what="':' between a dict key and its value ('{\"a\": 1}')")
+                vals.append(self.expr())
+                if not self.eat("OP", ","):
+                    break
+            close = self.expect("OP", "}", what="'}'")
+            return {"k": "dict", "keys": keys, "vals": vals, "line": t.line, "col": t.col, "end": close.end}
         if t.kind == "NAME":
+            if t.val == "if":
+                return self.if_expr()
             if t.val in ("true", "false"):
                 self.i += 1
                 return node("bool", t, v=t.val == "true")

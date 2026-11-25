@@ -42,7 +42,7 @@ class Numeric:
             lo, hi = int_range(dst)
             low = f"{d} >= {float(lo)!r}" if db == 64 and dk == "i" else f"{d} > {float(lo - 1)!r}"
             self.emit(f"if (!({low} && {d} < {float(hi + 1)!r})) "
-                      f"tok_panic({self.loc(n)}, \"%s does not fit in {dst[0]}\", tok_str_f64({d}));")
+                      f"tok_panic({self.loc(n)}, \"%s does not fit in {dst[0]}\", tok_cstr_f64({d}));")
             return f"(({dct}){t})"
         slo, shi = int_range(src)
         dlo, dhi = int_range(dst)
@@ -51,7 +51,7 @@ class Numeric:
             checks.append(f"{t} < {self.c_int(dlo, src)}")
         if dhi < shi:
             checks.append(f"{t} > {self.c_int(dhi, src)}")
-        shown = self.types.to_str(src, t)
+        shown = self.types.panic_text(src, t)
         self.emit(f"if ({' || '.join(checks)}) tok_panic({self.loc(n)}, \"%s does not fit in {dst[0]}\", {shown});")
         return f"(({dct}){t})"
 

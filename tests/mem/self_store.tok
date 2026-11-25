@@ -1,0 +1,12 @@
+// A record stored inside its own list: the stored value is a snapshot, never a cycle.
+// exit 0
+type Node = { name: str, kids: [Node] }
+
+fn main() ! io
+  var n = Node { name: "root", kids: [] }
+  n.kids.push(n)
+  print(n)
+  n.kids[0] = n
+  print(n)
+  n.kids[0].kids[0].name = "deep{2}"
+  print(n)

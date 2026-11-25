@@ -1,5 +1,1 @@
-fn main(args: [str]) ! io
-  if (args[1] or "").chars().sort() == (args[2] or "").chars().sort()
-    print("yes")
-  else
-    print("no")
+print(if (args[0] or "").chars().sort() == (args[1] or "").chars().sort() then "yes" else "no")

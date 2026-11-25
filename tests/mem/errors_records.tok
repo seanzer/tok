@@ -1,0 +1,87 @@
+// Early returns, ?, fail and handler blocks while records, lists and optionals are alive.
+// exit 1
+error Bad, Worse
+
+type Item = { name: str, tags: [str], note: str? }
+
+type Box = { items: [Item], best: Item? }
+
+fn mk(i: int) -> Item ! err
+  if i == 3
+    fail(Bad, "item {i} is bad")
+  if i == 5
+    fail(Worse, "item {i} is worse")
+  if i % 2 == 0
+    return Item { name: "even{i}", tags: ["e", "n{i}"], note: "note{i}" }
+  Item { name: "odd{i}", tags: [] }
+
+fn all(n: int) -> [Item] ! err
+  var out: [Item] = []
+  for i in 0..n
+    out.push(mk(i)?)
+  out
+
+fn names(xs: [Item]) -> [str]
+  xs.map(x -> x.name)
+
+fn safe(n: int) -> [Item]
+  var out: [Item] = []
+  for i in 0..n
+    it = mk(i) or e ->
+      if e.kind == Bad
+        return out
+      Item { name: "fallback {e.msg}", tags: [e.msg, "{e.kind}"] }
+    out.push(it)
+  out
+
+fn note_of(x: Item) -> str
+  x.note or "no note for {x.name}"
+
+fn longest(xs: [str]) -> str?
+  var best: str? = none
+  for x in xs
+    b = best or ""
+    if x.len() > b.len()
+      best = x
+  best
+
+fn early(xs: [Item], stop: str) -> str
+  for x in xs
+    label = "<{x.name}>"
+    if x.name == stop
+      return label
+    for t in x.tags
+      if t == stop
+        return "{label}:{t}"
+  "nothing"
+
+fn main() ! io
+  a = all(2)?
+  print(names(a))
+  b = all(4) or e -> safe(7)
+  print(names(b))
+  print(b.map(x -> note_of(x)))
+  print(longest(names(b)) or "?")
+  print(longest([]) or "?")
+  print(early(b, "n4"))
+  print(early(b, "odd1"))
+  print(early(b, "zzz"))
+  var box = Box { items: b }
+  box.best = box.items[2]
+  box.items[2].tags.push("pushed")
+  box.items = box.items.where(x -> x.tags.len() > 0)
+  print(box)
+  best = box.best
+  if best
+    print(best.tags)
+  var total = 0
+  for x in b where x.note
+    total += x.note.len()
+  print(total)
+  srt = b.sort(x -> x.name)
+  print(names(srt))
+  print(b.map(x -> x.tags.join("|")).unique())
+  print(names(b).min() or "none")
+  print(all(9) or e -> [Item { name: "{e.kind}", tags: [] }])
+  c = all(9)?
+  print(c)

@@ -45,8 +45,23 @@ def fmt(src):
     return {"ok": True, "source": new, "changed": new != src}
 
 
-def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536, stdin=""):
-    """Compile and run. `files` maps extra file names (modules, data) to their text; they are written next to
+SANITIZE = ["-O1", "-g", "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", "-fno-omit-frame-pointer",
+            "-DTOK_LEAK_CHECK"]
+
+
+def cc_flags(optimize, sanitize=False):
+    """-O2 for `build`, -O0 for `run`. `sanitize` builds with AddressSanitizer (which includes the leak checker) and
+    UndefinedBehaviorSanitizer. TOK_LEAK_CHECK=1 in the environment makes the program count its own allocations and
+    exit with 71 if any are left at the end. TOK_SANITIZE=1 turns `sanitize` on for every build and run."""
+    sanitize = sanitize or os.environ.get("TOK_SANITIZE") == "1"
+    flags = list(SANITIZE) if sanitize else ["-O2" if optimize else "-O0"]
+    if os.environ.get("TOK_LEAK_CHECK") == "1" and not sanitize:
+        flags.append("-DTOK_LEAK_CHECK")
+    return flags
+
+
+def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536, stdin="", sanitize=False):
+    """Compile and run. `sanitize` runs the program under the address, leak and undefined-behavior sanitizers. `files` maps extra file names (modules, data) to their text; they are written next to
     the program, and the program runs in that folder. `stdin` is the text on its standard input."""
     with tempfile.TemporaryDirectory(prefix="tokrun") as d:
         for name, text in (files or {}).items():
@@ -66,7 +81,7 @@ def run(src, args=(), files=None, timeout=10.0, optimize=False, max_output=65536
         c_path, exe = os.path.join(d, "main.c"), os.path.join(d, "main")
         with open(c_path, "w") as fh:
             fh.write(c_code)
-        cc = subprocess.run([os.environ.get("CC", "cc"), "-std=c11", "-O2" if optimize else "-O0", "-o", exe, c_path, "-lm"],
+        cc = subprocess.run([os.environ.get("CC", "cc"), "-std=c11"] + cc_flags(optimize, sanitize) + ["-o", exe, c_path, "-lm"],
                             capture_output=True, text=True)
         if cc.returncode != 0:
             return {"ok": False, "stage": "cc", "errors": [], "message": "internal error: the generated C did not compile",

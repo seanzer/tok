@@ -113,14 +113,14 @@ class ChainTests(TokCase):
     ARGS = "fn main(args: [str]) ! io\n"
 
     def test_parse_or_default_never_stops_the_program(self):
-        src = self.ARGS + '  print(args[1].to_int() or 0)\n  print(args[2].trim().upper() or "none")\n  print(args[9].len() or -1)\n'
+        src = self.ARGS + '  print(args[0].to_int() or 0)\n  print(args[1].trim().upper() or "none")\n  print(args[8].len() or -1)\n'
         path = self.write("c.tok", src)
         self.assertEqual(self.run_path(path, "--", "41", " ab "), "41\nAB\n-1\n")
         self.assertEqual(self.run_path(path, "--", "x"), "0\nnone\n-1\n")
         self.assertEqual(self.run_path(path), "0\nnone\n-1\n")
 
     def test_old_spelling_still_works_and_gives_the_same_answer(self):
-        src = self.ARGS + '  print((args[1] or "0").to_int() or 0)\n  print(args[1].to_int() or 0)\n'
+        src = self.ARGS + '  print((args[0] or "0").to_int() or 0)\n  print(args[0].to_int() or 0)\n'
         path = self.write("o.tok", src)
         self.assertEqual(self.run_path(path, "--", "12"), "12\n12\n")
         self.assertEqual(self.run_path(path), "0\n0\n")
@@ -184,7 +184,7 @@ class StringTests(TokCase):
         e = self.check_err(body('for c in "abc"', '  print(c)'))
         self.assertEqual((e["code"], ".chars()" in e["message"]), ("E0103", True))
         e = self.check_err(body('print(5[0])'))
-        self.assertEqual((e["code"], "only lists and strs" in e["message"]), ("E0103", True))
+        self.assertEqual((e["code"], "only lists, dicts and strs" in e["message"]), ("E0103", True))
 
     def test_numbers_as_text(self):
         src = body('print(255.to_str(2) + " " + 255.to_str(16) + " " + (-5).to_str(2) + " " + 0.to_str(2) + " " + 35.to_str(36))',

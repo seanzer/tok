@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print((args[1] or "").words().len())
+print((args[0] or "").words().len())

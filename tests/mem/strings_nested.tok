@@ -1,0 +1,69 @@
+// Strings grown in place, nested lists, recursion with list arguments, an error at the very end.
+// exit 1
+fn tail(s: str) -> str
+  var t = s
+  t += "!"
+  t
+
+fn num(p: str) -> int ! err
+  v = p.trim().to_int()
+  if v
+    return v
+  fail("not a number: '{p}'")
+
+fn parse(line: str) -> [int] ! err
+  line.split(",").map(p -> num(p)?)
+
+fn sum_or(line: str) -> int
+  xs = parse(line) or e ->
+    return -1
+  xs.sum()
+
+fn rec(n: int, acc: [str]) -> [str]
+  if n == 0
+    return acc
+  var next = acc
+  next.push("{n}")
+  rec(n - 1, next)
+
+fn main(args: [str]) ! io
+  print(tail("a") + tail(tail("b")))
+  print(sum_or("1, 2,3"))
+  print(sum_or("1, x,3"))
+  print(rec(5, []).join(" "))
+  var lines: [str] = []
+  for i in 1..4
+    lines.push("{i},{i * 2}")
+  var grid: [[int]] = []
+  for l in lines
+    grid.push(parse(l)?)
+  print(grid)
+  var cp = grid
+  cp[0][0] = 99
+  cp.push([7])
+  print(grid)
+  print(cp)
+  text = lines.join("\n")
+  print(text.lines().map(l -> l.replace(",", "=")).reverse())
+  print(text.chars().where(c -> c != "\n").unique().join(""))
+  print("a-b-c".split("-").map(p -> p.upper().repeat(2)))
+  var s = ""
+  var parts: [str] = []
+  for w in "one two three".words()
+    s = s + w[0]
+    parts.push(s)
+    s = "{s}{w.len()}"
+  print(parts)
+  print(s)
+  var m = [["a"]]
+  m[0] = m[0].map(v -> v + v)
+  m.push(m[0])
+  m[1][0] = "b"
+  print(m)
+  var q = ["x"]
+  q[0] = q[0] + q[0]
+  q[0] += q[0]
+  q[0] = "{q[0]}{q[0]}"
+  print(q)
+  print(args.len())
+  print(parse("4,five")?)

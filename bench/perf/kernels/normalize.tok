@@ -1,0 +1,17 @@
+// The design doc's normalize kernel on a large [f64].
+fn normalize(xs: [f64]) -> [f64]
+  m = mean(xs) or 0.0
+  s = sqrt(mean(xs.map(x -> (x - m) * (x - m))) or 1.0)
+  xs.map(x -> (x - m) / s)
+
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 1000000
+  rounds = args[1].to_int() or 8
+  var xs: [f64] = []
+  for i in 1..n
+    xs.push(f64(i % 1000) * 0.5)
+  var total = 0.0
+  for r in 1..rounds
+    ys = normalize(xs)
+    total = total + ys[r] + ys[n / 2] + (max(ys) or 0.0)
+  print(int(total * 1000.0))

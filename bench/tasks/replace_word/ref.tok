@@ -1,8 +1,1 @@
-fn main(args: [str]) ! io
-  var out: [str] = []
-  for w in args.drop(3)
-    if w == args[1]
-      out.push(args[2])
-    else
-      out.push(w)
-  print(out.join(" "))
+print(args.drop(2).map(w -> if w == args[0] then args[1] else w).join(" "))

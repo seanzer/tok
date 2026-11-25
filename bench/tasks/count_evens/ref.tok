@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print(args.drop(1).map(a -> a.to_int() or 0).where(n -> n % 2 == 0).len())
+print(args.map(a -> a.to_int() or 0).where(n -> n % 2 == 0).len())

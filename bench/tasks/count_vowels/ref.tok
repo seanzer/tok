@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print((args[1] or "").lower().chars().where(c -> "aeiou".contains(c)).len())
+print((args[0] or "").lower().chars().where(c -> "aeiou".contains(c)).len())

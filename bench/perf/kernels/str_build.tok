@@ -1,0 +1,11 @@
+// Build a long string piece by piece in a loop.
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 2500
+  rounds = args[1].to_int() or 10
+  var total = 0
+  for r in 1..rounds
+    var s = ""
+    for i in 1..n
+      s = s + "w{i} "
+    total = total + s.len()
+  print(total)

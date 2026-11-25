@@ -1,0 +1,3 @@
+{name: "root", kids: [{name: "root", kids: []}]}
+{name: "root", kids: [{name: "root", kids: [{name: "root", kids: []}]}]}
+{name: "root", kids: [{name: "root", kids: [{name: "deep2", kids: []}]}]}

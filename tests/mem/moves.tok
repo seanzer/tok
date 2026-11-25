@@ -1,0 +1,77 @@
+// Lists and records handed to functions that consume them: updated in place when unshared, copied when shared.
+// exit 1
+type Bag = { items: [str], label: str }
+
+fn with_item(xs: [str], v: str) -> [str]
+  var ys = xs
+  ys.push(v)
+  ys
+
+fn keep(xs: [str]) -> [str]
+  xs
+
+fn relabel(b: Bag, label: str) -> Bag
+  var out = b
+  out.label = label
+  out.items.push(label)
+  out
+
+fn maybe(xs: [str], n: int) -> [str] ! err
+  if n > 3
+    fail("too many: {xs.len()}")
+  if n == 0
+    return xs
+  var ys = xs
+  ys.push("m{n}")
+  ys
+
+fn twice(s: str) -> str
+  var t = s
+  t += s
+  t
+
+fn both(a: [str], b: [str]) -> [str]
+  var out = a
+  for x in b
+    out.push(x)
+  out
+
+fn main(args: [str]) ! io
+  var xs: [str] = []
+  for i in 1..5
+    xs = with_item(xs, "v{i}")
+  snapshot = xs
+  xs = with_item(xs, "after")
+  print(snapshot)
+  print(xs)
+  ys = with_item(xs, "y")
+  zs = with_item(ys, "z")
+  print(ys)
+  print(zs)
+  kept = keep(zs)
+  print(kept.len())
+  xs = both(xs, xs)
+  xs = both(xs, keep(xs))
+  print(xs.len())
+  var bag = Bag { items: xs.first(2), label: "one" }
+  old = bag
+  bag = relabel(bag, "two")
+  bag = relabel(bag, "three{args.len()}")
+  print(old)
+  print(bag)
+  var ms: [str] = []
+  ms = maybe(ms, 1)?
+  ms = maybe(ms, 0)?
+  ms = maybe(ms, 2) or ["fallback"]
+  ms = maybe(ms, 9) or e -> [e.msg]
+  print(ms)
+  var s = "ab"
+  s = twice(s)
+  s = twice(twice(s))
+  print(s)
+  fresh = with_item(with_item([], "p"), "q")
+  print(fresh)
+  last = with_item(fresh, "moved")
+  print(last)
+  ms = maybe(last, 7)?
+  print("unreachable")

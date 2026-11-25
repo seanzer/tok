@@ -62,13 +62,17 @@ class OptRes:
     def dry_type(self, n):
         """The type an expression would have, without emitting code or reporting errors. None if it has an error."""
         tmp, nerr, scopes, narrowed, sinks = self.tmp, len(self.errors), len(self.scopes), len(self.narrowed), len(self.sinks)
+        pools, state = [list(p) for p in self.pools], (self.cautious, self.dead, self.bails, self.preps)
+        self.dry += 1
         try:
             with self.capture():
                 return self.expr(n)[1]
         except Diag:
             return None
         finally:
-            self.tmp = tmp
+            self.dry -= 1
+            self.tmp, self.pools = tmp, pools
+            self.cautious, self.dead, self.bails, self.preps = state
             del self.errors[nerr:], self.scopes[scopes:], self.narrowed[narrowed:], self.sinks[sinks:]
 
     def opt_call(self, n, bc, bt, want):
@@ -78,20 +82,22 @@ class OptRes:
         if n["name"] == "push":
             self.err("E0103", f"cannot push onto {self.type_str(bt)}: it may be none; test it first", n["base"])
         src = self.hoist(bc, bt)
-        with self.capture(1) as pre:
-            code, ty = h(n, f"{src}.v", inner, want[1] if want is not None and want[0] == "opt" else want)
-        if ty == ERR:
-            return "0", ERR
-        if ty in (VOID, NEVER):
-            self.err("E0103", f"'{n['name']}' returns nothing, so it cannot be called on {self.type_str(bt)}; test it first", n)
-        out_ty = ty if ty[0] == "opt" else ("opt", ty)
         t = self.new_tmp()
+        with self.region(), self.capture(1) as pre:
+            code, ty = h(n, f"{src}.v", inner, want[1] if want is not None and want[0] == "opt" else want)
+            if ty == ERR:
+                return "0", ERR
+            if ty in (VOID, NEVER):
+                self.err("E0103", f"'{n['name']}' returns nothing, so it cannot be called on {self.type_str(bt)}; test it first", n)
+            out_ty = ty if ty[0] == "opt" else ("opt", ty)
+            code = self.take(code, ty)
+            self.emit(f"{t} = {code if ty[0] == 'opt' else f'(({self.c(out_ty)}){{.has = true, .v = {code}}})'};")
+            self.flush()
         self.emit(f"{self.c(out_ty)} {t} TOK_UNUSED = (({self.c(out_ty)}){{0}});")
         self.emit(f"if ({src}.has) {{")
         self.buf.extend(pre)
-        self.emit(f"  {t} = {code if ty[0] == 'opt' else f'(({self.c(out_ty)}){{.has = true, .v = {code}}})'};")
         self.emit("}")
-        return t, out_ty
+        return self.own(t, out_ty), out_ty
 
     def index_or(self, n, bc, bt, want):
         """xs[i] or default: the default is used when i is out of range."""
@@ -112,34 +118,40 @@ class OptRes:
                 self.err("E0113", "'or e -> ...' handles the error of a call that can fail; "
                                   f"here the left side is {self.type_str(lt)}, so write the default directly", n["r"])
         if lt[0] == "opt":
-            return self.default(n, f"{lc}.has", f"{lc}.v", lt[1], want)
+            return self.default(n, f"{lc}.has", f"{lc}.v", lt[1], want, lc)
         if lt[0] == "res":
             if lt[1] == VOID:
                 self.err("E0103", "this call returns nothing, so there is nothing to give a default for; use '?'", n["l"])
-            return self.default(n, f"!{lc}.err", f"{lc}.v", lt[1], want)
+            return self.default(n, f"!{lc}.err", f"{lc}.v", lt[1], want, lc, f"{lc}.err")
         if lt == NONE:
             self.err("E0103", "'none or ...' is always the right side; write the value directly", n["l"])
         self.err("E0103", f"'or' needs bool, an optional, or a call that can fail on its left, found {self.type_str(lt)}", n["l"])
 
-    def default(self, n, has, value, ty, want):
+    def default(self, n, has, value, ty, want, src=None, err=None):
+        """value if has, else the right side of `or`. `src` is the C temporary the left side lives in, when it is
+        one this statement owns: its value then moves into the result. `err` is its error message, if it has one."""
         r = n["r"]
-        with self.capture(1) as pre:
+        t = self.new_tmp()
+        with self.region(), self.capture(1) as pre:
             rc, rt = self.val(r, ty, never=True)
             if rt != NEVER:
-                rc = self.store(rc, rt, r, False)
+                rc = self.take(rc, rt)
                 rc = self.coerce(rc, rt, ty, r, f"the default must be {self.type_str(ty)}, found {self.type_str(rt)}")
+                if ty != ERR and rt != ERR:
+                    self.emit(f"{t} = {rc};")
+            self.flush()
         if ty == ERR:
             return "0", ERR
-        t = self.new_tmp()
+        moved = src is not None and self.disown(src)
         self.emit(f"{self.c(ty)} {t} TOK_UNUSED;")
         self.emit(f"if ({has}) {{")
-        self.emit(f"  {t} = {value};")
+        self.emit(f"  {t} = {value if moved else self.types.ret(ty, value)};")
         self.emit("} else {")
         self.buf.extend(pre)
-        if rt != NEVER:
-            self.emit(f"  {t} = {rc};")
+        if moved and err:
+            self.emit(f"  tok_srelease({err});")
         self.emit("}")
-        return t, ty
+        return self.own(t, ty), ty
 
     # ---------------------------------------------------------- handlers
 
@@ -152,17 +164,19 @@ class OptRes:
         if ty != VOID and ty != ERR:
             t = self.new_tmp()
             self.emit(f"{self.c(ty)} {t} TOK_UNUSED;")
+        # the result of the call is used up here: its value moves into the result, its error into `e`
+        moved = self.disown(lc)
         self.emit(f"if (!{lc}.err) {{")
         if t:
-            self.emit(f"  {t} = {lc}.v;")
+            self.emit(f"  {t} = {f'{lc}.v' if moved else self.types.ret(ty, f'{lc}.v')};")
         self.emit("} else {")
-        self.emit(f"  tok_error v_{lam['param']} TOK_UNUSED = {{ {lc}.err, {lc}.kind }};")
+        self.emit(f"  tok_error v_{lam['param']} TOK_UNUSED = {{ {f'{lc}.err' if moved else f'tok_sret({lc}.err)'}, {lc}.kind }};")
         self.scopes.append({})
-        self.define(lam["param"], ERRV)
+        self.define(lam["param"], ERRV, own=True)
         try:
             if lam["body"] is None:
                 block = lam["block"]
-                if ty not in (VOID, ERR) and not self.always_returns(block):
+                if ty not in (VOID, ERR) and not self.always_returns(block, self.loops):
                     self.report(Diag("E0105", f"the handler must give a {self.type_str(ty)} on every path: end each path "
                                               "in a value, 'return' or 'fail'", lam["line"], lam["col"], lam["end"]))
                 self.sinks.append((t, ty))
@@ -173,24 +187,27 @@ class OptRes:
             else:
                 self.depth += 1
                 try:
-                    body = lam["body"]
-                    code, rt = self.val(body, None if ty == VOID else ty, never=True)
-                    if rt != NEVER and ty not in (VOID, ERR):
-                        if rt == VOID:
-                            self.err("E0103", f"the handler must give a {self.type_str(ty)}, but this call returns nothing", body)
-                        code = self.store(code, rt, body, False)
-                        code = self.coerce(code, rt, ty, body,
-                                           f"the handler must give a {self.type_str(ty)}, found {self.type_str(rt)}")
-                        if rt != ERR:
-                            self.emit(f"{t} = {code};")
+                    with self.region():
+                        body = lam["body"]
+                        code, rt = self.val(body, None if ty == VOID else ty, never=True)
+                        if rt != NEVER and ty not in (VOID, ERR):
+                            if rt == VOID:
+                                self.err("E0103", f"the handler must give a {self.type_str(ty)}, but this call returns nothing", body)
+                            code = self.take(code, rt)
+                            code = self.coerce(code, rt, ty, body,
+                                               f"the handler must give a {self.type_str(ty)}, found {self.type_str(rt)}")
+                            if rt != ERR:
+                                self.emit(f"{t} = {code};")
+                        self.flush()
                 finally:
                     self.depth -= 1
         finally:
+            self.emit(f"  tok_srelease(v_{lam['param']}.msg);")
             self.scopes.pop()
             self.emit("}")
         if ty == ERR:
             return "0", ERR
-        return (t, ty) if t else ("", VOID)
+        return (self.own(t, ty), ty) if t else ("", VOID)
 
     # ---------------------------------------------------------- error kinds and values
 
@@ -230,12 +247,18 @@ class OptRes:
             return
         self.err("E0202", f"{what}, but '{self.cur['name']}' does not declare 'err' in its signature", n, self.sig_fix("err"))
 
-    def bail(self, msg, kind):
+    def bail(self, msg, kind, owned=False):
+        """Leave the function with an error. `msg` is borrowed unless `owned`."""
         sig = self.sig(self.cur)
         if sig["is_main"]:
             self.emit(f"tok_main_fail({msg});")
+            if owned:
+                self.emit(f"tok_srelease({msg});")
+            self.leave("1")
         else:
-            self.emit(f"return (({self.c(sig['cret'])}){{.err = {msg}, .kind = {kind}}});")
+            if not owned:
+                msg = self.take(msg, STR)
+            self.leave(f"(({self.c(sig['cret'])}){{.err = {msg}, .kind = {kind}}})")
 
     def x_try(self, n, want):
         code, ty = self.expr(n["e"], want)
@@ -247,13 +270,17 @@ class OptRes:
             self.err("E0204", f"'?' passes an error up to the caller, but {why}", n,
                      make_fix(f"remove \"?\" at {n['line']}:{n['q_col']}", [(n["line"], n["q_col"], "", 1)]))
         self.can_fail(n, "'?' passes the error up to the caller")
+        # the result of the call is used up here: the error moves to the caller, or the value stays with this statement
+        moved = self.disown(code)
         self.emit(f"if ({code}.err) {{")
         self.depth += 1
-        self.bail(f"{code}.err", f"{code}.kind")
+        self.bail(f"{code}.err", f"{code}.kind", owned=moved)
         self.depth -= 1
         self.emit("}")
         if ty[1] == VOID:
             return "", VOID
+        if moved:
+            self.own(f"{code}.v", ty[1])
         return f"{code}.v", ty[1]
 
     def b_fail(self, n, want):
@@ -274,7 +301,7 @@ class OptRes:
             mc = self.coerce(mc, mt, STR, args[1], f"fail needs a str message, found {self.type_str(mt)}")
             msg, kind = mc, code
         elif ty == EKIND:
-            msg, kind = f"tok_kind_name({code})", code
+            msg, kind = f"tok_kinds[{code}]", code
         elif ty == ERRV:
             msg, kind = f"{code}.msg", f"{code}.kind"
         else:

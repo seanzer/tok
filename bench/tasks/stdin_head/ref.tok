@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io
-  for line in io.read_all().lines().first(args[1].to_int() or 0)
-    print(line)
+for line in io.read_all().lines().first(args[0].to_int() or 0)
+  print(line)

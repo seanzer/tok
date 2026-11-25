@@ -1,6 +1,4 @@
-fn main(args: [str]) ! io
-  first = args[1] or ""
-  var n = 0
-  for i in 1..first.len() where n == i - 1 and args.drop(1).all(w -> w.starts_with(first.first(i)))
-    n = i
-  print(first.first(n))
+var p = args[0] or ""
+while not args.all(w -> w.starts_with(p))
+  p = p.first(p.len() - 1)
+print(p)

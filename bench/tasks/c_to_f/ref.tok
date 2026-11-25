@@ -1,3 +1,2 @@
-fn main(args: [str]) ! io
-  c = args[1].to_int() or 0
-  print((c * 9 + 160) / 5)
+c = args[0].to_int() or 0
+print((c * 9 + 160) / 5)

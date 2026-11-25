@@ -1,0 +1,13 @@
+// Build a list by push, then map, filter and sum it, several times over.
+fn main(args: [str]) ! io
+  n = args[0].to_int() or 1000000
+  rounds = args[1].to_int() or 8
+  var total = 0
+  for r in 1..rounds
+    var xs: [int] = []
+    for i in 1..n
+      xs.push(i + r)
+    ys = xs.map(x -> x * 2 + 1)
+    zs = ys.where(x -> x % 3 == 0)
+    total = total + zs.sum() + zs.len()
+  print(total)

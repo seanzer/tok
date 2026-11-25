@@ -1,0 +1,22 @@
+["a", "b3"]
+["a", "b3", "c"]
+["a", "b3"]
+["zb3", "b3", "c"]
+xx-xx!6
+root/2
+{name: "root", kids: [{name: "root", kids: [{name: "deep2", kids: [], tag: none}, {name: "leaf7", kids: [], tag: t1}], tag: none}, {name: "leaf7", kids: [], tag: t1}], tag: none}
+[1, 2]
+[[1, 9], [1, 9, 7]]
+["a", "b3", "q1", "r"]
+["a", "changeda", "q1", "r", "aa", "b3b3", "q1q1", "rr"]
+q1
+none1
+err: no item 99
+changeda
+changeda
+{a: ["a", "changeda", "q1", "r", "aa", "b3b3", "q1q1", "rr", "tail3"], b: [[100, 9], [1, 9, 7]]}
+[[1, 9], [1, 9, 7]]
+THE+QUICK+BROWN+FOX
+["THE", "QUICK", "FOX", "BROWN"]
+[["QUICK0", "BROWN0"], ["THE2", "QUICK2", "BROWN2", "FOX2"], ["THE2", "QUICK2", "BROWN2", "FOX2"], ["THE3", "QUICK3", "BROWN3", "FOX3"]]
+124

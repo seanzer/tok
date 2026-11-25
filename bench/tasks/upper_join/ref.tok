@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print(args.drop(1).map(a -> a.upper()).join("-"))
+print(args.map(a -> a.upper()).join("-"))

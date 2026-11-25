@@ -1,3 +1,2 @@
-fn main() ! io
-  xs = io.read_all().words().map(w -> w.to_f64() or 0.0)
-  print(mean(xs).fixed(2) or "none")
+xs = io.read_all().words().map(w -> w.to_f64() or 0.0)
+print(mean(xs).fixed(2) or "none")

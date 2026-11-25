@@ -1,2 +1,1 @@
-fn main(args: [str]) ! io
-  print((args[1].to_int() or 0) ** (args[2].to_int() or 0))
+print((args[0].to_int() or 0) ** (args[1].to_int() or 0))

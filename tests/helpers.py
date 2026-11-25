@@ -22,7 +22,8 @@ class TokCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.mkdtemp(prefix="toktest")
-        cls.env = dict(os.environ, XDG_CACHE_HOME=os.path.join(cls.tmp, "cache"))
+        # TOK_LEAK_CHECK: every program a test runs counts its allocations and exits with 71 if any are left
+        cls.env = dict(os.environ, XDG_CACHE_HOME=os.path.join(cls.tmp, "cache"), TOK_LEAK_CHECK="1")
 
     @classmethod
     def tearDownClass(cls):
